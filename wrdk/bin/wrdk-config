@@ -1,0 +1,45 @@
+#!/usr/bin/env python
+"""Provides an easy way to find out where wrdk is installed"""
+import sys
+import os
+
+join = os.path.join
+
+def path(*args):
+    split = [args[0]]
+
+    for arg in args[1:]:
+        split.extend(arg.split('/'))
+
+    combined = reduce(join, split)
+    return os.path.abspath(combined)
+
+def main():
+    root = join(os.path.dirname(sys.argv[0]), '..')
+    wikireader = join(root, '..')
+
+    for arg in sys.argv[1:]:
+        if arg == '--rules':
+            print path(root, 'share', 'rules.mk'),
+        elif arg == '--definitions':
+            print path(root, 'share', 'definitions.mk'),
+        elif arg == '--cflags':
+            print '-I%s' % path(wikireader, 'samo-lib', 'mini-libc', 'include'),
+            print '-I%s' % path(wikireader, 'samo-lib', 'grifo', 'include'),
+            print '-I%s' % path(wikireader, 'samo-lib', 'include'),
+            print '-DSAMO_RESTRICTIONS=1',
+        elif arg == '--ldflags':
+            print path(wikireader, 'samo-lib/mini-libc/lib/libc.a'),
+            print path(wikireader, 'samo-lib/grifo/lib/libgrifo.a'),
+            print path(wikireader, 'host-tools/toolchain-install/lib/gcc-lib/c33-epson-elf/3.3.2/libgcc.a'),
+        elif arg == '--lds':
+            print path(wikireader, 'samo-lib', 'grifo', 'lds', 'application.lds'),
+        elif arg == '--host-tools':
+            print path(wikireader, 'host-tools'),
+        elif arg == '--samo-lib':
+            print path(wikireader, 'samo-lib'),
+        else:
+            assert False, 'Unrecognised option "%s"' % arg
+
+if __name__ == '__main__':
+   main()

@@ -1,0 +1,37 @@
+WikiReader Loader
+-----------------
+
+A simple serial based boot loader that lets easily download and run
+programs on the WikiReader
+
+Michael Hope <michaelh@juju.net.nz>
+http://seabright.co.nz/
+
+Usage
+-----
+Prerequisites:
+ * A WikiReader
+ * A SD card
+ * A working build of the wikireader respository
+ * A serial port hooked into the debug port on the WikiReader
+ * The python-serial library
+
+Preperation:
+ * Run 'make'.  This builds stub.app and stub.ico
+ * Run 'make install'.  This copies everything needed into a directory
+   called 'dist'
+ * Copy the contents of 'dist' onto the SD card
+ * Insert the SD card into the WikiReader
+
+Using:
+ * Turn on the WikiReader.  You should see a 'download' icon appear
+ * Run 'python loader.py application-to-load.bin'
+ * The program should download and start
+
+You can convert a application from the '.app' format to a plain binary
+file using
+
+ c33-epson-elf-objcopy -j .text -j .data -j .rodata -O binary prog.app prog.bin
+
+The loader can also automatically reset the device.  To use this
+feature, connect the DSR line to the reset pin on the debug port.

@@ -1,0 +1,15 @@
+#!/usr/bin/env python
+"""A simple script that turns a binary file into a C array"""
+import sys
+
+__author__ = 'Michael Hope'
+
+def main():
+    dat = open(sys.argv[1], 'rb').read()
+    out = open(sys.argv[2], 'w')
+
+    for i in range(0, len(dat), 8):
+        print >> out, '   ', ''.join('0x%02x, ' % ord(x) for x in dat[i:i+8])
+
+if __name__ == '__main__':
+    main()
