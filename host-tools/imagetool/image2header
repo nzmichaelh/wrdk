@@ -168,7 +168,6 @@ def main():
                 for x in range(0, width):
                     rgb = image.colorComponents(image.getPixel((x, y)))
                     if rgb != (0, 0, 0) and rgb != (255, 255, 255):
-                        print rgb
                         mask = True
                         break
 

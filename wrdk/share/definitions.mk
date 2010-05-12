@@ -18,9 +18,9 @@ HOST_TOOLS := $(shell wrdk-config --host-tools)
 SAMO_LIB := $(shell wrdk-config --samo-lib)
 
 GRIFO = ${SAMO_LIB}/grifo
-GRIFO_SCRIPTS = ${GRIFO}/scripts
+GRIFO_SCRIPTS = $(shell wrdk-config --grifo-scripts)
 
-IMAGE2HEADER= $(HOST_TOOLS)/imagetool/image2header
+IMAGE2HEADER= $(shell wrdk-config --image2header)
 
 ifeq ($(TARGET),host)
 CROSS_COMPILE =
@@ -39,4 +39,5 @@ CFLAGS += -Wall -ggdb --std=gnu99
 CFLAGS += $(INCLUDES)
 CFLAGS += $(OPT)
 
-LIBS := $(shell wrdk-config --target=$(TARGET) --ldflags)
+LIBS += $(shell wrdk-config --target=$(TARGET) --libs)
+LDFLAGS += $(shell wrdk-config --target=$(TARGET) --ldflags)

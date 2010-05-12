@@ -22,10 +22,10 @@ $(BUILD2)/%.d: %.c
 	$(CC) -MM $(CFLAGS) -MT $(BUILD2)/$*.o -MG -MF $@ $<
 
 ifeq ($(TARGET),host)
-$(BUILD2)/$(THIS).app: $(BUILD2) $(BUILD2)/$(THIS).o $(LIBS)
+$(BUILD2)/$(THIS).app: $(BUILD2) $(BUILD2)/$(THIS).o $(LIB)
 	$(CC) -o $@ $(LDFLAGS) $(BUILD2)/$(THIS).o $(LIBS)
 else
-$(BUILD2)/$(THIS).app: $(BUILD2) $(BUILD2)/$(THIS).o $(LIBS) $(GRIFO_APPLICATION_LDS)
+$(BUILD2)/$(THIS).app: $(BUILD2) $(BUILD2)/$(THIS).o $(LIB) $(GRIFO_APPLICATION_LDS)
 	$(LD) -o $@ $(LDFLAGS) $(BUILD2)/$(THIS).o $(LIBS) -T $(GRIFO_APPLICATION_LDS)
 endif
 
