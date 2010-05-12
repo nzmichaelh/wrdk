@@ -1,0 +1,19 @@
+/* XPM */
+static char *mid_[] = {
+/* columns rows colors chars-per-pixel */
+"16 10 3 1",
+"  c #000000",
+". c #FF00FF",
+"X c #FFFFFF",
+/* pixels */
+"....X......X....",
+"...X X....X X...",
+"....X XXXX X....",
+"...X        X...",
+"..X  XX  XX  X..",
+".X            X.",
+"X XX        XX X",
+"X XXXXXXXXXXXX X",
+".X XX  XX  XX X.",
+"..X..XX..XX..X.."
+};
