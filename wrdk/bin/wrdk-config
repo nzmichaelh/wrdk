@@ -14,32 +14,60 @@ def path(*args):
     combined = reduce(join, split)
     return os.path.abspath(combined)
 
+def samov1_cflags(root, w):
+    print '-I%s' % path(w, 'samo-lib/mini-libc/include'),
+    print '-I%s' % path(w, 'samo-lib/grifo/include'),
+    print '-I%s' % path(w, 'samo-lib/include'),
+    print '-DSAMO_RESTRICTIONS=1',
+
+def samov1_ldflags(root, w):
+    print path(w, 'samo-lib/mini-libc/lib/libc.a'),
+    print path(w, 'samo-lib/grifo/lib/libgrifo.a'),
+    print path(w, 'host-tools/toolchain-install/lib/gcc-lib/c33-epson-elf/3.3.2/libgcc.a'),
+
+def samov1_lds(root, w):
+    print path(w, 'samo-lib/grifo/lds/application.lds'),
+
+def host_cflags(root, w):
+    print '-I%s' % path(w, 'wrdk/wrem'),
+    print '-DWRDK_HOST',
+
+def host_ldflags(root, w):
+    print path(w, 'wrdk/wrem/libwrem.a'),
+    print '-lSDL -lrt -lm',
+
+def host_lds(root, w):
+    pass
+
+def definitions(root, w):
+    print path(root, 'share/definitions.mk'),
+
+def rules(root, w):
+    print path(root, 'share/rules.mk'),
+
+def host_tools(root, w):
+    print path(w, 'host-tools'),
+
+def samo_lib(root, w):
+    print path(w, 'samo-lib'),
+
 def main():
     root = join(os.path.dirname(sys.argv[0]), '..')
     wikireader = join(root, '..')
+    target = 'samov1'
 
     for arg in sys.argv[1:]:
-        if arg == '--rules':
-            print path(root, 'share', 'rules.mk'),
-        elif arg == '--definitions':
-            print path(root, 'share', 'definitions.mk'),
-        elif arg == '--cflags':
-            print '-I%s' % path(wikireader, 'samo-lib', 'mini-libc', 'include'),
-            print '-I%s' % path(wikireader, 'samo-lib', 'grifo', 'include'),
-            print '-I%s' % path(wikireader, 'samo-lib', 'include'),
-            print '-DSAMO_RESTRICTIONS=1',
-        elif arg == '--ldflags':
-            print path(wikireader, 'samo-lib/mini-libc/lib/libc.a'),
-            print path(wikireader, 'samo-lib/grifo/lib/libgrifo.a'),
-            print path(wikireader, 'host-tools/toolchain-install/lib/gcc-lib/c33-epson-elf/3.3.2/libgcc.a'),
-        elif arg == '--lds':
-            print path(wikireader, 'samo-lib', 'grifo', 'lds', 'application.lds'),
-        elif arg == '--host-tools':
-            print path(wikireader, 'host-tools'),
-        elif arg == '--samo-lib':
-            print path(wikireader, 'samo-lib'),
-        else:
-            assert False, 'Unrecognised option "%s"' % arg
+        if arg.startswith('--target='):
+            target = arg.split('=')[1]
+        elif arg.startswith('--'):
+            type = arg[2:].replace('-', '_')
+
+            for name in ['%s_%s' % (target, type), type]:
+                if name in globals():
+                    globals()[name](root, wikireader)
+                    break
+            else:
+                assert False, 'Unrecognised argument "%s"' % arg
 
 if __name__ == '__main__':
    main()

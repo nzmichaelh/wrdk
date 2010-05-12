@@ -1,39 +1,53 @@
 # Common rules across all wrdk targets
 #
 
+LIBS += $(LIB)
+
+all: $(TARGETS)
+
+host:
+	$(MAKE) TARGET=host
+
+OBJ ?= $(addprefix $(BUILD2)/, $(SRC:.c=.o))
+
 $(LIB): $(OBJ)
 	$(RM) -f $@
 	$(AR) r $@ $^
 
-$(BUILD)/%.o: %.c
+$(BUILD2)/%.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-$(BUILD)/%.d: %.c
-	mkdir -p $(BUILD)
-	$(CC) -MM $(CFLAGS) -MT $(BUILD)/$*.o -MG -MF $@ $<
+$(BUILD2)/%.d: %.c
+	mkdir -p $(BUILD2)
+	$(CC) -MM $(CFLAGS) -MT $(BUILD2)/$*.o -MG -MF $@ $<
 
-$(THIS).app: build build/$(THIS).o $(LIBS) $(GRIFO_APPLICATION_LDS)
-	$(LD) -o $@ $(LDFLAGS) build/$(THIS).o $(LIBS) -T $(GRIFO_APPLICATION_LDS)
+ifeq ($(TARGET),host)
+$(BUILD2)/$(THIS).app: $(BUILD2) $(BUILD2)/$(THIS).o $(LIBS)
+	$(CC) -o $@ $(LDFLAGS) $(BUILD2)/$(THIS).o $(LIBS)
+else
+$(BUILD2)/$(THIS).app: $(BUILD2) $(BUILD2)/$(THIS).o $(LIBS) $(GRIFO_APPLICATION_LDS)
+	$(LD) -o $@ $(LDFLAGS) $(BUILD2)/$(THIS).o $(LIBS) -T $(GRIFO_APPLICATION_LDS)
+endif
 
 %.bin: %.elf
 	$(OBJCOPY) -j .text -j .data -j .rodata -O binary $< $@
 
 $(BUILD)/%.img: resources/%.xpm
-	${IMAGE2HEADER} --inverted --header-file=$@ --variable-name=$(notdir ${@:.img=_image}) $<
+	${IMAGE2HEADER} --auto-mask --inverted --header-file=$@ --variable-name=$(notdir ${@:.img=_image}) $<
 
 # convert XPM to binary ICO format
-%.ico: %.xpm
+$(BUILD)/%.ico: %.xpm
 	${GRIFO_SCRIPTS}/xpm2icon --icon=$@ $<
 
-build:
+$(BUILD2):
 	$(MKDIR) $@
 
 clean:
-	$(RM) -r $(TARGETS) build
+	$(RM) -r $(TARGETS) $(BUILD)
 	$(RM) -r *.o *.app *.elf *.map *.asm33 *.dump *.ico *.inc
 
-$(BUILD)/deps.mk: $(addprefix $(BUILD)/, $(SRC:.c=.d))
-	mkdir -p $(BUILD)
+$(BUILD2)/deps.mk: $(addprefix $(BUILD2)/, $(SRC:.c=.d))
+	mkdir -p $(BUILD2)
 	cat $^ > $@
 
-include $(BUILD)/deps.mk
+include $(BUILD2)/deps.mk
