@@ -7,6 +7,7 @@ TARGET ?= samov1
 
 BUILD = build
 BUILD2 = $(BUILD)/$(TARGET)
+INSTALL_DIR = dist
 
 THIS := $(notdir $(shell pwd))
 

@@ -1,16 +1,16 @@
 # Common rules across all wrdk targets
 #
 
--include $(WRDK_SHARE)/rules-$(LAYOUT).mk
--include $(WRDK_SHARE)/rules-$(TARGET).mk
--include $(WRDK_SHARE)/rules-$(TARGET)-$(LAYOUT).mk
-
 LIBS += $(LIB)
 
 all: $(TARGETS)
 
 host:
 	$(MAKE) TARGET=host
+
+install: all
+	mkdir -p $(INSTALL_DIR)
+	cp -f $(TARGETS) $(INSTALL_DIR)
 
 OBJ ?= $(addprefix $(BUILD2)/, $(SRC:.c=.o))
 
@@ -39,11 +39,15 @@ $(BUILD2):
 	$(MKDIR) $@
 
 clean:
-	$(RM) -r $(TARGETS) $(BUILD)
-	$(RM) -r *.o *.app *.elf *.map *.asm33 *.dump *.ico *.inc
+	rm -rf $(TARGETS) $(BUILD) $(INSTALL_DIR)
+	rm -rf *.o *.app *.elf *.map *.asm33 *.dump *.ico *.inc
 
 $(BUILD2)/deps.mk: $(addprefix $(BUILD2)/, $(SRC:.c=.d))
 	mkdir -p $(BUILD2)
 	cat $^ > $@
+
+-include $(WRDK_SHARE)/rules-$(LAYOUT).mk
+-include $(WRDK_SHARE)/rules-$(TARGET).mk
+-include $(WRDK_SHARE)/rules-$(TARGET)-$(LAYOUT).mk
 
 include $(BUILD2)/deps.mk
