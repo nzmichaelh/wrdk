@@ -96,7 +96,6 @@ $(STAMPS)/gcc: $(STAMPS)/binutils $(STAMPS)/gcc-patch
 # components together into the staging area
 package:
 	mkdir -p $(C33)/include $(C33)/lib
-	cp -a $(HOST_TOOLS)/toolchain-install/* $(STAGING)
 	cp -a $(SAMO_LIB_INCLUDE)/* \
 	$(FATFS_INCLUDE)/*.h \
 	$(GRIFO_INCLUDE)/* \
@@ -116,10 +115,14 @@ package:
 	mkdir -p $(STAGING)/share/sdimage
 	cp $(GRIFO)/grifo.elf $(STAGING)/share/sdimage/kernel.elf
 	cp init.ini $(GRIFO)/examples/init/init.app $(STAGING)/share/sdimage
-	for i in $(SUBDIRS); do $(MAKE) -C $(STAGING)/$$i install INSTALL_DIR=$(STAGING)/share/sdimage; done
+	for i in $(SUBDIRS); do $(MAKE) -C $$i install INSTALL_DIR=$(STAGING)/share/sdimage; done
 	cd $(STAGING)/share/sdimage && sha256sum * > sha256.txt
 	cp README $(STAGING)
 	for i in $(SUBDIRS); do $(MAKE) -C $(STAGING)/$$i clean; done
+
+foo:
+	$(MAKE) -C loader install INSTALL_DIR=$(STAGING)/share/sdimage
+#	for i in $(SUBDIRS); do $(MAKE) -C $$i install INSTALL_DIR=$(STAGING)/share/sdimage; done
 
 # Archive up the final build
 archive:

@@ -49,7 +49,7 @@ MK_DIR   := ${ROOT_DIR}/samo-lib/Mk
 
 OS := $(strip $(shell uname -s))
 
-export SHELL = /bin/sh
+#export SHELL = /bin/sh
 RM = rm -f
 MKDIR = mkdir -p
 COPY = cp -p
@@ -198,7 +198,7 @@ IMAGE2HEADER= ${HOST_TOOLS}/imagetool/image2header
 # Cross compiler definitions
 # ==========================
 
-export PATH:=${HOST_TOOLS}/toolchain-install/bin:${PATH}
+#export PATH:=${HOST_TOOLS}/toolchain-install/bin:${PATH}
 
 BUILD_PREFIX =
 
