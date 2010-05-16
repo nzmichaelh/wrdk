@@ -1,26 +1,39 @@
-# Makefile
-#
+include ../samo-lib/Mk/definitions.mk
 
-WRDK_SHARE := $(shell wrdk-config --share)
-include $(WRDK_SHARE)/definitions.mk
+SUBDIRS = loader examples/wrinv examples/baby
 
-TARGETS = stub.app $(BUILD)/stub.ico
+#.PHONY: $(SUBDIRS)
 
-# list of modules
-SRC = $(wildcard *.c)
-OBJ = $(addprefix $(BUILD2)/, $(SRC:.c=.o))
+all: build
 
-LIBS += $(LIB)
+build:
+	for i in $(SUBDIRS); do make -C $$i; done
 
-all: $(TARGETS)
+clean:
+	for i in $(SUBDIRS); do make -C $$i clean; done
 
-stub.app: $(BUILD2) $(BUILD2)/stub.o $(LIB) $(GRIFO_APPLICATION_LDS)
-	$(LD) -o $@ $(LDFLAGS) $(BUILD2)/stub.o $(LIBS) -T $(GRIFO_APPLICATION_LDS)
+BUILD = build/wrdk
+C33 = $(BUILD)/c33-epson-elf
 
-loader.elf: $(BUILD2) $(BUILD2)/main.o $(LIB) loader.lds
-	$(LD) -o $@ $(LDFLAGS) $(BUILD2)/main.o $(LIBS) -T loader.lds
+toolchain:
+	mkdir -p $(C33)/include $(C33)/lib
+	cp -a $(HOST_TOOLS)/toolchain-install/* $(BUILD)
+	cp -a $(SAMO_LIB_INCLUDE)/* \
+	$(FATFS_INCLUDE)/*.h \
+	$(GRIFO_INCLUDE)/* \
+	$(MINI_LIBC_INCLUDE)/* \
+	$(C33)/include
+	cp -a $(MINI_LIBC_LIB) \
+	$(FATFS_LIB) \
+	$(GRIFO_LIB) \
+	$(C33)/lib
+	cp -a $(IMAGE2HEADER) $(BUILD)/bin
+	cp -a bin/* $(BUILD)/bin
+	cp -a $(GRIFO_SCRIPTS)/* $(BUILD)/bin
+	rsync -Ca examples $(BUILD)
+	cp -a share $(BUILD)
+	cp $(GRIFO)/lds/* $(BUILD)/share
+	cp -a loader $(BUILD)
+	for i in $(SUBDIRS); do $(MAKE) -C $(BUILD)/$$i clean; done
 
-$(BUILD)/%.inc: %.bin
-	python bin2array $< $@
 
-include $(WRDK_SHARE)/rules.mk

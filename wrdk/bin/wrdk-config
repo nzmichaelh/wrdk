@@ -24,10 +24,10 @@ def path(*args):
     return os.path.abspath(combined)
 
 def intree_share(root, w):
-    print path(w, 'wrdk/share/wrdk'),
+    print path(w, 'wrdk/share'),
 
 def standalone_share(root, w):
-    print path(root, 'share/wrdk')
+    print path(root, 'share')
 
 def main():
     root = join(os.path.dirname(sys.argv[0]), '..')

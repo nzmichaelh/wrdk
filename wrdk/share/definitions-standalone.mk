@@ -1,4 +1,4 @@
-WRDK_ROOT = $(WRDK_SHARE)/../..
+WRDK_ROOT = $(WRDK_SHARE)/..
 
 HOST_TOOLS := 
 SAMO_LIB := 

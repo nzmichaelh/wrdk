@@ -14,10 +14,10 @@ LIBS += $(LIB)
 
 all: $(TARGETS)
 
-stub.app: $(BUILD2) $(BUILD2)/stub.o $(LIBS) $(GRIFO_APPLICATION_LDS)
+stub.app: $(BUILD2) $(BUILD2)/stub.o $(LIB) $(GRIFO_APPLICATION_LDS)
 	$(LD) -o $@ $(LDFLAGS) $(BUILD2)/stub.o $(LIBS) -T $(GRIFO_APPLICATION_LDS)
 
-loader.elf: $(BUILD2) $(BUILD2)/main.o $(LIBS) loader.lds
+loader.elf: $(BUILD2) $(BUILD2)/main.o $(LIB) loader.lds
 	$(LD) -o $@ $(LDFLAGS) $(BUILD2)/main.o $(LIBS) -T loader.lds
 
 $(BUILD)/%.inc: %.bin
