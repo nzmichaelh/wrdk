@@ -221,9 +221,9 @@ static void flip(void)
     /* We pretend here.  Render into an off-screen buffer then
        memcpy() into the real framebuffer
     */
-    uint32_t *pdest = lcd_get_framebuffer();
-    uint32_t *psrc = fb;
-    uint32_t *pend = fb + sizeof(fb);
+    uint32_t *pdest = (uint32_t *)lcd_get_framebuffer();
+    uint32_t *psrc = (uint32_t *)fb;
+    uint32_t *pend = (uint32_t *)(fb + sizeof(fb));
 
     while (psrc != pend)
     {
@@ -278,7 +278,7 @@ static void draw(void)
     blit(&background_image, 0, 0);
 
     /* Score */
-    lcd_set_framebuffer(fb);
+    lcd_set_framebuffer((uint32_t *)fb);
     lcd_at_xy(0, 0);
     lcd_printf("Score %u", q.score);
     lcd_set_default_framebuffer();

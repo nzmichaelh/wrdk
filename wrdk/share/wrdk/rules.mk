@@ -1,6 +1,10 @@
 # Common rules across all wrdk targets
 #
 
+-include $(WRDK_SHARE)/rules-$(LAYOUT).mk
+-include $(WRDK_SHARE)/rules-$(TARGET).mk
+-include $(WRDK_SHARE)/rules-$(TARGET)-$(LAYOUT).mk
+
 LIBS += $(LIB)
 
 all: $(TARGETS)
@@ -21,14 +25,6 @@ $(BUILD2)/%.d: %.c
 	mkdir -p $(BUILD2)
 	$(CC) -MM $(CFLAGS) -MT $(BUILD2)/$*.o -MG -MF $@ $<
 
-ifeq ($(TARGET),host)
-$(BUILD2)/$(THIS).app: $(BUILD2) $(BUILD2)/$(THIS).o $(LIB)
-	$(CC) -o $@ $(LDFLAGS) $(BUILD2)/$(THIS).o $(LIBS)
-else
-$(BUILD2)/$(THIS).app: $(BUILD2) $(BUILD2)/$(THIS).o $(LIB) $(GRIFO_APPLICATION_LDS)
-	$(LD) -o $@ $(LDFLAGS) $(BUILD2)/$(THIS).o $(LIBS) -T $(GRIFO_APPLICATION_LDS)
-endif
-
 %.bin: %.elf
 	$(OBJCOPY) -j .text -j .data -j .rodata -O binary $< $@
 
@@ -37,7 +33,7 @@ $(BUILD)/%.img: resources/%.xpm
 
 # convert XPM to binary ICO format
 $(BUILD)/%.ico: %.xpm
-	${GRIFO_SCRIPTS}/xpm2icon --icon=$@ $<
+	$(XPM2ICON) --icon=$@ $<
 
 $(BUILD2):
 	$(MKDIR) $@

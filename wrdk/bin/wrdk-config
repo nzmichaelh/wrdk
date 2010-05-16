@@ -1,11 +1,20 @@
 #!/usr/bin/env python
 """Provides an easy way to find out where wrdk is installed"""
+
+# Variables are implemented through functions that are named after the
+# specific situation they handle.  The most specific situation (such
+# as a stand-alone layout for a samov1) are checked first, all the way
+# down to the fallback case.
+
 import sys
 import os
 
 join = os.path.join
 
 def path(*args):
+    """Generate an absolute path based on a root directory.  Always
+    generates a path using the host convention.
+    """
     split = [args[0]]
 
     for arg in args[1:]:
@@ -14,93 +23,31 @@ def path(*args):
     combined = reduce(join, split)
     return os.path.abspath(combined)
 
-def intree_samov1_cflags(root, w):
-    print '-I%s' % path(w, 'samo-lib/mini-libc/include'),
-    print '-I%s' % path(w, 'samo-lib/grifo/include'),
-    print '-I%s' % path(w, 'samo-lib/include'),
-    print '-DSAMO_RESTRICTIONS=1',
+def intree_share(root, w):
+    print path(w, 'wrdk/share/wrdk'),
 
-def wrdk_samov1_cflags(root, w):
-    print '-DSAMO_RESTRICTIONS=1',
-
-def intree_samov1_libs(root, w):
-    print path(w, 'samo-lib/mini-libc/lib/libc.a'),
-    print path(w, 'samo-lib/grifo/lib/libgrifo.a'),
-    print path(w, 'host-tools/toolchain-install/lib/gcc-lib/c33-epson-elf/3.3.2/libgcc.a'),
-
-def wrdk_samov1_libs(root, w):
-    print '-lgrifo -lc',
-    print path(root, 'lib/gcc-lib/c33-epson-elf/3.3.2/libgcc.a'),
-
-def wrdk_samov1_ldflags(root, w):
-    print '-L', path(root, 'c33-epson-elf/lib'),
-
-def intree_samov1_lds(root, w):
-    print path(w, 'samo-lib/grifo/lds/application.lds'),
-
-def wrdk_samov1_lds(root, w):
-    print path(root, 'share/application.lds'),
-
-def host_cflags(root, w):
-    print '-I%s' % path(w, 'wrdk/wrem'),
-    print '-DWRDK_HOST',
-
-def host_libs(root, w):
-    print path(w, 'wrdk/wrem/libwrem.a'),
-    print '-lSDL -lrt -lm',
-
-def host_lds(root, w):
-    pass
-
-def definitions(root, w):
-    print path(root, 'share/definitions.mk'),
-
-def rules(root, w):
-    print path(root, 'share/rules.mk'),
-
-def ldflags(root, w):
-    pass
-
-def intree_image2header(root, w):
-    print path(w, 'host-tools/imagetool/image2header'),
-
-def wrdk_image2header(root, w):
-    print path(root, 'bin/image2header'),
-
-def intree_host_tools(root, w):
-    print path(w, 'host-tools'),
-
-def wrdk_host_tools(root, w):
-    print path(root, 'bin'),
-
-def intree_grifo_scripts(root, w):
-    print path(w, 'samo-lib/grifo/scripts'),
-
-def wrdk_grifo_scripts(root, w):
-    print path(root, 'bin')
-
-def samo_lib(root, w):
-    print path(w, 'samo-lib'),
+def standalone_share(root, w):
+    print path(root, 'share/wrdk')
 
 def main():
     root = join(os.path.dirname(sys.argv[0]), '..')
 
     if os.path.exists(path(root, '../samo-lib')):
-        variant = 'intree'
+        layout = 'intree'
     else:
-        variant = 'wrdk'
+        layout = 'standalone'
 
     wikireader = join(root, '..')
     target = 'samov1'
 
     for arg in sys.argv[1:]:
-        if arg.startswith('--target='):
-            target = arg.split('=')[1]
+        if arg == '--layout':
+            print layout
         elif arg.startswith('--'):
             type = arg[2:].replace('-', '_')
 
-            for name in ['%s_%s_%s' % (variant, target, type),
-                         '%s_%s' % (variant, type),
+            for name in ['%s_%s_%s' % (layout, target, type),
+                         '%s_%s' % (layout, type),
                          '%s_%s' % (target, type),
                          type]:
                 if name in globals():

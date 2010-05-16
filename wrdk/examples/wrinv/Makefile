@@ -1,7 +1,8 @@
 # Makefile
 #
 
-include $(shell wrdk-config --definitions)
+WRDK_SHARE := $(shell wrdk-config --share)
+include $(WRDK_SHARE)/definitions.mk
 
 # list of modules
 SRC = $(wildcard *.c)
@@ -11,4 +12,4 @@ LIBS += $(LIB)
 
 all: $(TARGETS)
 
-include $(shell wrdk-config --rules)
+include $(WRDK_SHARE)/rules.mk
