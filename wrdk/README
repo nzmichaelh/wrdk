@@ -1,0 +1,86 @@
+wrdk - a simple WikiReader Development Kit
+------------------------------------------
+
+Michael Hope <michaelh@juju.net.nz>  2010
+http://wiki.github.com/nzmichaelh/wrdk/
+
+_wrdk_ is a toolchain, examples, and simple serial loader that lets
+you easily develop applications for the Openmoko WikiReader.
+
+Most of the work was already done by Openmoko (thanks Openmoko!).
+wrdk builds on this and adds a pre-built toolchain and loader which
+makes it much easier to get up and going, and shortens the
+compile/load/test cycle via the serial loader.
+
+Install
+-------
+wrdk is designed to be installed under /opt or your home directory.
+
+To install:
+
+* Change to your home directory
+* Extract the archive using tar xzf wrdk-linux-$VERSION.tar.gz
+* Add $HOME/wrdk/bin to your path
+
+Making a SD card
+----------------
+The loader and examples are grifo based applications.  This section
+covers making a new SD card that boots grifo and gives a menu to
+select applications from.
+
+* Get a micro SD card
+* Format it with the FAT32 filesystem
+* Copy all the files from wrdk/share/sdimage to the root of the card
+* Sync and unmount
+
+Insert the card into the WikiReader and turn the device on.  You
+should see the WikiReader logo, then 'wrdk', then icons for all of the
+installed applications.
+
+Serial loader
+-------------
+The serial loader is a small, grifo based program that can load and
+execute other grifo programs over the WikiReader's built in serial
+port.
+
+Build a 3.3 V serial cable and connect it to the debug connector in
+the battery bay of the WikiReader.
+
+For teardown pictures see:
+ http://wiki.seabright.co.nz/wiki/WikiReader.html
+
+For the debug connector pinout see:
+ http://wiki.github.com/wikireader/wikireader/hardware-specifications
+
+To use the loader:
+
+* Build your application (foo.app)
+* Build a binary only version (make foo.bin)
+* Start the WikiReader
+* Press the loader icon (looks like a circle with an arrow)
+* Use loader.py from the 'loader' directory to load and run the binary
+   version of the application
+
+Making your own applications
+----------------------------
+wrdk includes a set of Makefile rules designed to make writing your
+own application fairly straightforward.  It does expect a fairly
+rigid, self-contained layout though.
+
+Say you want to make a new application called 'wrhello':
+
+* Make a directory called 'wrhello'.
+* Make a directory under wrhello called 'resources'.  All images go in here.
+* Copy the Makefile from examples/wrinv to the wrhello directory.
+* Create wrhello.c and write your application.
+* Save any images in xpm format under wrhello/resources.
+* Create a 64x64 icon and save it as wrhello.xpm.
+
+Make sure the wrdk bin directory is in your path.
+
+Running 'make' will give you the application in
+wrhello/build/samov1/wrhello.app and the binary icon in
+wrhello/build/wrhello.ico.  Copy these both onto the SD card and add
+them to the init.ini on the card.
+
+Don't forget to umount && sync before removing the card!
