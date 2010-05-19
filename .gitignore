@@ -10,9 +10,9 @@ moc_*
 *.d
 *.asm33
 gcc
-gcc-*
+gcc-*.gz
 binutils
-binutils-*
+binutils-*.gz
 install
 KERNEL*
 *.map

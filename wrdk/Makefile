@@ -1,6 +1,10 @@
 # Makefile that packages up a copy of wrdk
 #
 
+# make USE_COLLECT2= HOST_CC=gcc GCC_FOR_TARGET=c33-epson-elf-gcc
+# ../gcc-3.3.2/configure --target=c33-epson-elf --host=i586-mingw32msvc --build=i686-pc-linux-gnuaout --prefix=$HOME/mingw  --enable-languages=c
+# ../binutils-2.10.1/configure --target=c33-epson-elf --host=i586-mingw32msvc --build=i686-pc-linux-gnuaout --prefix=$HOME/mingw  --program-prefix=c33-epson-elf --program-suffix=.exe
+
 include ../samo-lib/Mk/definitions.mk
 
 # Release version
@@ -40,6 +44,10 @@ GCC_FILE = $(GCC_PACKAGE)
 
 toolchain: $(STAMPS)/binutils $(STAMPS)/gcc
 
+# Shortcuts
+binutils-patch: $(STAMPS)/binutils-patch
+gcc-patch: $(STAMPS)/gcc-patch
+
 # Fetch binutils
 $(STAMPS)/binutils-fetch:
 	mkdir -p $(@D)
@@ -69,6 +77,7 @@ $(STAMPS)/binutils: $(STAMPS)/binutils-patch
 
 # Fetch gcc
 $(STAMPS)/gcc-fetch:
+	mkdir -p $(@D)
 	cp ../host-tools/toolchain-download/gcc-* .
 	touch $@
 
