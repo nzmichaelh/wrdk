@@ -408,14 +408,14 @@ static void update_shot(void)
     int any = 0;
 
     /* Move it on up */
-    q.shot.y -= 2;
+    q.shot.y -= 4;
 
     /* Collied with any invaders? */
     for (int i = 0; i < SizeOfArray(q.invaders); i++)
     {
         Sprite *invader = q.invaders + i;
 
-        if (invader->active)
+        if (q.shot.active && invader->active && !invader->explode)
         {
             Rectangle bounds;
             get_bounds2(invader, &bounds);
@@ -533,14 +533,14 @@ static void move(void)
         if ((q.buttons & (1 << BUTTON_SEARCH)) != 0)
         {
             /* Move left */
-            q.player.x -= 1;
+            q.player.x -= 2;
             q.player.x = max(0, q.player.x);
         }
 
         if ((q.buttons & (1 << BUTTON_HISTORY)) != 0)
         {
             /* Move right */
-            q.player.x += 1;
+            q.player.x += 2;
             q.player.x = min(LCD_WIDTH - player_image.width, q.player.x);
         }
 
@@ -572,18 +572,18 @@ static void fps(int count)
     static uint32_t last;
     uint32_t now = timer_get();
 
-    int32_t delta = now - last;
+    int32_t elapsed = now - last;
     int32_t want = TIMER_CountsPerMicroSecond * 1000000 / count;
-    int32_t remain = want - delta;
+    int32_t remain = want - elapsed;
 
-    if (last == 0 || remain <= 0)
+    if (last == 0 || remain < 0)
     {
         /* Can't keep up */
         last = now;
     }
     else
     {
-        last += remain;
+        last += want;
         delay_us(remain / TIMER_CountsPerMicroSecond);
     }
 }
