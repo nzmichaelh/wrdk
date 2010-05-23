@@ -26,6 +26,8 @@
 #include "obstack.h"
 #include "output-file.h"
 
+extern const struct relax_type md_relax_table[];
+
 /* This looks like a good idea.  Let's try turning it on always, for now.  */
 #undef  BFD_FAST_SECTION_FILL
 #define BFD_FAST_SECTION_FILL

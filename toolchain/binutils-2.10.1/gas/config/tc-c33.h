@@ -56,7 +56,7 @@ extern int c33_force_relocation PARAMS ((struct fix *));
    directives, so we have to parse "cons" expressions ourselves.  */
 #define TC_PARSE_CONS_EXPRESSION(EXP, NBYTES) parse_cons_expression_c33 (EXP)
 #define TC_CONS_FIX_NEW cons_fix_new_c33
-extern const struct relax_type md_relax_table[];
+//extern const struct relax_type md_relax_table[];
 #define TC_GENERIC_RELAX_TABLE md_relax_table
 
 /* This section must be in the small data area (pointed to by GP).  */
