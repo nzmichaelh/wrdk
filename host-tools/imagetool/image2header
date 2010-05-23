@@ -158,8 +158,13 @@ def main():
         # output some constants as an enum
         bytes_per_row = (width + 7) >> 3
         total_bytes = bytes_per_row * height
-        f.write('enum {\n\t%s_BytesPerRow = %d,\n\t%s_TotalBytes  = %d,\n};\n'
-                % (variable_name, bytes_per_row, variable_name, total_bytes))
+        f.write(('enum {\n\t' +
+                '%(variable_name)s_BytesPerRow = %(bytes_per_row)d,\n\t' +
+                '%(variable_name)s_TotalBytes  = %(total_bytes)d,\n\t' +
+                '%(variable_name)s_Width = %(width)d,\n\t' +
+                '%(variable_name)s_Height = %(height)d,\n' +
+                '};\n')
+                % locals())
 
         if auto_mask:
             # Scan the image and see if there's pixels except black or

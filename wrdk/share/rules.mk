@@ -29,7 +29,7 @@ $(BUILD2)/%.d: %.c
 	$(OBJCOPY) -j .text -j .data -j .rodata -O binary $< $@
 
 $(BUILD)/%.img: resources/%.xpm
-	${IMAGE2HEADER} --auto-mask --inverted --header-file=$@ --variable-name=$(notdir ${@:.img=_image}) $<
+	${IMAGE2HEADER} --with-mask --inverted --header-file=$@ --variable-name=$(notdir ${@:.img=_image}) $<
 
 # convert XPM to binary ICO format
 $(BUILD)/%.ico: %.xpm

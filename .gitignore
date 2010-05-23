@@ -9,7 +9,6 @@ moc_*
 *.dSYM
 *.d
 *.asm33
-gcc
 gcc-*.gz
 binutils
 binutils-*.gz

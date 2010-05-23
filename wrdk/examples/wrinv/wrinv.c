@@ -242,8 +242,8 @@ static void init(void)
 
     q.frame = 0;
     q.at = 0;
-    q.dx = 5;
-    q.dy = 5;
+    q.dx = 6;
+    q.dy = 8;
     q.down = 0;
 
     /* Reset the player */
@@ -383,12 +383,12 @@ static void update_on_last(void)
 
         get_bounds(&bounds);
             
-        if (q.dx < 0 && bounds.left < 5)
+        if (q.dx < 0 && bounds.left <= -q.dx)
         {
             q.dx = -q.dx;
             q.down = 1;
         }
-        else if (q.dx > 0 && bounds.right > 240 - 5)
+        else if (q.dx > 0 && bounds.right >= LCD_WIDTH - q.dx)
         {
             q.dx = -q.dx;
             q.down = 1;
