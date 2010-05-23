@@ -1,0 +1,327 @@
+GAS LISTING mulsf3.s 			page 1
+
+
+   1              	;*********************************************
+   2              	;*	Copyright (C), 1996-2001 SEIKO EPSON Corp.
+   3              	;*		ALL RIGHTS RESERVED
+   4              	;*
+   5              	;*	filename : mulsf3.s
+   6              	;*
+   7              	;*	Single floating point multiplication function
+   8              	;*		input: %r6, %r7
+   9              	;*		output: %r4
+  10              	;*
+  11              	;*	Begin		1996/09/12	V. Chan
+  12              	;*  変更		2001/01/26  O.Hinokuchi
+  13              	;*  			 ・レジスタ置換
+  14              	;*
+  15              	;*****************************************
+  16              	
+  17              	.section .text
+  18              	.align 1
+  19              	.global __mulsf3
+  20              	
+  21              	;==============================================
+  22              	;＜レジスタ説明＞
+  23              	;	%r0:符号ビット１(0(+) or 1(-))
+  24              	;	%r1:指数部１(8bit)
+  25              	;	%r2:符号ビット２(0(+) or 1(-))/temp/shift
+  26              	;	%r3:指数部２(8bit)/mask
+  27              	;	%r4:戻り値(float)/乗算結果[H]
+  28              	;	%r5:implied bit/count
+  29              	;	%r6:引数１/乗算結果[L]/仮数[L]
+  30              	;	%r7:引数２
+  31              	;	%r8:mask
+  32              	;	%r9:overflow value
+  33              	;	%r12:scan64 引数１
+  34              	;	%r13:scan64 引数２
+  35              	;==============================================
+  36              	
+  37              	
+  38              	;;macro	VARSHIFT $1, $2, $3
+  39              		; used in 32-bit variable shifting
+  40              		; $1 = input register
+  41              		; $2 = shift amount
+  42              		; $3 = shift instruction
+  43              	;$$1:
+  44              	;	cmp		$2, 8		; if temp <= 8 then goto $$2
+  45              	;	jrle	$$2
+  46              	
+  47              	;	$3		$1, 8		; shift input register 8 bits
+  48              	;	jp.d	$$1
+  49              	;	sub		$2, 8		; temp = temp - 8
+  50              	
+  51              	;$$2:
+  52              	;	$3		$1, $2		; last shift
+  53              	;;endm
+  54              	
+  55              	__mulsf3:
+  56              	
+  57 0000 0302     		pushn	%r3				; save register values
+GAS LISTING mulsf3.s 			page 2
+
+
+  58              	
+  59              		;@@@ 01/01/26 add start hinokuchi
+  60              		;sub		%sp, 2
+  61              		;ld.w	[%sp+0], %r12	; %r12待避
+  62              		;ld.w	[%sp+1], %r13	; %r13待避
+  63              		;@@@ 01/01/26 add end
+  64              	
+  65              	
+  66              		;@@@ 01/02/15 del xld.w	%r9, 0xff		; overflow value(%r9) <- 0xff
+  67              	
+  68 0002 602E     		ld.w	%r0, %r6		; 符号ビット１(%r0) <- 引数１(%r6) 
+  69 0004 109C     		rl		%r0, 1			; 符号ビット１(%r0) rotate left 1 bit
+  70 0006 1070     		and		%r0, 1			; 符号ビット１(%r0) & 1 
+  71              	
+  72 0008 722E     		ld.w	%r2, %r7		; 符号ビット２(%r2) <- 引数２(%r7)
+  73 000a 129C     		rl		%r2, 1			; 符号ビット２(%r2) rotate left 1 bit
+  74 000c 1270     		and		%r2, 1			; 符号ビット２(%r2) & 1 
+  75              	
+  76 000e 203A     		xor		%r0, %r2		; 符号ビット１(%r0) = ~符号ビット１(%r0)
+  77 0010 046C     		ld.w	%r4, 0			; 戻り値(%r4) <- 0
+  78              	
+  79 0012 168C     		sll		%r6, 1			; 引数１(%r6) << 1  clear MSB
+  80 0014 1688     		srl		%r6, 1			; 引数１(%r6) >> 1
+  81 0016 0668     		cmp		%r6, 0			
+  82 0018 00C0     		ext		end@rm
+  83 001a 8718     		jreq	end@rl			; if 引数１(%r6) = 0 then end
+  84              		
+  85 001c 178C     		sll		%r7, 1			; 引数２(%r7) << 1 clear MSB
+  86 001e 1788     		srl		%r7, 1			; 引数２(%r7) >> 1
+  87 0020 0768     		cmp		%r7, 0		
+  88 0022 00C0     		ext		end@rm
+  89 0024 8218     		jreq	end@rl			; if 引数２(%r7) = 0 then end
+  90              	
+  91 0026 612E     		ld.w	%r1, %r6		; 指数部１(%r1) <- 引数１(%r6)
+  92 0028 81888188 		xsrl 	%r1, 23			; 指数部１(%r1) >> 23
+  92      7188
+  93              	
+  94 002e 03C0F16B 		xcmp	%r1, 0xff		; if 指数部１(%r1) >= overflow value
+  95 0032 710A     		jrge	overflow		; then jump to overflow
+  96              	
+  97 0034 732E     		ld.w	%r3, %r7		; 指数部２(%r3) <- 引数２(%r7)
+  98 0036 83888388 		xsrl	%r3, 23			; 指数部２(%r3) >> 23
+  98      7388
+  99              	
+ 100 003c 03C0F36B 		xcmp	%r3, 0xff		; if 指数部２(%r3) >= overflow value
+ 101 0040 6A0A     		jrge	overflow		; then jump to overflow
+ 102              	
+ 103              		;@@@ 01/02/15 del xld.w	%r8, 0x7fffff 	; mask(%r8) <- 0x7fffff set mask for isolating mantissa
+ 104              		;@@@ 01/02/15 del xld.w	%r5, 0x800000	; implied bit(%r5) <- 0x800000
+ 105 0042 0FC0FFDF 		xld.w	%r5, 0x7fffff 	; mask(%r5) <- 0x7fffff set mask for isolating mantissa @@@ 01/02/15 add
+ 105      F56F
+ 106              	
+ 107 0048 126C     		ld.w	%r2, 1			; temp(%r2) <- 1
+ 108              	
+ 109              		; isolate mantissa1
+ 110 004a 0168     		cmp		%r1, 0
+ 111 004c 0619     		jreq.d	getman2			; if 指数部１(%r1) = 0 (denormal)
+GAS LISTING mulsf3.s 			page 3
+
+
+ 112 004e 5632     		and		%r6, %r5		; clear first 9 bits of %r6
+ 113 0050 10C000C0 		xoor	%r6, 0x800000	; else add implied bit(0x800000) to mantissa
+ 113      0674
+ 114              	
+ 115 0056 026C     		ld.w	%r2, 0			; temp(%r2) = 0
+ 116              	
+ 117              	getman2:
+ 118              		; isolate mantissa2
+ 119 0058 0368     		cmp		%r3, 0
+ 120 005a 0719     		jreq.d	flag			; if exp2 = 0 then jump to flag
+ 121 005c 5732     		and		%r7, %r5		; clear first 9 bits of %r7
+ 122 005e 10C000C0 		xld.w	%r5, 0x800000	; implied bit(%r5) <- 0x800000 @@@ 01/02/15 add
+ 122      056C
+ 123 0064 031F     		jp.d	multi			; delayed jump
+ 124 0066 5736     		or	%r7, %r5			; else add implied bit(0x800000)
+ 125              	
+ 126              	flag:
+ 127 0068 1260     		add		%r2, 1			; temp(%r2) = 2 or 1 (2 if den * den : 1 if nor * den)
+ 128              	
+ 129              	multi:
+ 130              		; check result exponent
+ 131 006a 3122     		add		%r1, %r3		; 指数部１(%r1) = 指数部１(%r1) + 指数部２(%r3) + temp(%r2) - bias(0x7f)
+ 132 006c 2122     		add		%r1, %r2
+ 133              	
+ 134 006e 01C0F167 		xsub	%r1, 0x7f		; 指数部１(%r1) = 指数部１(%r1) - 0x7f
+ 135              	
+ 136 0072 03C0F16B 		xcmp	%r1, 0xff		; if 指数部１(%r1) >= 0xff then goto overflow
+ 137 0076 4F0A     		jrge	overflow
+ 138              	
+ 139 0078 A16A     		xcmp	%r1, -22		; if 指数部１(%r1) < -22 then goto end
+ 140 007a 570D     		jrlt.d	end
+ 141 007c 046C     		ld.w	%r4, 0			; underflow value
+ 142              	
+ 143 007e 76AE     		mltu.w	%r6, %r7		; %ahr,%alr <- 引数１(%r6) * 引数２(%r7)  multiply: 64-bit result is {%r4, %r6}
+ 144 0080 34A4     		ld.w	%r4, %ahr		; 乗算結果[H](%r4) <- %ahr
+ 145 0082 26A4     		ld.w	%r6, %alr		; 乗算結果[L](%r6) <- %alr
+ 146              	
+ 147 0084 482E     		ld.w	%r8, %r4		; scan64 引数１(%r8) <- 乗算結果[H](%r4)
+ 148 0086 692E     		ld.w	%r9, %r6		; scan64 引数２(%r9) <- 乗算結果[L](%r6)
+ 149 0088 00C000C0 		xcall	__scan64
+ 149      001C
+ 150 008e 952E     		ld.w	%r5, %r9		; %r5 = count (; of leading 0's in result)
+ 151              	
+ 152              	normalize:
+ 153              		; %r0 = result sign, %r1 = result exponent
+ 154              		; %r5 = count, %r4 = result1, %r6 = result2
+ 155              		; note: max. count = 63, min. count = 16
+ 156              	
+ 157 0090 0168     		cmp		%r1, 0			; if 指数部１(%r1) > 0 then jump to expgtz
+ 158 0092 0B09     		jrgt.d	expgtz
+ 159 0094 1565     		sub		%r5, 17			; count(%r5) = count(%r5) - 17
+ 160              	
+ 161              		; case: exp <= 0
+ 162 0096 136C     		ld.w	%r3, 1			; 指数部２(%r3) = 1 - 指数部１(%r1)
+ 163 0098 1326     		sub		%r3, %r1
+ 164 009a 926C     		ld.w	%r2, 9			; %r2 = shift
+ 165 009c 3226     		sub		%r2, %r3		; shift(%r2) = 9 - (1 - 指数部１(%r1))
+GAS LISTING mulsf3.s 			page 4
+
+
+ 166              	
+ 167 009e 512A     		cmp		%r1, %r5
+ 168 00a0 0D0F     		jrle.d	shift			; if 指数部１(%r1) <= count then jump to shift
+ 169 00a2 016C     		ld.w	%r1, 0			; 指数部１(%r1) <- 0
+ 170              	
+ 171              		; case: exp > count - 17  (only when exp = 0 and original count = 16)
+ 172 00a4 0B1F     		jp.d	shift			; delayed jump
+ 173 00a6 116C     		ld.w	%r1, 1			; 指数部１(%r1) <- 1
+ 174              	
+ 175              	expgtz:
+ 176 00a8 152A     		cmp		%r5, %r1		; if count(%r5) < 指数部１(%r1) then goto shftltexp
+ 177 00aa 060D     		jrlt.d	shftltexp
+ 178 00ac 926C     		ld.w	%r2, 9			; shift(2) <- 9 (for positioning)
+ 179              	
+ 180              		; case: original count - 17 >= exp
+ 181 00ae 1222     		add		%r2, %r1		; shift(%r2) = shift(%r2) + 指数部１(%r1) - 1
+ 182 00b0 1264     		sub		%r2, 1			; shift(%r2) as much as exp allows (until denormal)
+ 183 00b2 041F     		jp.d	shift
+ 184 00b4 016C     		ld.w	%r1, 0			; 指数部１(%r1) <- 0
+ 185              		
+ 186              	shftltexp:
+ 187 00b6 5126     		sub		%r1, %r5		; 指数部１(%r1) = 指数部１(%r1) - count(%r5)
+ 188 00b8 5222     		add		%r2, %r5		; shift(2) = shift(%r2) + count(%r5)
+ 189              	
+ 190              	shift:
+ 191              		; max. shift < 64
+ 192 00ba 0268     		cmp		%r2, 0			; if shift(%r2) < 0 then shift to the right
+ 193 00bc 0D0C     		jrlt	rshift
+ 194 00be 00C0026A 		xcmp	%r2, 32			; if shift(%r2) < 32 then goto lshift
+ 195 00c2 170C     		jrlt	lshift
+ 196              	
+ 197              		; case: shift >= 32 (at least one is denormal)
+ 198 00c4 642E     		ld.w	%r4, %r6		; result1 = result2
+ 199 00c6 0266     		sub		%r2, 32			; shift(%r2) = shift(%r2) - 32
+ 200              		;xsll	%r4, %r2		; result1 << shift
+ 201              		; used in 32-bit variable shifting	; 	VARSHIFT %r4, %r2, sll
+ 202              		; $1 = input register
+ 203              		; $2 = shift amount
+ 204              		; $3 = shift instruction
+ 205              	__L0001:
+ 206 00c8 8268     		cmp		%r2, 8		; if temp <= 8 then goto $$2
+ 207 00ca 040E     		jrle	__L0002
+ 208              	
+ 209 00cc 848C     		sll		%r4, 8		; shift input register 8 bits
+ 210 00ce FD1F     		jp.d	__L0001
+ 211 00d0 8264     		sub		%r2, 8		; temp = temp - 8
+ 212              	
+ 213              	__L0002:
+ 214 00d2 248D     		sll		%r4, %r2		; last shift
+ 215 00d4 241E     		jp		finish			; no overflow from norm * den
+ 216              	
+ 217              	rshift:
+ 218              		; case: shift < 0
+ 219 00d6 223E     		not		%r2, %r2		; shift(%r2) = ~shift(%r2) + 1
+ 220 00d8 1260     		add		%r2, 1
+ 221              	
+ 222 00da 0269     		cmp		%r2, 16			; if shift(2) < 16 then shift
+GAS LISTING mulsf3.s 			page 5
+
+
+ 223 00dc 030C     		jrlt	denormal
+ 224              	
+ 225              		; case: shift >= 16
+ 226 00de 251F     		jp.d	end
+ 227 00e0 046C     		ld.w	%r4, 0			; 戻り値(%r4) <- 0
+ 228              	
+ 229              	denormal:
+ 230              		; case: shift < 16
+ 231              		;xsrl	%r4, %r2		; result >> shift
+ 232              		; used in 32-bit variable shifting	; 	VARSHIFT %r4, %r2, srl
+ 233              		; $1 = input register
+ 234              		; $2 = shift amount
+ 235              		; $3 = shift instruction
+ 236              	__L0003:
+ 237 00e2 8268     		cmp		%r2, 8		; if temp <= 8 then goto $$2
+ 238 00e4 040E     		jrle	__L0004
+ 239              	
+ 240 00e6 8488     		srl		%r4, 8		; shift input register 8 bits
+ 241 00e8 FD1F     		jp.d	__L0003
+ 242 00ea 8264     		sub		%r2, 8		; temp = temp - 8
+ 243              	
+ 244              	__L0004:
+ 245 00ec 2489     		srl		%r4, %r2		; last shift
+ 246 00ee 171E     		jp		finish
+ 247              	
+ 248              	lshift:					; case: 32 > shift >= 0
+ 249              		; {%r4, %r6} << shift
+ 250              		;xsll	%r4, %r2		; shift high 32-bits to the left x bits (shift amount = x)
+ 251              		;xrl	%r6, %r2		; rotate low 32-bits to the left x bits
+ 252              		;xsll	%r3, %r2		; make a mask for first 32-x bits --> %r3 = 111...000
+ 253              		
+ 254 00f0 F36F     		ld.w	%r3, -1			; %r3 = 0xffff ffff
+ 255              		; 64-bit variable shift and rotate routine
+ 256              	L1:
+ 257 00f2 8268     		cmp		%r2, 8			; if shift(%r2) amount <= 8 then goto L2
+ 258 00f4 060E     		jrle	L2
+ 259              	
+ 260 00f6 848C     		sll		%r4, 8			; 戻り値(%r4) << 8
+ 261 00f8 869C     		rl		%r6, 8			; 仮数[L](%r6) rotate << 8
+ 262 00fa 838C     		sll		%r3, 8			; mask(%r3) << 8
+ 263 00fc FB1F     		jp.d	L1
+ 264 00fe 8264     		sub		%r2, 8			; shift(%r2) = shift(%r2) - 8 
+ 265              	
+ 266              	L2:
+ 267 0100 248D     		sll		%r4, %r2		; 戻り値(%r4) << shift(%r2)
+ 268 0102 269D     		rl		%r6, %r2		; 仮数[L] rotate << shift(%r2)
+ 269 0104 238D     		sll		%r3, %r2		; mask(%r3) << shift(%r2)
+ 270              	
+ 271 0106 323E     		not		%r2, %r3		; flip mask for last x bits --> %r2 = 000...111 (mask)
+ 272 0108 6232     		and		%r2, %r6		; isolate last x bits of %r6
+ 273 010a 2436     		or		%r4, %r2		; add last x bits of %r4 to %r4
+ 274 010c 3632     		and		%r6, %r3		; keep the high 32-x bits of %r6 
+ 275              	
+ 276              		; overflow check
+ 277 010e 03C0F16B 		xcmp	%r1, 0xff		; if 指数部１(%r1) < overflow value(%r9)
+ 278 0112 050C     		jrlt	finish			; then jump to finish
+ 279              	
+GAS LISTING mulsf3.s 			page 6
+
+
+ 280              	overflow:
+ 281 0114 F0CF00C0 		xld.w	%r4, 0x7f800000	; put infinity into result
+ 281      046C
+ 282 011a 071E     		jp		end				; delayed jump
+ 283              	
+ 284              	finish:
+ 285              		; %r0 = sign, %r1 = exponent, %r4 = mantissa
+ 286 011c 0FC0FFDF 		xand	%r4, 0x7fffff		; isolate mantissa
+ 286      F473
+ 287 0122 81981198 		xrr		%r1, 9			; position exponent bits to [30:23]
+ 288 0126 1436     		or		%r4, %r1
+ 289              	
+ 290              	end:
+ 291 0128 1098     		rr		%r0, 1			; position sign bit to MSB
+ 292 012a 0436     		or		%r4, %r0		; 戻り値(%r4) | 符号ビット１(%r0)
+ 293              	
+ 294              		;@@@ 01/01/23 add start hinokuchi
+ 295              		;ld.w	%r13, [%sp+1]	; %r13復帰
+ 296              		;ld.w	%r12, [%sp+0]	; %r12復帰
+ 297              		;add		%sp, 2
+ 298              		;@@@ 01/01/23 add end
+ 299              	
+ 300 012c 4302     		popn	%r3				; restore register values
+ 301 012e 4006     		ret

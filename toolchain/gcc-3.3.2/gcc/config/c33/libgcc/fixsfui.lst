@@ -1,0 +1,127 @@
+GAS LISTING fixsfui.s 			page 1
+
+
+   1              	;*********************************************
+   2              	;*	Copyright (C), 1996-2001 SEIKO EPSON Corp.
+   3              	;*		ALL RIGHTS RESERVED
+   4              	;*
+   5              	;*	filename : fixsfui.s
+   6              	;*
+   7              	;*	Change type: Single float --> Unsigned integer
+   8              	;*							  --> Signed integer
+   9              	;*		input: %r6
+  10              	;*		output: %r4
+  11              	;*
+  12              	;*	Begin		1996/09/12	V. Chan
+  13              	;*  変更		2001/01/17  O.Hinokuchi
+  14              	;*  			 ・レジスタ置き換え
+  15              	;*				 ・ファイル分割  __fixsfsi -> fixsfis.s に移動
+  16              	;*				 ・マイナスの値のキャストは ０  オーバーフローする時は、
+  17              	;*                0xffffffffを返すように修正。(gccの処理と同一)
+  18              	;*	gas対応		2001/10/15	watanabe
+  19              	;*********************************************
+  20              	
+  21              	.section .text
+  22              	.align 1
+  23              	.global __fixunssfsi
+  24              	
+  25              	;==============================================
+  26              	;＜レジスタ説明＞
+  27              	;	%r4:戻り値(int or uint)
+  28              	;	%r5:符号ビット(0(+) or 1(-))
+  29              	;	%r6:引数１(float)
+  30              	;	%r7:指数部(8bit)
+  31              	;	%r8:shift
+  32              	;
+  33              	;==============================================
+  34              	
+  35              	__fixunssfsi:
+  36              	
+  37 0000 642E     		ld.w	%r4, %r6
+  38 0002 00D000C0 		xand	%r4, 0x80000000				; if( 符号ビット == 0 )
+  38      0470
+  39              	
+  40 0008 00C000C0 		xjreq	start						;    goto __start
+  40      0318
+  41              											; else
+  42 000e 046C     		xld.w	%r4, 0x0					;	return 0
+  43 0010 4006     		ret
+  44              	start:
+  45              	
+  46 0012 652E     		ld.w	%r5, %r6		; 符号ビット(%r5) <- 引数１(%r6)  
+  47 0014 159C     		rl		%r5, 1			; 符号ビット(%r5) >> 31 と同じ
+  48 0016 1570     		and		%r5, 1			; 符号ビット(%r5) = 符号ビット(%r5) & 1
+  49              	
+  50 0018 672E     		ld.w	%r7, %r6		; 指数部(%r7) <- 引数１(%r6) 
+  51 001a 178C     		sll		%r7, 1			; 指数部(%r7) << 1
+  52 001c 87888788 		xsrl 	%r7, 24			; 指数部(%r7) >> 24		
+  52      8788
+  53              								;
+  54              								;
+GAS LISTING fixsfui.s 			page 2
+
+
+  55              								;							
+  56 0022 01C0F76B 		xcmp	%r7, 0x7f		; if 指数部(%r7) < 0x7f then goto end
+  57 0026 250D     		jrlt.d	end				; round to zero case (integer underflow)
+  58 0028 046C     		ld.w	%r4, 0			; 戻り値(%r4) <- 0 
+  59              	
+  60 002a 02C0F769 		xcmp	%r7, 0x9f		; if 指数部(%r7) >= 0x9f then integer overflow
+  61 002e 146C     		ld.w	%r4, 1			; 戻り値(%r4) <- 1
+  62 0030 1C0B     		jrge.d	overflow
+  63 0032 1498     		rr		%r4, 1			; 戻り値(%r4) <- 0x8000 0000
+  64              	
+  65              		; isolate mantissa
+  66 0034 642E     		ld.w	%r4,%r6			; 戻り値(%r4) <- 引数１(%r6) 
+  67 0036 0FC0FFDF 		xand	%r4,0x7fffff	; 戻り値(%r4) <- 戻り値(%r4) & 0x7fffff) clear first 9 bits of %r6
+  67      F473
+  68 003c 10C000C0 		xoor	%r4,0x800000	; 戻り値(%r4) <- (戻り値(%r4) | 0x800000) add implied bit
+  68      0474
+  69              	
+  70 0042 02C0686D 		xld.w	%r8, 0x96		;shift(%r8) <- 0x96
+  71              	
+  72 0046 872A     		cmp		%r7, %r8		; 0x7f + 31 - 8 = 0x96
+  73 0048 0908     		jrgt	shftleft		; if 指数部(%r7) > 0x96 then goto shftleft
+  74              	
+  75              		; case: exp <= 0x96
+  76 004a 7826     		sub		%r8, %r7		; shift(%r8) = shift(%r8=0x96) - 指数部(%r7) (max = 23)
+  77              	
+  78              		; 32-bit variable right shift routine (faster than xsrl)
+  79              	shift:
+  80 004c 8868     		cmp		%r8, 8			; if shift(%r8) <= 8 then goto done
+  81 004e 040E     		jrle	done
+  82              		
+  83              		; case: shift > 8
+  84 0050 8864     		sub		%r8, 8			; shift(%r8) = shift(%r8) - 8
+  85 0052 FD1F     		jp.d	shift
+  86 0054 8488     		srl		%r4, 8			; 戻り値(%r4) >> 8
+  87              	
+  88              	done:						; case: shift(%r8) < 8
+  89 0056 041F     		jp.d	finish
+  90 0058 8489     		srl		%r4, %r8		; 戻り値(%r4) >> shift(%r8) final shift of result
+  91              		
+  92              	shftleft:
+  93 005a 8726     		sub		%r7, %r8		; 指数部(%r7) = 指数部(%r7) - shift(%r8=0x96) (max = 8)
+  94              			
+  95 005c 748D     		sll		%r4, %r7		; 戻り値(%r4) >> 指数部(%r7) shift mantissa to the left 8-shift bits
+  96              	
+  97              	finish:
+  98 005e 0568     		cmp		%r5, 0			; if 符号ビット(%r5) = 0 then goto end
+  99 0060 0818     		jreq	end
+ 100              	
+ 101              		; case: sign = 1
+ 102 0062 443E     		not		%r4, %r4		; 戻り値(%r4) = ~戻り値(%r4)
+ 103 0064 061F     		jp.d	end
+ 104 0066 1460     		add		%r4, 1			; 戻り値(%r4) = 戻り値(%r4) + 1 (２の補数)
+ 105              	
+ 106              	overflow:
+ 107 0068 0568     		cmp		%r5, 0			; check sign
+ 108 006a 031A     		jrne	end				; if 符号ビット(%r5) = 1 then goto end
+ 109 006c 046C     		ld.w	%r4, 0			; オーバーフローする時は、0xffffffffを返すように修正。01/01/17  Hinokuchi 
+GAS LISTING fixsfui.s 			page 3
+
+
+ 110 006e 443E     		not		%r4, %r4		; 戻り値(%r4) <- 0xffffffff
+ 111              	
+ 112              	end:
+ 113 0070 4006     		ret

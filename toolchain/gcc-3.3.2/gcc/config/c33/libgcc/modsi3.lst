@@ -1,0 +1,138 @@
+GAS LISTING modsi3.s 			page 1
+
+
+   1              	;	Function :	__modsi3
+   2              	;	Input :		%r6	--- dividend
+   3              	;			%r7	--- divisor
+   4              	;	Output :	%r4	--- remainder
+   5              	;	Function :	calculate signed integer modulo arithmetic
+   6              	
+   7              		.section .text
+   8              		.align 1
+   9              		.global	__modsi3
+  10              	__modsi3:
+  11 0000 62A0     		ld.w	%alr,%r6	; set dividend to accumlator (%alr)
+  12 0002 708B     		div0s	%r7		; initializer of signed division
+  13              	;ifdef	FAST
+  14              	;	div1	%r7		; execute division ;1
+  15              	;	div1	%r7		; execute division ;2
+  16              	;	div1	%r7		; execute division ;3
+  17              	;	div1	%r7		; execute division ;4
+  18              	;	div1	%r7		; execute division ;5
+  19              	;	div1	%r7		; execute division ;6
+  20              	;	div1	%r7		; execute division ;7
+  21              	;	div1	%r7		; execute division ;8
+  22              	;	div1	%r7		; execute division ;9
+  23              	;	div1	%r7		; execute division ;10
+  24              	;	div1	%r7		; execute division ;11
+  25              	;	div1	%r7		; execute division ;12
+  26              	;	div1	%r7		; execute division ;13
+  27              	;	div1	%r7		; execute division ;14
+  28              	;	div1	%r7		; execute division ;15
+  29              	;	div1	%r7		; execute division ;16
+  30              	;	div1	%r7		; execute division ;17
+  31              	;	div1	%r7		; execute division ;18
+  32              	;	div1	%r7		; execute division ;19
+  33              	;	div1	%r7		; execute division ;20
+  34              	;	div1	%r7		; execute division ;21
+  35              	;	div1	%r7		; execute division ;22
+  36              	;	div1	%r7		; execute division ;23
+  37              	;	div1	%r7		; execute division ;24
+  38              	;	div1	%r7		; execute division ;25
+  39              	;	div1	%r7		; execute division ;26
+  40              	;	div1	%r7		; execute division ;27
+  41              	;	div1	%r7		; execute division ;28
+  42              	;	div1	%r7		; execute division ;29
+  43              	;	div1	%r7		; execute division ;30
+  44              	;	div1	%r7		; execute division ;31
+  45              	;	div1	%r7		; execute division ;32
+  46              	;else
+  47 0004 486C     		ld.w	%r8,0x4		; set loop counter (N = 4)
+  48 0006 09A4     		ld.w	%r9,%psr	; save flag register
+  49              	__modsi3_loop_start:	
+  50 0008 7093     		div1	%r7		; execute division ;1
+  51 000a 7093     		div1	%r7		; execute division ;2
+  52 000c 7093     		div1	%r7		; execute division ;3
+  53 000e 7093     		div1	%r7		; execute division ;4
+  54 0010 7093     		div1	%r7		; execute division ;5
+  55 0012 7093     		div1	%r7		; execute division ;6
+  56 0014 7093     		div1	%r7		; execute division ;7
+  57 0016 7093     		div1	%r7		; execute division ;8
+GAS LISTING modsi3.s 			page 2
+
+
+  58 0018 1864     		sub	%r8,0x1		; decrement loop counter
+  59 001a F71B     		jrne.d	__modsi3_loop_start	; if (loop counter != 0) goto loop top
+  60 001c 90A0     		ld.w	%psr,%r9	; restore flag register (delayed slot)
+  61              	;endif
+  62 001e 7097     		div2s	%r7		; post divistion process ;1
+  63 0020 009B     		div3s			; post divistion process ;2
+  64 0022 4007     		ret.d			; return to the caller (use delayed return)
+  65 0024 34A4     		ld.w	%r4,%ahr	; set remainder to return reg (delayed slot)
+  66              	
+  67              	
+  68              	;	Function :	__umodsi3
+  69              	;	Input :		%r6	--- dividend
+  70              	;			%r7	--- divisor
+  71              	;	Output :	%r4	--- remainder
+  72              	;	Function :	calculate unsigned integer modulo arithmetic
+  73              	
+  74              		.section .text
+  75              		.align 1
+  76              		.global	__umodsi3
+  77              	__umodsi3:
+  78 0026 62A0     		ld.w	%alr,%r6	; set dividend to accumlator (%alr)
+  79 0028 708F     		div0u	%r7		; initializer of signed division
+  80              	;ifdef	FAST
+  81              	;	div1	%r7		; execute division ;1
+  82              	;	div1	%r7		; execute division ;2
+  83              	;	div1	%r7		; execute division ;3
+  84              	;	div1	%r7		; execute division ;4
+  85              	;	div1	%r7		; execute division ;5
+  86              	;	div1	%r7		; execute division ;6
+  87              	;	div1	%r7		; execute division ;7
+  88              	;	div1	%r7		; execute division ;8
+  89              	;	div1	%r7		; execute division ;9
+  90              	;	div1	%r7		; execute division ;10
+  91              	;	div1	%r7		; execute division ;11
+  92              	;	div1	%r7		; execute division ;12
+  93              	;	div1	%r7		; execute division ;13
+  94              	;	div1	%r7		; execute division ;14
+  95              	;	div1	%r7		; execute division ;15
+  96              	;	div1	%r7		; execute division ;16
+  97              	;	div1	%r7		; execute division ;17
+  98              	;	div1	%r7		; execute division ;18
+  99              	;	div1	%r7		; execute division ;19
+ 100              	;	div1	%r7		; execute division ;20
+ 101              	;	div1	%r7		; execute division ;21
+ 102              	;	div1	%r7		; execute division ;22
+ 103              	;	div1	%r7		; execute division ;23
+ 104              	;	div1	%r7		; execute division ;24
+ 105              	;	div1	%r7		; execute division ;25
+ 106              	;	div1	%r7		; execute division ;26
+ 107              	;	div1	%r7		; execute division ;27
+ 108              	;	div1	%r7		; execute division ;28
+ 109              	;	div1	%r7		; execute division ;29
+ 110              	;	div1	%r7		; execute division ;30
+ 111              	;	div1	%r7		; execute division ;31
+ 112              	;	div1	%r7		; execute division ;32
+ 113              	;else
+ 114 002a 486C     		ld.w	%r8,0x4		; set loop counter (N = 4)
+GAS LISTING modsi3.s 			page 3
+
+
+ 115              	__umodsi3_loop_start:	
+ 116 002c 7093     		div1	%r7		; execute division ;1
+ 117 002e 7093     		div1	%r7		; execute division ;2
+ 118 0030 7093     		div1	%r7		; execute division ;3
+ 119 0032 7093     		div1	%r7		; execute division ;4
+ 120 0034 7093     		div1	%r7		; execute division ;5
+ 121 0036 7093     		div1	%r7		; execute division ;6
+ 122 0038 7093     		div1	%r7		; execute division ;7
+ 123 003a 7093     		div1	%r7		; execute division ;8
+ 124 003c 1864     		sub	%r8,0x1		; decrement loop counter
+ 125 003e F71A     		jrne	__umodsi3_loop_start	; if (loop counter != 0) goto loop top
+ 126              	;endif
+ 127 0040 4007     		ret.d			; return to the caller (use delayed return)
+ 128 0042 34A4     		ld.w	%r4,%ahr	; set remainder to return reg (delayed slot)
+ 129              	

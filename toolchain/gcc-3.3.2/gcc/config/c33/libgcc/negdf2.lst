@@ -1,0 +1,41 @@
+GAS LISTING negdf2.s 			page 1
+
+
+   1              	;*********************************************
+   2              	;*	Copyright (C), 1996-2001 SEIKO EPSON Corp.
+   3              	;*		ALL RIGHTS RESERVED
+   4              	;*
+   5              	;*	filename : negdfs.s
+   6              	;*
+   7              	;*	Double floating point negative function
+   8              	;*		input: (%r7, %r6)
+   9              	;*		output: (%r5, %r4)
+  10              	;*
+  11              	;*	Begin		1996/09/12	V. Chan
+  12              	;*  変更		2001/01/15  O.Hinokuchi
+  13              	;*  			 ・レジスタ置換
+  14              	;*	gas対応		2001/10/15	watanabe
+  15              	;*
+  16              	;*********************************************
+  17              	
+  18              	.section .text
+  19              	.align 1
+  20              	.global __negdf2
+  21              	
+  22              	;==============================================
+  23              	;＜レジスタ説明＞
+  24              	;	%r4:戻り値(L)(double)
+  25              	;	%r5:戻り値(H)(double)
+  26              	;	%r6:引数１(L)(double)
+  27              	;	%r7:引数１(H)(double)
+  28              	;==============================================
+  29              	
+  30              	__negdf2:
+  31              	
+  32              		; flip the MSB of %r5 and put result in %r6
+  33 0000 752E     		ld.w	%r5,%r7					;戻り値(H)(5) <- 引数１(H)(7)
+  34 0002 00D000C0 		xxor	%r5,0x80000000			;戻り値(H)(5) <- 戻り値(H)(5) | 0x80000000
+  34      0578
+  35 0008 642E     		ld.w	%r4, %r6				;戻り値(L)(4) <- 引数１(L)(6)
+  36              	
+  37 000a 4006     		ret

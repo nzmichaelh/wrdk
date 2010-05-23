@@ -1,0 +1,108 @@
+GAS LISTING fcmpd.s 			page 1
+
+
+   1              	;*********************************************
+   2              	;*	Copyright (C), 1996-2001 SEIKO EPSON Corp.
+   3              	;*		ALL RIGHTS RESERVED
+   4              	;*
+   5              	;*	filename : fcmpd.s
+   6              	;*
+   7              	;*	Double floating point compare
+   8              	;*		input: (%r7, %r6) & (%r9, %r8)
+   9              	;*		output: %psr
+  10              	;*
+  11              	;*	Begin		1996/10/30	V. Chan
+  12              	;*  変更		2001/01/15  O.Hinokuchi
+  13              	;*  			 ・レジスタ置換
+  14              	;*	gas対応		2001/10/15	watanabe
+  15              	;*
+  16              	;*********************************************
+  17              	
+  18              	.section .text
+  19              	.align 1
+  20              	.global __fcmpd
+  21              	
+  22              	;==============================================
+  23              	;＜レジスタ説明＞
+  24              	;	%r2:指数部２
+  25              	;	%r4:符号ビット１[0(+) or 1(-)]
+  26              	;	%r5:符号ビット２[0(+) or 1(-)]/指数部１/mask
+  27              	;	%r6:引数１[L](double)/仮数部１[L]
+  28              	;	%r7:引数１[H](double)/仮数部１[H]
+  29              	;	%r8:引数２[L](double)/仮数部２[L]
+  30              	;	%r9:引数２[H](double)/仮数部２[H]
+  31              	;==============================================
+  32              	
+  33              	__fcmpd:
+  34 0000 0202     		pushn	%r2				; %r0〜%r2 待避
+  35              	
+  36 0002 742E     		ld.w	%r4, %r7		; 符号ビット１(%r4) <- 引数１[H](%r7)
+  37 0004 149C     		rl		%r4, 1			; rotate left 1 bit
+  38 0006 1470     		and		%r4, 1			; use mask to keep LSB
+  39              	
+  40 0008 952E     		ld.w	%r5, %r9		; 符号ビット２(%r4) <- 引数２[H](%r9)
+  41 000a 159C     		rl		%r5, 1			; rotate left 1 bit
+  42 000c 1570     		and		%r5, 1			; use mask to keep LSB
+  43              	
+  44              		; if 符号ビット１(%r4) = 1 and 符号ビット２(%r5) = 0 then CVZN = 1001 (lt)
+  45              		; if 符号ビット１(%r4) = 0 and 符号ビット２(%r5) = 1 then CVZN = 0000 (gt)
+  46 000e 452A     		cmp		%r5, %r4		; if 符号ビット２(%r5) != 符号ビット１(%r4) 
+  47 0010 231A     		jrne	end				; %psr is changed
+  48              	
+  49              		; case: 符号ビット１(%r4) = 符号ビット２(%r5) 
+  50 0012 752E     		ld.w	%r5, %r7		; 指数部１(%r5) <- 引数１[H](%r7)
+  51 0014 158C     		sll		%r5, 1			; 指数部１(%r5) << 1
+  52 0016 85888588 		xsrl 	%r5, 21			; 指数部１(%r5) >> 21
+  52      5588
+  53              	
+  54 001c 922E     		ld.w	%r2, %r9		; 指数部２(%r2) <- 引数２[H](%r9)
+  55 001e 128C     		sll		%r2, 1			; 指数部２(%r2) << 1
+  56 0020 82888288 		xsrl 	%r2, 21			; 指数部２(%r2) >> 21
+GAS LISTING fcmpd.s 			page 2
+
+
+  56      5288
+  57              	
+  58 0026 1468     		cmp		%r4, 1			; if 符号ビット１(%r4) = 1 
+  59 0028 0418     		jreq	negexp			; then goto negexp
+  60              	
+  61              		; max. 指数部 = 0x7ff
+  62              		; min. 指数部 = 0x00
+  63 002a 252A     		cmp		%r5, %r2		; if 指数部１(%r5) != 指数部２(%r2) 
+  64 002c 151A     		jrne	end				; then goto end
+  65 002e 031E     		jp		mancmp
+  66              	
+  67              	negexp:
+  68 0030 522A     		cmp		%r2, %r5		; if 指数部２(%r2) !=  指数部１(%r5)
+  69 0032 121A     		jrne	end				; then goto end
+  70              	
+  71              	mancmp:
+  72 0034 1FC0F56B 		xcmp	%r5, 0x7ff		; if 指数部１(%r5) = 指数部２(%r2) = 特殊数(0xff) 
+  73 0038 0F18     		jreq	end				; then goto end
+  74              	
+  75              		; case: 指数部１(%r5) = 指数部２(%r2)
+  76 003a 01C0FFDF 		xld.w	%r5, 0xfffff	; mask(%r5) <- 0x7fffff
+  76      F56F
+  77              	
+  78 0040 5732     		and		%r7, %r5		; 仮数部１(%r7) = 仮数部１(%r7) & mask(%r5)
+  79 0042 5932     		and		%r9, %r5		; 仮数部２(%r9) = 仮数部２(%r9) & mask(%r5)
+  80              	
+  81 0044 1468     		cmp		%r4, 1			; if 符号ビット１(%r4) = 1 
+  82 0046 0518     		jreq	negman
+  83              	
+  84 0048 972A     		cmp		%r7, %r9		; compare 仮数部１[H](%r7) : 仮数部２[H](%r9) 
+  85 004a 061A     		jrne	end
+  86              	
+  87              		; case: man1 = man2
+  88 004c 862A     		cmp		%r6, %r8		; compare 仮数部１[L](%r6) : 仮数部２[L](%r8) 
+  89 004e 041E     		jp		end
+  90              	
+  91              	negman:
+  92 0050 792A     		cmp		%r9, %r7		; compare 仮数部２[H](%r9) : 仮数部１[H](%r7) 
+  93 0052 021A     		jrne	end
+  94              	
+  95 0054 682A     		cmp		%r8, %r6		; compare 仮数部１[L](%r6) : 仮数部２[L](%r8) 
+  96              		
+  97              	end:
+  98 0056 4202     		popn	%r2				; %r0〜%r2 復帰
+  99 0058 4006     		ret

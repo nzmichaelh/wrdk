@@ -2697,6 +2697,21 @@ v850-*-*)
 	c_target_objs="v850-c.o"
 	cxx_target_objs="v850-c.o"
 	;;
+	
+# ADD K.Watanabe V1.7 >>>>>>>
+c33-*-*)			
+		cpu_type=c33
+		tm_file="dbxelf.h elfos.h svr4.h c33/c33.h"		
+		xm_file="c33/xm-c33.h"
+		tmake_file=c33/t-c33
+		if test x$stabs = xyes
+		then
+			tm_file="${tm_file} dbx.h"
+		fi
+		use_collect2=no
+		;;	
+# ADD K.Watanabe V1.7 <<<<<<<	
+
 vax-*-bsd*)			# VAXen running BSD
 	tm_file="${tm_file} vax/bsd.h"
 	use_collect2=yes

@@ -4557,6 +4557,25 @@ print_version (file, indent)
      FILE *file;
      const char *indent;
 {
+
+#ifdef EPSON    /* CHG K.Watanabe V1.7 >>>>>>> */
+    /* cc1 prints its c33-compiler version. */
+
+#ifndef __VERSION__
+#define __VERSION__ "[?]"
+#endif
+  fnotice (file,
+#ifdef __GNUC__
+	   "%s%s%s version %s (%s) compiled by GNU C version %s%s.\n"
+#else
+	   "%s%s%s version %s (%s) compiled by CC.\n"
+#endif
+	   , indent, *indent != 0 ? " " : "",
+	   lang_hooks.name, version_string, TARGET_NAME, __VERSION__, 
+	   C33_TARGET_VERSION );
+
+#else
+
 #ifndef __VERSION__
 #define __VERSION__ "[?]"
 #endif
@@ -4569,6 +4588,8 @@ print_version (file, indent)
 	   , indent, *indent != 0 ? " " : "",
 	   lang_hooks.name, version_string, TARGET_NAME,
 	   indent, __VERSION__);
+#endif			/* #ifndef EPSON *//* CHG K.Watanabe V1.7 <<<<<<< */
+	   
   fnotice (file, "%s%sGGC heuristics: --param ggc-min-expand=%d --param ggc-min-heapsize=%d\n",
 	   indent, *indent != 0 ? " " : "",
 	   PARAM_VALUE (GGC_MIN_EXPAND), PARAM_VALUE (GGC_MIN_HEAPSIZE));
@@ -4878,6 +4899,36 @@ parse_options_and_default_flags (argc, argv)
       flag_crossjumping = 1;
       flag_if_conversion = 1;
       flag_if_conversion2 = 1;
+      
+    /* ADD K.Watanabe V1.7 >>>>>>> */
+    /* C33: Correspondence to a bug.													*/
+    /*      Enable "-fforce-addr" which is the compiler option with default             */
+    /*      only when it is "-O".                                                       */
+    /* -fforce-addr -- This options means that the content of memory is loaded to       */
+    /*                 the register, and the register is referenced.                    */ 
+    /*																					*/
+    /* The option above is set because the following bug is occurred                    */
+    /* at the "-O" && ( Not "-medda32" or Advanced mode ).                              */
+    /*																					*/
+    /* "-fforce-addr" is enabled with default at the "-O", because the state of         */
+    /* existence of "-medda32" / Advanced mode can not be checked in this function.     */
+    /*																					*/
+	/*	 xld.w	[%sp+132],%r8    														*/
+	/* 	.......																			*/
+	/*	xld.w	[%sp+132],%r11															*/
+	/*	.......																			*/
+	/* ;;;;;;;;;;;;;;;;;;;;;;;;;;;														*/
+	/* xld.w	%r8,[%sp+132]	---- ‡@													*/
+	/* ;;;;;;;;;;;;;;;;;;;;;;;;;;;														*/
+	/* xld.w	[%sp+176],%r8   ---- ‡A													*/
+	/*																					*/
+	/* The code of ‡@ is deleted in the process of optimization, 						*/
+	/* and the right value is not set to [%sp+176]( which is ‡A ).						*/
+	
+	  if( optimize == 1 ){
+  		 flag_force_addr = 1;
+      } 	      
+      /* ADD K.Watanabe V1.7 <<<<<<< */       
     }
 
   if (optimize >= 2)

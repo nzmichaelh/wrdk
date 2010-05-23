@@ -1,0 +1,150 @@
+GAS LISTING divsi3.s 			page 1
+
+
+   1              	;
+   2              	;	Copyright (C) SEIKO EPSON CORP. 1996
+   3              	;
+   4              	;	Filename : divsi3.c
+   5              	;	Function :
+   6              	;	  This module defines the functions
+   7              	;		that emulate signed and unsigned integer division.
+   8              	;	Revision :
+   9              	;	  10/18/1996	ESD T.Katahira		start			    */
+  10              	;
+  11              	;
+  12              	;	Function :	__divsi3
+  13              	;	Input :		%r6	--- dividend
+  14              	;			%r7	--- divisor
+  15              	;	Output :	%r4	--- quotient
+  16              	;	Function :	calculate signed integer division
+  17              	
+  18              	
+  19              		.section .text
+  20              		.align 1
+  21              		.global	__divsi3
+  22              	__divsi3:
+  23 0000 62A0     		ld.w	%alr,%r6	; set dividend to accumlator (%alr)
+  24 0002 708B     		div0s	%r7		; initializer of signed division
+  25              	;ifdef	FAST
+  26              	;	div1	%r7		; execute division ;1
+  27              	;	div1	%r7		; execute division ;2
+  28              	;	div1	%r7		; execute division ;3
+  29              	;	div1	%r7		; execute division ;4
+  30              	;	div1	%r7		; execute division ;5
+  31              	;	div1	%r7		; execute division ;6
+  32              	;	div1	%r7		; execute division ;7
+  33              	;	div1	%r7		; execute division ;8
+  34              	;	div1	%r7		; execute division ;9
+  35              	;	div1	%r7		; execute division ;10
+  36              	;	div1	%r7		; execute division ;11
+  37              	;	div1	%r7		; execute division ;12
+  38              	;	div1	%r7		; execute division ;13
+  39              	;	div1	%r7		; execute division ;14
+  40              	;	div1	%r7		; execute division ;15
+  41              	;	div1	%r7		; execute division ;16
+  42              	;	div1	%r7		; execute division ;17
+  43              	;	div1	%r7		; execute division ;18
+  44              	;	div1	%r7		; execute division ;19
+  45              	;	div1	%r7		; execute division ;20
+  46              	;	div1	%r7		; execute division ;21
+  47              	;	div1	%r7		; execute division ;22
+  48              	;	div1	%r7		; execute division ;23
+  49              	;	div1	%r7		; execute division ;24
+  50              	;	div1	%r7		; execute division ;25
+  51              	;	div1	%r7		; execute division ;26
+  52              	;	div1	%r7		; execute division ;27
+  53              	;	div1	%r7		; execute division ;28
+  54              	;	div1	%r7		; execute division ;29
+  55              	;	div1	%r7		; execute division ;30
+  56              	;	div1	%r7		; execute division ;31
+  57              	;	div1	%r7		; execute division ;32
+GAS LISTING divsi3.s 			page 2
+
+
+  58              	;else
+  59 0004 486C     		ld.w	%r8,0x4		; set loop counter (N = 4)
+  60 0006 09A4     		ld.w	%r9,%psr	; save flag register
+  61              	__divsi3_loop_start:	
+  62 0008 7093     		div1	%r7		; execute division ;1
+  63 000a 7093     		div1	%r7		; execute division ;2
+  64 000c 7093     		div1	%r7		; execute division ;3
+  65 000e 7093     		div1	%r7		; execute division ;4
+  66 0010 7093     		div1	%r7		; execute division ;5
+  67 0012 7093     		div1	%r7		; execute division ;6
+  68 0014 7093     		div1	%r7		; execute division ;7
+  69 0016 7093     		div1	%r7		; execute division ;8
+  70 0018 1864     		sub	%r8,0x1		; decrement loop counter
+  71 001a F71B     		jrne.d	__divsi3_loop_start	; if (loop counter != 0) goto loop top
+  72 001c 90A0     		ld.w	%psr,%r9	; restore flag register (delayed slot)
+  73              	;endif
+  74 001e 7097     		div2s	%r7		; post divistion process ;1
+  75 0020 009B     		div3s			; post divistion process ;2
+  76 0022 4007     		ret.d			; return to the caller (use delayed return)
+  77 0024 24A4     		ld.w	%r4,%alr	; set quotient to return reg (delayed slot)
+  78              	
+  79              	
+  80              	;	Function :	__udivsi3
+  81              	;	Input :		%r6	--- dividend
+  82              	;			%r7	--- divisor
+  83              	;	Output :	%r4	--- quotient
+  84              	;	Function :	calculate unsigned integer division
+  85              	
+  86              		.section .text
+  87              		.align 1
+  88              		.global	__udivsi3
+  89              	__udivsi3:
+  90 0026 62A0     		ld.w	%alr,%r6	; set dividend to accumlator (%alr)
+  91 0028 708F     		div0u	%r7		; initializer of signed division
+  92              	;ifdef	FAST
+  93              	;	div1	%r7		; execute division ;1
+  94              	;	div1	%r7		; execute division ;2
+  95              	;	div1	%r7		; execute division ;3
+  96              	;	div1	%r7		; execute division ;4
+  97              	;	div1	%r7		; execute division ;5
+  98              	;	div1	%r7		; execute division ;6
+  99              	;	div1	%r7		; execute division ;7
+ 100              	;	div1	%r7		; execute division ;8
+ 101              	;	div1	%r7		; execute division ;9
+ 102              	;	div1	%r7		; execute division ;10
+ 103              	;	div1	%r7		; execute division ;11
+ 104              	;	div1	%r7		; execute division ;12
+ 105              	;	div1	%r7		; execute division ;13
+ 106              	;	div1	%r7		; execute division ;14
+ 107              	;	div1	%r7		; execute division ;15
+ 108              	;	div1	%r7		; execute division ;16
+ 109              	;	div1	%r7		; execute division ;17
+ 110              	;	div1	%r7		; execute division ;18
+ 111              	;	div1	%r7		; execute division ;19
+ 112              	;	div1	%r7		; execute division ;20
+ 113              	;	div1	%r7		; execute division ;21
+ 114              	;	div1	%r7		; execute division ;22
+GAS LISTING divsi3.s 			page 3
+
+
+ 115              	;	div1	%r7		; execute division ;23
+ 116              	;	div1	%r7		; execute division ;24
+ 117              	;	div1	%r7		; execute division ;25
+ 118              	;	div1	%r7		; execute division ;26
+ 119              	;	div1	%r7		; execute division ;27
+ 120              	;	div1	%r7		; execute division ;28
+ 121              	;	div1	%r7		; execute division ;29
+ 122              	;	div1	%r7		; execute division ;30
+ 123              	;	div1	%r7		; execute division ;31
+ 124              	;	div1	%r7		; execute division ;32
+ 125              	;else
+ 126 002a 486C     		ld.w	%r8,0x4		; set loop counter (N = 4)
+ 127              	__udivsi3_loop_start:	
+ 128 002c 7093     		div1	%r7		; execute division ;1
+ 129 002e 7093     		div1	%r7		; execute division ;2
+ 130 0030 7093     		div1	%r7		; execute division ;3
+ 131 0032 7093     		div1	%r7		; execute division ;4
+ 132 0034 7093     		div1	%r7		; execute division ;5
+ 133 0036 7093     		div1	%r7		; execute division ;6
+ 134 0038 7093     		div1	%r7		; execute division ;7
+ 135 003a 7093     		div1	%r7		; execute division ;8
+ 136 003c 1864     		sub	%r8,0x1		; decrement loop counter
+ 137 003e F71A     		jrne	__udivsi3_loop_start	; if (loop counter != 0) goto loop top
+ 138              	;endif
+ 139 0040 4007     		ret.d			; return to the caller (use delayed return)
+ 140 0042 24A4     		ld.w	%r4,%alr	; set quotient to return reg (delayed slot)
+ 141              	

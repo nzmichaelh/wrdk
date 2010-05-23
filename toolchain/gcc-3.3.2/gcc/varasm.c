@@ -470,7 +470,7 @@ resolve_unique_section (decl, reloc, flag_function_or_data_sections)
       && targetm.have_named_sections
       && (flag_function_or_data_sections
 	  || DECL_ONE_ONLY (decl)))
-    (*targetm.asm_out.unique_section) (decl, reloc);
+    (*targetm.asm_out.unique_section) (decl, reloc); 
 }
 
 #ifdef BSS_SECTION_ASM_OP
@@ -563,7 +563,7 @@ function_section (decl)
 {
   if (decl != NULL_TREE
       && DECL_SECTION_NAME (decl) != NULL_TREE)
-    named_section (decl, (char *) 0, 0);
+    named_section (decl, (char *) 0, 0); 
   else
     text_section ();
 }
@@ -1583,12 +1583,23 @@ assemble_variable (decl, top_level, at_end, dont_output_data)
       if (DECL_COMMON (decl))
 	sorry ("thread-local COMMON data not implemented");
     }
+/* CHG K.Watanabe V1.7 >>>>>>> */    
+/* C33: Allocate to ".data" section even when it is initizalized by 0. */
+#if 0
   else if (DECL_INITIAL (decl) == 0
 	   || DECL_INITIAL (decl) == error_mark_node
 	   || (flag_zero_initialized_in_bss
 	       /* Leave constant zeroes in .rodata so they can be shared.  */
 	       && !TREE_READONLY (decl)
 	       && initializer_zerop (DECL_INITIAL (decl))))
+#endif      
+  else if (DECL_INITIAL (decl) == 0
+	   || DECL_INITIAL (decl) == error_mark_node
+	   || (flag_zero_initialized_in_bss
+	       /* Leave constant zeroes in .rodata so they can be shared.  */
+	       && !TREE_READONLY (decl)
+	       && 0 ))
+/* CHG K.Watanabe V1.7 <<<<<<< */
     {
       unsigned HOST_WIDE_INT size = tree_low_cst (DECL_SIZE_UNIT (decl), 1);
       unsigned HOST_WIDE_INT rounded = size;

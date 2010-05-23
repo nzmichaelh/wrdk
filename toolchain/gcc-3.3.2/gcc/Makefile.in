@@ -660,7 +660,6 @@ HOST_VARRAY = $(BUILD_PREFIX)varray.o
 # currently being compiled, in both source trees, to be examined as well.
 INCLUDES = -I. -I$(@D) -I$(srcdir) -I$(srcdir)/$(@D) \
 	   -I$(srcdir)/config -I$(srcdir)/../include
-
 # Always use -I$(srcdir)/config when compiling.
 .c.o:
 	$(CC) -c $(ALL_CFLAGS) $(ALL_CPPFLAGS) $(INCLUDES) $< $(OUTPUT_OPTION)

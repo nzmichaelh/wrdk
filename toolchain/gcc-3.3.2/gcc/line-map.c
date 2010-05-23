@@ -25,6 +25,11 @@ Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 #include "line-map.h"
 #include "intl.h"
 
+/* ADD K.Watanabe V1.7 >>>>>>> */
+/* C33: Output the same content with version 2.95.2, when the assembler source files are preprocessed. */
+extern int i_Asm_Adjust_Line_Init_Flg;
+/* ADD K.Watanabe V1.7 <<<<<<< */
+
 static void trace_include
   PARAMS ((const struct line_maps *, const struct line_map *));
 
@@ -80,7 +85,8 @@ add_line_map (set, reason, sysp, from_line, to_file, to_line)
      unsigned int to_line;
 {
   struct line_map *map;
-
+  int i_len;		/* ADD K.Watanabe V1.7 */
+  
   if (set->used && from_line < set->maps[set->used - 1].from_line)
     abort ();
 
@@ -124,7 +130,18 @@ add_line_map (set, reason, sysp, from_line, to_file, to_line)
       if (error || to_file == NULL)
 	{
 	  to_file = from->to_file;
-	  to_line = LAST_SOURCE_LINE (from) + 1;
+	/* CHG K.Watanabe V1.7 >>>>>>> */
+	/* C33: Output the same content with version 2.95.2, when the assembler source files are preprocessed. */
+/*	  to_line = LAST_SOURCE_LINE (from) + 1; */
+	  i_len = strlen( to_file );
+      if( ( ( to_file[ i_len- 1 ] == 's' ) || ( to_file[ i_len- 1 ] == 'S' ) )
+								      			&& ( i_Asm_Adjust_Line_Init_Flg == 0 ) ){
+		  to_line = LAST_SOURCE_LINE (from);
+		  i_Asm_Adjust_Line_Init_Flg = 1;
+	  } else {
+		  to_line = LAST_SOURCE_LINE (from) + 1; 
+ 	  }		  
+	/* CHG K.Watanabe V1.7 <<<<<<< */	  
 	  sysp = from->sysp;
 	}
     }

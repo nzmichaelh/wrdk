@@ -6184,7 +6184,12 @@ main (argc, argv)
 
       if (! strncmp (version_string, compiler_version, n)
 	  && compiler_version[n] == 0)
+#ifdef EPSON    /* CHG K.Watanabe V1.7 >>>>>>> */
+    /* xgcc prints its c33-compiler version. */
+	notice ("gcc version %s%s\n", version_string, C33_TARGET_VERSION );
+#else	  
 	notice ("gcc version %s\n", version_string);
+#endif			/* CHG K.Watanabe V1.7 <<<<<<< */	
       else
 	notice ("gcc driver version %s executing gcc version %s\n",
 		version_string, compiler_version);

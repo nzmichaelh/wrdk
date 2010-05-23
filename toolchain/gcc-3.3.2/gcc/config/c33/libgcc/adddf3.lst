@@ -1,0 +1,847 @@
+GAS LISTING adddf3.s 			page 1
+
+
+   1              	;*********************************************
+   2              	;*	Copyright (C), 1996-2001 SEIKO EPSON Corp.
+   3              	;*		ALL RIGHTS RESERVED
+   4              	;*
+   5              	;*	filename : adddf3.s
+   6              	;*
+   7              	;*	Double floating point addition function
+   8              	;*						& subtract function
+   9              	;*		input: (%r7, %r6) & (%r9, %r8)
+  10              	;*		output: (%r5, %r4)
+  11              	;*
+  12              	;*	Begin				1996/09/12	V. Chan
+  13              	;*  Fixed sign bug		1997/02/17	V. Chan
+  14              	;*  変更				2001/01/18  O.Hinokuchi
+  15              	;*  			 		 ・レジスタ置き換え
+  16              	;*	gas対応		2001/10/15	watanabe
+  17              	;*
+  18              	;*****************************************
+  19              	
+  20              	.section .text
+  21              	.align 1
+  22              	.global	__adddf3
+  23              	.global __subdf3
+  24              	
+  25              	;==============================================
+  26              	;＜レジスタ説明＞
+  27              	;	%r0:符号ビット１(0(+) or 1(-))
+  28              	;	%r1:指数部１(8bit)
+  29              	;	%r2:符号ビット２(0(+) or 1(-))/count
+  30              	;	%r3:指数部２(8bit)
+  31              	;	%r4:戻り値[L]
+  32              	;	%r5:戻り値[H]
+  33              	;	%r6:引数１[L](double)/仮数部１[L]/shift counter
+  34              	;	%r7:引数１[H](double)/仮数部１[H]
+  35              	;	%r8:引数２[L](double)/仮数部２[L]
+  36              	;	%r9:引数２[H](double)/仮数部２[H]
+  37              	;	%r10:temp/difference/implied
+  38              	;	%r11:xflag
+  39              	;	%r13:count/shift
+  40              	;	-------------------------------------------
+  41              	;	%r0:共有レジスタ
+  42              	;		bit31:指数部１
+  43              	;		bit30:指数部２
+  44              	;		bit29-22:TEMP(1byte)
+  45              	;		bit21-11:指数部１
+  46              	;		bit10-0 :指数部２
+  47              	;==============================================
+  48              	
+  49              	
+  50              	;;macro	VARSHIFT $1, $2, $3
+  51              		; used in 32-bit variable shifting
+  52              		; $1 = input register
+  53              		; $2 = shift amount
+  54              		; $3 = shift instruction
+  55              	
+  56              	;$$1:
+  57              	;	cmp		$2, 8		; if temp <= 8 then goto $$2
+GAS LISTING adddf3.s 			page 2
+
+
+  58              	;	jrle	$$2
+  59              	
+  60              	;	$3		$1, 8		; shift input register 8 bits
+  61              	;	jp.d	$$1
+  62              	;	sub		$2, 8		; temp = temp - 8
+  63              	
+  64              	;$$2:
+  65              	;	$3		$1, $2		; last shift
+  66              	;;endm
+  67              	
+  68              	;;macro	SHFTROTSHFT $1, $2, $3, $4, $5, $6, $7
+  69              		; used in 64-bit variable shifting
+  70              		; $1 = shift amount
+  71              		; $2 = 1st input register (shifted)
+  72              		; $3 = 2nd input register (rotated)
+  73              		; $4 = 3rd input register (mask --> shifted)
+  74              		; $5 = shift instruction
+  75              		; $6 = rotate instruction
+  76              		; $7 = temp register
+  77              	;	ld.w	$7, $1		; temp = shift amount
+  78              	
+  79              	;$$1:
+  80              	;	cmp		$7, 8		; if temp <= 8 then goto $$2
+  81              	;	jrle	$$2
+  82              	
+  83              	;	$5		$2, 8		; shift 1st register
+  84              	;	$6		$3, 8		; rotate 2nd register
+  85              	;	$5		$4, 8		; shift 3rd register
+  86              	;	jp.d	$$1
+  87              	;	sub		$7, 8		; temp = temp - 8
+  88              	
+  89              	;$$2:
+  90              	;	$5		$2, $7		; last shift
+  91              	;	$6		$3, $7		; last rotate
+  92              	;	$5		$4, $7		; last shift
+  93              	;;endm
+  94              	
+  95              	__subdf3:
+  96 0000 00D000C0 		xxor	%r9, 0x80000000			; 引数２[H}(%r9)= 引数２[H](%r9) & 0x80000000 
+  96      0978
+  97              	
+  98              	__adddf3:
+  99 0006 0302     		pushn	%r3				; save register values
+ 100              	
+ 101              		;@@@ 01/01/23 add start hinokuchi
+ 102              		;sub		%sp, 4
+ 103              		;ld.w	[%sp+0], %r10	; %r10待避
+ 104              		;ld.w	[%sp+1], %r11	; %r11待避
+ 105              		;ld.w	[%sp+2], %r12	; %r12待避
+ 106              		;ld.w	[%sp+3], %r13	; %r13待避
+ 107              		;@@@ 01/01/23 add end
+ 108              		
+ 109              		;@@@ 01/02/14 del start
+ 110              		;ld.w	%r0, %r7		; 符号ビット１(%r0) <- 引数１[H](%r7) 
+ 111              		;rl		%r0, 1			; 符号ビット１(%r0) rotate left 1 bit
+ 112              		;and		%r0, 1			; 符号ビット１(%r0) & 1 
+ 113              		;@@@ 01/01/23 del end
+GAS LISTING adddf3.s 			page 3
+
+
+ 114 0008 006C     		ld.w	%r0, 0			; 共有レジスタクリア(%r0) @@@ 01/02/14 add
+ 115              	
+ 116              		;@@@ 01/02/14 add start
+ 117 000a 712E     		ld.w	%r1, %r7		; 符号ビット１(%r1) <- 引数１[H](%r7) 
+ 118 000c 119C     		rl		%r1, 1			; 符号ビット１(%r1) rotate left 1 bit
+ 119 000e 1170     		and		%r1, 1			; 符号ビット１(%r1) & 1 
+ 120              		; 	SET_SIGN1 %r0, %r1		; 共有レジスタに符号ビット１保存 
+ 121              	__L0001:
+ 122 0010 FFCFFFDF 		xand	%r0,0x7fffffff	; 共有レジスタ 符号ビット１クリア
+ 122      F073
+ 123 0016 1170     		and		%r1,1			; 1ビットマスク
+ 124 0018 1198     		rr		%r1,1			; 符号ビット１のビット位置にローテート
+ 125 001a 1036     		or		%r0,%r1			; 符号ビット１セット
+ 126 001c 119C     		rl		%r1,1			; 符号ビット復帰
+ 127              		;@@@ 01/01/23 add end
+ 128              	
+ 129              	
+ 130              	
+ 131              		;@@@ 01/02/14 del start
+ 132              		;ld.w	%r2, %r9		; 符号ビット２(%r2) <- 引数２[H](%r9)
+ 133              		;rl		%r2, 1			; 符号ビット２(%r2) rotate left 1 bit
+ 134              		;and	%r2, 1			; 符号ビット２(%r2) & 1 
+ 135              		;@@@ 01/01/23 del end
+ 136              	
+ 137              		;@@@ 01/02/14 add start
+ 138 001e 922E     		ld.w	%r2, %r9		; 符号ビット２(%r1) <- 引数２[H](%r9)
+ 139 0020 129C     		rl		%r2, 1			; 符号ビット２(%r1) rotate left 1 bit
+ 140 0022 1270     		and		%r2, 1			; 符号ビット２(%r1) & 1 
+ 141              		; 	SET_SIGN2 %r0, %r2		; 共有レジスタに符号ビット２保存 
+ 142              	__L0002:
+ 143 0024 FFD7FFDF 		xand	%r0,0xbfffffff	; 共有レジスタ 符号ビット２クリア
+ 143      F073
+ 144 002a 1270     		and		%r2,1			; 1ビットマスク
+ 145 002c 2298     		rr		%r2,2			; 符号ビット２のビット位置にローテート
+ 146 002e 2036     		or		%r0,%r2			; 符号ビット２セット
+ 147 0030 229C     		rl		%r2,2			; 符号ビット復帰
+ 148              	
+ 149              		;@@@ 01/01/23 add end
+ 150              	
+ 151              	
+ 152 0032 712E     		ld.w	%r1, %r7		; 指数部１(%r1) <- 引数１[H](%r7)
+ 153 0034 118C     		sll		%r1, 1			; 指数部１(%r1) << 1
+ 154 0036 81888188 		xsrl 	%r1, 21			; 指数部１(%r1) >> 21
+ 154      5188
+ 155              	
+ 156              		; 	SET_EXP1 %r0, %r1		; @@@ 01/02/14 add start
+ 157              	__L0003:
+ 158 003c E0DF0070 		xand	%r0,0xfffff800	; 共有レジスタ 指数部１クリア
+ 159 0040 1FC0F173 		xand	%r1,0x7ff		; １１ビットマスク
+ 160 0044 1036     		or		%r0,%r1			; 指数部１セット
+ 161              	
+ 162              	
+ 163 0046 1FC0F16B 		xcmp	%r1, 0x7ff		; if 指数部１(%r1) >= 指数部オーバーフロー値(0x7ff) 
+ 164 004a 00C001C0 		xjrge	overflow		; then jump to overflow
+ 164      380A
+ 165              	
+ 166 0050 932E     		ld.w	%r3, %r9		; 指数部２(%r3) <- 引数２[H](%r9)
+GAS LISTING adddf3.s 			page 4
+
+
+ 167 0052 138C     		sll 	%r3, 1			; 指数部２(%r3) << 1
+ 168 0054 83888388 		xsrl	%r3, 21			; 指数部２(%r3) >> 21
+ 168      5388
+ 169              	
+ 170              		; 	SET_EXP2 %r0, %r3		; @@@ 01/02/14 add start
+ 171              	__L0004:
+ 172 005a F8DF1FC0 		xand	%r0,0xffc007ff	; 共有レジスタ 指数部２クリア
+ 172      F073
+ 173 0060 1FC0F373 		xand	%r3,0x7ff		; １１ビットマスク
+ 174 0064 838C     		sll		%r3,8			; 指数部２のビット位置にシフト
+ 175 0066 338C     		sll		%r3,3			; 指数部２のビット位置にシフト
+ 176 0068 3036     		or		%r0,%r3			; 指数部２セット
+ 177 006a 8388     		srl		%r3,8			; 指数部復帰
+ 178 006c 3388     		srl		%r3,3			; 指数部復帰
+ 179              	
+ 180              		; 	GET_SIGN1	%r0, %r4
+ 181              	__L0005:
+ 182 006e 042E     		ld.w	%r4,%r0			; 
+ 183 0070 149C     		rl		%r4,1			; 符号ビットローテート
+ 184 0072 1470     		and		%r4,1			; 共有レジスタ 符号ビット１取得
+ 185              	
+ 186              	
+ 187              		;@@@ del 01/02/15 ld.w	%r10, %r0		; temp(%r10) = 符号ビット１(%r0)
+ 188              		;@@@ del 01/02/15 ld.w	%r10, %r0		; temp(%r10) = 符号ビット１(%r0)
+ 189              	
+ 190              		; 	SET_SIGN1 %r0, %r2		; 共有レジスタ[符号ビット１](%r0) <- 符号ビット２(%r2)
+ 191              	__L0006:
+ 192 0074 FFCFFFDF 		xand	%r0,0x7fffffff	; 共有レジスタ 符号ビット１クリア
+ 192      F073
+ 193 007a 1270     		and		%r2,1			; 1ビットマスク
+ 194 007c 1298     		rr		%r2,1			; 符号ビット１のビット位置にローテート
+ 195 007e 2036     		or		%r0,%r2			; 符号ビット１セット
+ 196 0080 129C     		rl		%r2,1			; 符号ビット復帰
+ 197 0082 1FC0F36B 		xcmp	%r3, 0x7ff		; if 指数部２(%r3) >= 指数部オーバーフロー値(0x7ff) 
+ 198              		;@@@ del 01/02/15 ld.w	%r0, %r2		; 符号ビット１(%r0) <- 符号ビット２(%r2)
+ 199 0086 00C001C0 		xjrge	overflow		; then jump to overflow
+ 199      1A0A
+ 200              		; 	SET_SIGN1 %r0, %r4		; 共有レジスタ[符号ビット１](%r0) <- 符号ビット２(%r2)
+ 201              	__L0007:
+ 202 008c FFCFFFDF 		xand	%r0,0x7fffffff	; 共有レジスタ 符号ビット１クリア
+ 202      F073
+ 203 0092 1470     		and		%r4,1			; 1ビットマスク
+ 204 0094 1498     		rr		%r4,1			; 符号ビット１のビット位置にローテート
+ 205 0096 4036     		or		%r0,%r4			; 符号ビット１セット
+ 206 0098 149C     		rl		%r4,1			; 符号ビット復帰
+ 207              	
+ 208 009a 312A     		cmp		%r1, %r3		; if 指数部１(%r1) < 指数部２(%r3)
+ 209 009c 0B0C     		jrlt	ex1ltex2		; then jump to ex1ltex2
+ 210              		;@@@ del 01/02/15 ld.w	%r0, %r10		; 符号ビット１(%r0) <- temp(%r10)
+ 211              	
+ 212              		; case: exp1 >= exp2
+ 213 009e 752E     		ld.w	%r5, %r7		; 戻り値[H](%r5) <- 引数１[H](%r7)
+ 214              		;@@@ del 01/02/15 ld.w	%r10, %r1		; difference(%r10) = 指数部１(%r1) - 指数部２(%r3)
+ 215 00a0 142E     		ld.w	%r4, %r1		; difference(%r4) = 指数部１(%r1) - 指数部２(%r3)
+ 216 00a2 3426     		sub		%r4, %r3
+ 217              		;@@@ del 01/02/15 sub		%r10, %r3
+ 218              	
+GAS LISTING adddf3.s 			page 5
+
+
+ 219              		;@@@ del 01/02/15 xcmp	%r10, 0x35		; if difference(%r10) >= 0x35 (53-bits) then
+ 220 00a4 00C0546B 		xcmp	%r4, 0x35		; if difference(%r4) >= 0x35 (53-bits) then
+ 221              	
+ 222 00a8 642E     		ld.w	%r4, %r6		; 戻り値[L](%r4) <- 引数１[L](%r6)
+ 223 00aa 00C001C0 		xjrge	end				; return first input
+ 223      130A
+ 224 00b0 121E     		jp		continue
+ 225              		
+ 226              	ex1ltex2:
+ 227 00b2 952E     		ld.w	%r5, %r9		; 戻り値[H](%r5) <- 引数２[H](%r9)
+ 228              		;@@@ del 01/02/15 ld.w	%r10, %r3		; difference(%r10) = 指数部１(%r1) - 指数部２(%r3)
+ 229 00b4 342E     		ld.w	%r4, %r3		; difference(%r4) = 指数部１(%r1) - 指数部２(%r3)
+ 230              	
+ 231 00b6 1426     		sub		%r4, %r1
+ 232              		;@@@ del 01/02/15 sub		%r10, %r1
+ 233              		
+ 234              		;@@@ del 01/02/15 xcmp	%r10, 0x35		; if difference(%r10) >= 0x35 (53-bits) then
+ 235 00b8 00C0546B 		xcmp	%r4, 0x35		; if difference(%r4) >= 0x35 (53-bits) then
+ 236              	
+ 237 00bc 842E     		ld.w	%r4, %r8		; 戻り値[L](%r4) <- 引数２[L](%r8)
+ 238 00be 0B0C     		jrlt	continue
+ 239              		;@@@ del 01/02/15 ld.w	%r0, %r2		; 符号ビット１(%r0) <- 符号ビット２(%r2)
+ 240              		; 	SET_SIGN1 %r0, %r2		; 共有レジスタ[符号ビット１] <- 符号ビット２(%r2)@@@ add 01/02/15
+ 241              	__L0008:
+ 242 00c0 FFCFFFDF 		xand	%r0,0x7fffffff	; 共有レジスタ 符号ビット１クリア
+ 242      F073
+ 243 00c6 1270     		and		%r2,1			; 1ビットマスク
+ 244 00c8 1298     		rr		%r2,1			; 符号ビット１のビット位置にローテート
+ 245 00ca 2036     		or		%r0,%r2			; 符号ビット１セット
+ 246 00cc 129C     		rl		%r2,1			; 符号ビット復帰
+ 247 00ce 00C001C0 		xjp		end				; return 2nd input
+ 247      011E
+ 248              	
+ 249              	continue:
+ 250              		;@@@ del 01/02/15 xld.w	%r10, 0x100000	; implied bit(%r10) <- 0x100000
+ 251 00d4 02C000C0 		xld.w	%r2, 0x100000	; implied bit(%r2) <- 0x100000
+ 251      026C
+ 252              	
+ 253              		;@@@ del 01/02/15 xld.w	%r13, 0xfffff	; mask(%r13) <- 0xfffff 
+ 254 00da 01C0FFDF 		xld.w	%r4, 0xfffff	; mask(%r4) <- 0xfffff 
+ 254      F46F
+ 255              	
+ 256              		; isolate mantissa1
+ 257 00e0 0168     		cmp		%r1, 0			; if 指数部１(%r1) = 0 then goto getman2
+ 258 00e2 0319     		jreq.d	getman2
+ 259              		;@@@ del 01/02/15 and		%r7, %r13		; 引数１[H](%r7) & mask(%r13) clear first 12 bits of %r7
+ 260 00e4 4732     		and		%r7, %r4		; 引数１[H](%r7) & mask(%r4) clear first 12 bits of %r7
+ 261              	
+ 262              		;@@@ del 01/02/15 or		%r7, %r10		; 引数１[H](%r7) | mplied bit(%r10)  else normal input --> add im
+ 263 00e6 2736     		or		%r7, %r2		; 引数１[H](%r7) | mplied bit(%r2)  else normal input --> add implied bit
+ 264              		
+ 265              	getman2:
+ 266 00e8 0368     		cmp		%r3, 0			; if 指数部２(%r3) = 0 then goto signs
+ 267 00ea 0319     		jreq.d	cmpexp
+ 268              		;@@@ del 01/02/15 and		%r9, %r13		; 引数２[H](%r9) & mask(%r13) clear first 12 bits of %r9
+ 269 00ec 4932     		and		%r9, %r4		; 引数２[H](%r9) & mask(%r4) clear first 12 bits of %r9
+ 270              	
+GAS LISTING adddf3.s 			page 6
+
+
+ 271              		;@@@ del 01/02/15 or		%r9, %r10		; 引数２[H](%r9) | mplied bit(%r10) else normal input --> add imp
+ 272 00ee 2936     		or		%r9, %r2		; 引数２[H](%r9) | mplied bit(%r2) else normal input --> add implied bit
+ 273              	
+ 274              	cmpexp:
+ 275              		; compare exponents -- %r1 will be result exponent
+ 276              		; if exp1 > exp2 then mantissa2 is shifted to the right
+ 277              		; if exp2 > exp1 then mantissa1 is shifted to the right
+ 278              	
+ 279              		;@@@ del 01/02/15 ld.w	%r11, 0			; xflag(%r11) = 0
+ 280 00f0 046C     		ld.w 	%r4, 0
+ 281              		; 	SET_TEMP %r0, %r4			; 共有レジスタ[temp](%r0) <- xflag = 0 
+ 282              	__L0009:
+ 283 00f2 07D8FFDF 		xand	%r0,0xc03fffff	; 共有レジスタ TEMPクリア
+ 283      F073
+ 284 00f8 03C0F473 		xand	%r4,0xff			; 1バイト mask
+ 285 00fc 8498     		rr		%r4,8			; TEMPのビット位置にシフト
+ 286 00fe 2498     		rr		%r4,2			; TEMPのビット位置にシフト
+ 287 0100 4036     		or		%r0,%r4			; TEMPセット
+ 288 0102 849C     		rl		%r4,8			; 設定値復帰
+ 289 0104 249C     		rl		%r4,2			; 設定値復帰
+ 290              	
+ 291              	
+ 292 0106 312A     		cmp		%r1, %r3
+ 293 0108 6318     		jreq	negation		; if 指数部１(%r1) = 指数部２(%r3) then jump to negation
+ 294 010a 3508     		jrgt	man2			; if 指数部１(%r1) > 指数部２(%r3) then jump to man2
+ 295              	
+ 296              		; case: exp1 < exp2
+ 297              		;@@@ del 01/02/15 ld.w	%r11, 2			; xflag(%r11) = 2
+ 298 010c 246C     		ld.w 	%r4, 2
+ 299              		; 	SET_TEMP %r0, %r4		; 共有レジスタ[temp](%r0) <- xflag = 2 
+ 300              	__L0010:
+ 301 010e 07D8FFDF 		xand	%r0,0xc03fffff	; 共有レジスタ TEMPクリア
+ 301      F073
+ 302 0114 03C0F473 		xand	%r4,0xff			; 1バイト mask
+ 303 0118 8498     		rr		%r4,8			; TEMPのビット位置にシフト
+ 304 011a 2498     		rr		%r4,2			; TEMPのビット位置にシフト
+ 305 011c 4036     		or		%r0,%r4			; TEMPセット
+ 306 011e 849C     		rl		%r4,8			; 設定値復帰
+ 307 0120 249C     		rl		%r4,2			; 設定値復帰
+ 308              	
+ 309              	
+ 310              		;@@@ del 01/02/15 ld.w	%r10, %r1		; temp(%r10) = 指数部１(%r1)
+ 311 0122 142E     		ld.w	%r4, %r1		; temp(%r4) = 指数部１(%r1)
+ 312              	
+ 313 0124 312E     		ld.w	%r1, %r3		; 指数部１(%r1) = 指数部２(%r3)
+ 314              		; 	SET_EXP1 %r0, %r1		; @@@ 01/02/26 add start
+ 315              	__L0011:
+ 316 0126 E0DF0070 		xand	%r0,0xfffff800	; 共有レジスタ 指数部１クリア
+ 317 012a 1FC0F173 		xand	%r1,0x7ff		; １１ビットマスク
+ 318 012e 1036     		or		%r0,%r1			; 指数部１セット
+ 319              	
+ 320              	
+ 321              		;@@@ del 01/02/15 sub		%r3, %r10		; shift (%r3) = 指数部２(%r3) - 指数部１(%r1)
+ 322 0130 4326     		sub		%r3, %r4		; shift (%r3) = 指数部２(%r3) - 指数部１(%r4)
+ 323              	
+ 324              		;@@@ del 01/02/15 cmp		%r10, 0			; if 指数部１(%r1) != 0 then goto shftm1 (normal)
+ 325 0132 0468     		cmp		%r4, 0			; if 指数部１(%r4) != 0 then goto shftm1 (normal)
+GAS LISTING adddf3.s 			page 7
+
+
+ 326              	
+ 327 0134 021A     		jrne	shftm1
+ 328 0136 1364     		sub		%r3, 1			; shift(%r3) = shift (%r3) - 1  else denormal --> decrement shift
+ 329              	
+ 330              	shftm1:
+ 331 0138 00C0036A 		xcmp	%r3, 32			; if shift(%r3) < 32 then 64-bit shift
+ 332 013c 0B0C     		jrlt	shift1
+ 333              	
+ 334              		; case: shift >=32
+ 335 013e 762E     		ld.w	%r6, %r7		; 仮数部１[L] <- 仮数部１[H] (32-bit shift)
+ 336 0140 076C     		ld.w	%r7, 0			; 仮数部１[H] <- 0
+ 337 0142 0366     		sub		%r3, 32			; shift(%r3) = shift(%r3) - 32
+ 338              		;xsrl	%r6, %r3		; man1_2 >> shift
+ 339              		; used in 32-bit variable shifting	; 	VARSHIFT %r6, %r3, srl
+ 340              		; $1 = input register
+ 341              		; $2 = shift amount
+ 342              		; $3 = shift instruction
+ 343              	
+ 344              	__L0012:
+ 345 0144 8368     		cmp		%r3, 8		; if temp <= 8 then goto $$2
+ 346 0146 040E     		jrle	__L0013
+ 347              	
+ 348 0148 8688     		srl		%r6, 8		; shift input register 8 bits
+ 349 014a FD1F     		jp.d	__L0012
+ 350 014c 8364     		sub		%r3, 8		; temp = temp - 8
+ 351              	
+ 352              	__L0013:
+ 353 014e 3689     		srl		%r6, %r3		; last shift
+ 354 0150 3F1E     		jp		negation
+ 355              	
+ 356              	shift1:
+ 357              		; shift {man1, man1_2} right
+ 358              		;xsrl	%r6, %r3		; shift low 32-bits to the right x bits (shift amount = x)
+ 359              		;xrr	%r7, %r3		; rotate high 32-bits to the right x bits
+ 360              		;xsrl	%r10, %r3		; make a mask for last 32-x bits --> %r10 = 000...111
+ 361              	
+ 362              		;@@@ del 01/02/15 ld.w	%r10, -1		; mask(%r10) <- 0xffff ffff
+ 363 0152 F46F     		ld.w	%r4, -1		; mask(%r4) <- 0xffff ffff
+ 364              	
+ 365              		;@@@ del 01/02/15 SHFTROTSHFT %r3, %r6, %r7, %r10, srl, rr, %r3
+ 366              		; used in 64-bit variable shifting	; 	SHFTROTSHFT %r3, %r6, %r7, %r4, srl, rr, %r3
+ 367              		; $1 = shift amount
+ 368              		; $2 = 1st input register (shifted)
+ 369              		; $3 = 2nd input register (rotated)
+ 370              		; $4 = 3rd input register (mask --> shifted)
+ 371              		; $5 = shift instruction
+ 372              		; $6 = rotate instruction
+ 373              		; $7 = temp register
+ 374 0154 332E     		ld.w	%r3, %r3		; temp = shift amount
+ 375              	
+ 376              	__L0014:
+ 377 0156 8368     		cmp		%r3, 8		; if temp <= 8 then goto $$2
+ 378 0158 060E     		jrle	__L0015
+ 379              	
+ 380 015a 8688     		srl		%r6, 8		; shift 1st register
+ 381 015c 8798     		rr		%r7, 8		; rotate 2nd register
+ 382 015e 8488     		srl		%r4, 8		; shift 3rd register
+GAS LISTING adddf3.s 			page 8
+
+
+ 383 0160 FB1F     		jp.d	__L0014
+ 384 0162 8364     		sub		%r3, 8		; temp = temp - 8
+ 385              	
+ 386              	__L0015:
+ 387 0164 3689     		srl		%r6, %r3		; last shift
+ 388 0166 3799     		rr		%r7, %r3		; last rotate
+ 389 0168 3489     		srl		%r4, %r3		; last shift
+ 390              	
+ 391              		;@@@ del 01/02/15 not		%r3, %r10		; shift(%r3) = ~mask(%r10)   flip mask for first x bits --> %r3 
+ 392 016a 433E     		not		%r3, %r4		; shift(%r3) = ~mask(%r4)   flip mask for first x bits --> %r3 = 111...000 (mask)
+ 393              	
+ 394 016c 7332     		and		%r3, %r7		; isolate first x bits of %r7
+ 395 016e 3636     		or		%r6, %r3		; add first x bits of %r7 to %r6
+ 396 0170 2F1F     		jp.d	negation
+ 397              		;@@@ del 01/02/15 and		%r7, %r10		; keep the low 32-x bits of %r7
+ 398 0172 4732     		and		%r7, %r4		; keep the low 32-x bits of %r7
+ 399              	
+ 400              	
+ 401              	man2:						; case: 指数部１(%r1) > 指数部２(%r3)
+ 402              		;@@@ del 01/02/15 ld.w	%r11, 1			; xflag(%r11) = 1
+ 403 0174 146C     		ld.w 	%r4, 1
+ 404              		; 	SET_TEMP %r0, %r4		; 共有レジスタ[temp](%r0) <- xflag = 1 
+ 405              	__L0016:
+ 406 0176 07D8FFDF 		xand	%r0,0xc03fffff	; 共有レジスタ TEMPクリア
+ 406      F073
+ 407 017c 03C0F473 		xand	%r4,0xff			; 1バイト mask
+ 408 0180 8498     		rr		%r4,8			; TEMPのビット位置にシフト
+ 409 0182 2498     		rr		%r4,2			; TEMPのビット位置にシフト
+ 410 0184 4036     		or		%r0,%r4			; TEMPセット
+ 411 0186 849C     		rl		%r4,8			; 設定値復帰
+ 412 0188 249C     		rl		%r4,2			; 設定値復帰
+ 413              	
+ 414              	
+ 415              		;@@@ del 01/02/15 ld.w	%r10, %r1		; temp(%r10) <- 指数部１(%r1)
+ 416 018a 142E     		ld.w	%r4, %r1		; temp(%r4) <- 指数部１(%r1)
+ 417              	
+ 418              		;@@@ del 01/02/15 sub		%r10, %r3		; shift(%r10) = 指数部１(%r1) - 指数部２(%r3)
+ 419 018c 3426     		sub		%r4, %r3		; shift(%r4) = 指数部１(%r1) - 指数部２(%r3)
+ 420              	
+ 421 018e 0368     		cmp		%r3, 0			; if 指数部２(%r1) != 0 then goto shftm2 (normal)
+ 422 0190 021A     		jrne	shftm2
+ 423              		;@@@ del 01/02/15 sub		%r10, 1			; else denormal --> shift(%r10) = shift(%r10) - 1
+ 424 0192 1464     		sub		%r4, 1			; else denormal --> shift(%r4) = shift(%r4) - 1
+ 425              		
+ 426              	shftm2:
+ 427              		;@@@ del 01/02/15 xcmp	%r10, 32		; if shift(%r10) < 32 then 64-bit shift
+ 428 0194 00C0046A 		xcmp	%r4, 32		; if shift(%r4) < 32 then 64-bit shift
+ 429              	
+ 430 0198 0B0C     		jrlt	shift2
+ 431              	
+ 432              		; case: shift >=32
+ 433 019a 982E     		ld.w	%r8, %r9		; 仮数部２[L] <- 仮数部２[H] 
+ 434 019c 096C     		ld.w	%r9, 0			; 仮数部２[H] <- 0
+ 435              		;@@@ del 01/02/15 sub		%r10, 32		; shift(%r10) = shift(%r10) - 32
+ 436 019e 0466     		sub		%r4, 32			; shift(%r4) = shift(%r4) - 32
+ 437              	
+ 438              		;xsrl	%r8, %r10		; man2_2 >> shift
+GAS LISTING adddf3.s 			page 9
+
+
+ 439              		;@@@ del 01/02/15 VARSHIFT %r8, %r10, srl
+ 440              		; used in 32-bit variable shifting	; 	VARSHIFT %r8, %r4, srl
+ 441              		; $1 = input register
+ 442              		; $2 = shift amount
+ 443              		; $3 = shift instruction
+ 444              	
+ 445              	__L0017:
+ 446 01a0 8468     		cmp		%r4, 8		; if temp <= 8 then goto $$2
+ 447 01a2 040E     		jrle	__L0018
+ 448              	
+ 449 01a4 8888     		srl		%r8, 8		; shift input register 8 bits
+ 450 01a6 FD1F     		jp.d	__L0017
+ 451 01a8 8464     		sub		%r4, 8		; temp = temp - 8
+ 452              	
+ 453              	__L0018:
+ 454 01aa 4889     		srl		%r8, %r4		; last shift
+ 455              	
+ 456 01ac 111E     		jp		negation
+ 457              	
+ 458              	shift2:
+ 459              		; shift {man2, man2_2} right
+ 460              		;xsrl	%r8, %r10		; shift low 32-bits to the right x bits (shift amount = x)
+ 461              		;xrr	%r9, %r10		; rotate high 32-bits to the right x bits
+ 462              		;xsrl	%r3, %r10		; make a mask for last 32-x bits --> %r3 = 000...111
+ 463              	
+ 464 01ae F36F     		ld.w	%r3, -1			; %r3 = 0xffff ffff
+ 465              		;@@@ del 01/02/15 SHFTROTSHFT %r10, %r8, %r9, %r3, srl, rr, %r13		; %r13 = temp
+ 466              		; used in 64-bit variable shifting	; 	SHFTROTSHFT %r4, %r8, %r9, %r3, srl, rr, %r4		; %r4 = temp
+ 467              		; $1 = shift amount
+ 468              		; $2 = 1st input register (shifted)
+ 469              		; $3 = 2nd input register (rotated)
+ 470              		; $4 = 3rd input register (mask --> shifted)
+ 471              		; $5 = shift instruction
+ 472              		; $6 = rotate instruction
+ 473              		; $7 = temp register
+ 474 01b0 442E     		ld.w	%r4, %r4		; temp = shift amount
+ 475              	
+ 476              	__L0019:
+ 477 01b2 8468     		cmp		%r4, 8		; if temp <= 8 then goto $$2
+ 478 01b4 060E     		jrle	__L0020
+ 479              	
+ 480 01b6 8888     		srl		%r8, 8		; shift 1st register
+ 481 01b8 8998     		rr		%r9, 8		; rotate 2nd register
+ 482 01ba 8388     		srl		%r3, 8		; shift 3rd register
+ 483 01bc FB1F     		jp.d	__L0019
+ 484 01be 8464     		sub		%r4, 8		; temp = temp - 8
+ 485              	
+ 486              	__L0020:
+ 487 01c0 4889     		srl		%r8, %r4		; last shift
+ 488 01c2 4999     		rr		%r9, %r4		; last rotate
+ 489 01c4 4389     		srl		%r3, %r4		; last shift
+ 490              	
+ 491              		;@@@ del 01/02/15 not		%r10, %r3		; flip mask for first x bits --> %r10 = 111...000 (mask)
+ 492 01c6 343E     		not		%r4, %r3		; flip mask for first x bits --> %r4 = 111...000 (mask)
+ 493              	
+ 494              		;@@@ del 01/02/15 and		%r10, %r9		; isolate first x bits of %r9
+ 495 01c8 9432     		and		%r4, %r9		; isolate first x bits of %r9
+GAS LISTING adddf3.s 			page 10
+
+
+ 496              	
+ 497              		;@@@ del 01/02/15 or		%r8, %r10		; add first x bits of %r9 to %r8
+ 498 01ca 4836     		or		%r8, %r4		; add first x bits of %r9 to %r8
+ 499              	
+ 500 01cc 3932     		and		%r9, %r3		; keep the low 32-x bits of %r9
+ 501              	
+ 502              	negation:
+ 503              		; xflag = 0 if exp1 = exp2
+ 504              		;		  1 if exp1 > exp2
+ 505              		;		  2 if exp1 < exp2
+ 506              		; %r0 will now be result sign bit
+ 507              	
+ 508              		; if exp1 = exp2 then this is the case
+ 509              		; sign1	(%r0)  sign2 (%r2)	result sign (%r0)
+ 510              		;	0			  0				0	<== no change
+ 511              		;	1			  0				0	<== change to 1 if result < 0
+ 512              		;	0			  1				0	<== change to 1 if result < 0
+ 513              		;	1			  1				1	<== no change
+ 514              	
+ 515              		; 	GET_TEMP 	%r0, %r1	; xflag(%r1) <- 共有レジスタ[TEMP](%r0)	@@@ 01/02/15 add
+ 516              	__L0021:
+ 517 01ce 012E     		ld.w	%r1,%r0			
+ 518 01d0 819C     		rl		%r1,8
+ 519 01d2 219C     		rl		%r1,2
+ 520 01d4 03C0F173 		xand	%r1,0xff			; 共有レジスタ TEMP取得
+ 521              	
+ 522              		; 	GET_SIGN1	%r0, %r4	; 符号ビット１(%r4) <- 共有レジスタ[符号ビット１](%r0)	@@@ 01/02/15 add
+ 523              	__L0022:
+ 524 01d8 042E     		ld.w	%r4,%r0			; 
+ 525 01da 149C     		rl		%r4,1			; 符号ビットローテート
+ 526 01dc 1470     		and		%r4,1			; 共有レジスタ 符号ビット１取得
+ 527              	
+ 528              		; 	GET_SIGN2	%r0, %r2	; 符号ビット２(%r2) <- 共有レジスタ[符号ビット２](%r0)	@@@ 01/02/15 add
+ 529              	__L0023:
+ 530 01de 022E     		ld.w	%r2,%r0			; 
+ 531 01e0 229C     		rl		%r2,2			; 符号ビットローテート
+ 532 01e2 1270     		and		%r2,1			; 共有レジスタ 符号ビット２取得
+ 533              	
+ 534              	
+ 535              		;@@@ del 01/02/15 cmp		%r0, %r2		; if 符号ビット１(%r0) = 符号ビット２(%r2)
+ 536 01e4 242A     		cmp		%r4, %r2		; if 符号ビット１(%r4) = 符号ビット２(%r2)
+ 537              	
+ 538 01e6 1618     		jreq	sign			; then goto sign
+ 539              		;@@@ del 01/02/15 cmp		%r0, 1			; if 符号ビット１(%r0) != 1 
+ 540 01e8 1468     		cmp		%r4, 1			; if 符号ビット１(%r4) != 1 
+ 541              	
+ 542 01ea 101A     		jrne	negm2			; then goto negm2
+ 543              	
+ 544              		; case: sign1 = 1
+ 545              		;@@@ del 01/02/15 cmp		%r11, 0			; only change %r0 if xflag(%r11) = 0
+ 546 01ec 0168     		cmp		%r1, 0			; only change %r0 if xflag(%r1) = 0
+ 547              	
+ 548 01ee 091A     		jrne	negm1
+ 549              		;@@@ del 01/02/15 ld.w	%r0, 0			; 符号ビット１(%r0) <- 0
+ 550 01f0 046C     		ld.w	%r4, 0
+ 551              		; 	SET_SIGN1	%r0, %r4		; 共有レジスタ[符号ビット１] <- 0
+ 552              	__L0024:
+GAS LISTING adddf3.s 			page 11
+
+
+ 553 01f2 FFCFFFDF 		xand	%r0,0x7fffffff	; 共有レジスタ 符号ビット１クリア
+ 553      F073
+ 554 01f8 1470     		and		%r4,1			; 1ビットマスク
+ 555 01fa 1498     		rr		%r4,1			; 符号ビット１のビット位置にローテート
+ 556 01fc 4036     		or		%r0,%r4			; 符号ビット１セット
+ 557 01fe 149C     		rl		%r4,1			; 符号ビット復帰
+ 558              	
+ 559              	negm1:
+ 560 0200 773E     		not		%r7, %r7		; negate the first input
+ 561 0202 663E     		not		%r6, %r6
+ 562 0204 1660     		add		%r6, 1
+ 563 0206 27B8     		adc		%r7, %r2		; using %r2 (equals 0) to add the carry-over
+ 564 0208 051E     		jp		sign
+ 565              	
+ 566              	negm2:
+ 567              		; case: sign2 = 1
+ 568 020a 993E     		not		%r9, %r9		; negate the second input
+ 569 020c 883E     		not		%r8, %r8
+ 570 020e 1860     		add		%r8, 1
+ 571              		;@@@ del 01/02/15 adc		%r9, %r0		; using %r0 (equals 0) to add carry-over
+ 572 0210 49B8     		adc		%r9, %r4		; using %r4 (equals 0) to add carry-over
+ 573              	
+ 574              	sign:
+ 575              		; fix sign
+ 576              		; if xflag = 2 then result sign = sign2 (%r0 = %r2)
+ 577              		; if xflag = 1 then result sign = sign1	(%r0 = %r0)
+ 578              		; if xflag = 0 then result sign = 0 or 1
+ 579              	
+ 580 0212 2168     		cmp		%r1, 2			; if xflag(%r1) != 2
+ 581 0214 081A     		jrne	addition		; then goto  addition
+ 582              	
+ 583              		; case: xflag = 2
+ 584              		;@@@ del 01/02/15 ld.w	%r0, %r2		; 符号ビット１(%r0) <- 符号ビット２(%r2)
+ 585              		; 	SET_SIGN1	%r0, %r2		; 共有レジスタ[符号ビット１] <- 符号ビット２(%r2)
+ 586              	__L0025:
+ 587 0216 FFCFFFDF 		xand	%r0,0x7fffffff	; 共有レジスタ 符号ビット１クリア
+ 587      F073
+ 588 021c 1270     		and		%r2,1			; 1ビットマスク
+ 589 021e 1298     		rr		%r2,1			; 符号ビット１のビット位置にローテート
+ 590 0220 2036     		or		%r0,%r2			; 符号ビット１セット
+ 591 0222 129C     		rl		%r2,1			; 符号ビット復帰
+ 592              	
+ 593              	
+ 594              	addition:
+ 595              		; %r0 = result sign, %r1 = result exponent
+ 596              		; {%r7, %r6} = mantissa1, {%r9, %r8} = mantiss2
+ 597              		; {%r5, %r5} = result
+ 598              	
+ 599 0224 642E     		ld.w	%r4, %r6		; 戻り値[L](%r4) = 仮数部１[L](6) + 仮数部２[L](%r8)
+ 600 0226 8422     		add		%r4, %r8
+ 601              	
+ 602 0228 752E     		ld.w	%r5, %r7		; 戻り値[H](%r5) = 仮数部１[H](%r7) + 仮数部２[H](%r9) (with carry)
+ 603 022a 95B8     		adc		%r5, %r9
+ 604              	
+ 605 022c 0568     		cmp		%r5, 0
+ 606 022e 1408     		jrgt	count			; if 戻り値[H](%r5)  > 0 then normalize
+ 607 0230 040C     		jrlt	negative		; if 戻り値[H](%r5)  < 0 then negate result first
+GAS LISTING adddf3.s 			page 12
+
+
+ 608              	
+ 609              		; case: result1 = 0
+ 610 0232 0468     		cmp		%r4, 0
+ 611 0234 5018     		jreq	end				; if 戻り値[L](%r4) = 0 then end
+ 612 0236 1008     		jrgt	count			; if 戻り値[L](%r4) > 0 then normalize
+ 613              	
+ 614              	negative:					; result is negative
+ 615 0238 553E     		not		%r5, %r5		; negate the 64-bit result
+ 616 023a 443E     		not		%r4, %r4
+ 617 023c 1460     		add		%r4, 1			; 戻り値[L](%r4) = ~戻り値[L](%r4) + 1
+ 618 023e 026C     		ld.w	%r2, 0			; %r2 = 0 (temp variable for carry-over add)
+ 619 0240 25B8     		adc		%r5, %r2		; 戻り値[H](%r5) = ~戻り値[H](%r5) + carry over
+ 620              	
+ 621              		;@@@ 01/02/15 del cmp		%r11, 0			; if xflag(%r11) != 0 then goto count
+ 622 0242 0168     		cmp		%r1, 0			; if xflag(%r1) != 0 then goto count
+ 623              	
+ 624 0244 091A     		jrne	count
+ 625              		;@@@ 01/02/15 del ld.w	%r0, 1			; sign was 0 now sign = 1
+ 626 0246 166C     		ld.w	%r6, 1
+ 627              		; 	SET_SIGN1	%r0, %r6		; 共有レジスタ[符号ビット１] <- 1
+ 628              	__L0026:
+ 629 0248 FFCFFFDF 		xand	%r0,0x7fffffff	; 共有レジスタ 符号ビット１クリア
+ 629      F073
+ 630 024e 1670     		and		%r6,1			; 1ビットマスク
+ 631 0250 1698     		rr		%r6,1			; 符号ビット１のビット位置にローテート
+ 632 0252 6036     		or		%r0,%r6			; 符号ビット１セット
+ 633 0254 169C     		rl		%r6,1			; 符号ビット復帰
+ 634              	
+ 635              	count:
+ 636              		; %r0 = result sign, %r1 = result exponent
+ 637              		; {%r5, %r4} = result, %r13 = count
+ 638              	
+ 639 0256 162E     		ld.w	%r6, %r1		; xflag(%r6) <- xflag(%r1) @@@ 01/02/15 add
+ 640              	
+ 641              		;@@@ 01/02/15 del ld.w	%r12, %r5		; copy result to input register of subroutine
+ 642 0258 582E     		ld.w	%r8, %r5		; copy result to input register of subroutine
+ 643              	
+ 644              		;@@@ 01/02/15 del ld.w	%r13, %r4
+ 645 025a 492E     		ld.w	%r9, %r4
+ 646 025c 00C000C0 		xcall	__scan64		; call 64-bit scan subroutine
+ 646      001C
+ 647              			
+ 648              		; check result exponent for normalizing	
+ 649              	
+ 650              		; 	GET_EXP1 	%r0, %r1	; 指数部１(%r1) <- 共有レジスタ[指数部１](%r0)
+ 651              	__L0027:
+ 652 0262 012E     		ld.w	%r1,%r0			; 
+ 653 0264 1FC0F173 		xand	%r1,0x7ff		; 共有レジスタ 指数部１取得
+ 654              	
+ 655 0268 0168     		cmp		%r1, 0			; if 指数部１(%r1) != 0 then goto normalize
+ 656 026a 051A     		jrne	normalize
+ 657              	
+ 658              		; case: exp = 0
+ 659              		;@@@ 01/02/15 del cmp		%r13, 11		; if count(%r13) != 11 then goto end (denormal result)
+ 660 026c B968     		cmp		%r9, 11			; if count(%r9) != 11 then goto end (denormal result)
+ 661              	
+ 662 026e 2D1A     		jrne	finish
+GAS LISTING adddf3.s 			page 13
+
+
+ 663              	
+ 664              		; case: count = 11 & exp = 0 (denormal + denormal with carry-over result)
+ 665 0270 2C1F     		jp.d	finish
+ 666 0272 116C     		ld.w	%r1, 1			; 指数部１(%r1) <- 1	
+ 667              	
+ 668              	normalize:
+ 669              		;@@@ 01/02/15 del cmp		%r13, 11
+ 670 0274 B968     		cmp		%r9, 11
+ 671              	
+ 672 0276 2918     		jreq	finish			; if count(%r13) = 11 then goto finish (no shifting needed)
+ 673 0278 190C     		jrlt	rshift			; if count(%r9) < 11 then need to shift right
+ 674              	
+ 675              		; case: count > 11	(need to shift left)
+ 676              		;@@@ 01/02/15 del sub		%r13, 11		; count(%r13) = count(%r13) - 11
+ 677 027a B964     		sub		%r9, 11			; count(%r9) = count(%r9) - 11
+ 678              	
+ 679              		;@@@ 01/02/15 del cmp		%r1, %r13		; if 指数部１(%r1) > count then normal result
+ 680 027c 912A     		cmp		%r1, %r9		; if 指数部１(%r1) > count(%r9) then normal result
+ 681 027e 0408     		jrgt	lshift
+ 682              	
+ 683              		; case: exp <= count (denormal result)
+ 684 0280 1164     		sub		%r1, 1			; 指数部１(%r1) = 指数部１(%r1) - 1
+ 685 0282 021F     		jp.d	lshift
+ 686              		;@@@ 01/02/15 del ld.w	%r13, %r1		; shift(%r13) = 指数部１(%r1)
+ 687 0284 192E     		ld.w	%r9, %r1		; shift(%r9) = 指数部１(%r1)
+ 688              	
+ 689              	
+ 690              	lshift:
+ 691              		; {%r5, %r4} << shift
+ 692              		;xsll	%r5, %r13		; shift high 32-bits to the left x bits (shift amount = x)
+ 693              		;xrl	%r4, %r13		; rotate low 32-bits to the left x bits
+ 694              		;xsll	%r2, %r13		; make a mask for first 32-x bits --> %r2 = 111...000
+ 695              	
+ 696 0286 F26F     		ld.w	%r2, -1			; %r2 = 0xffff ffff
+ 697              		;@@@ 01/02/15 del SHFTROTSHFT %r13, %r5, %r4, %r2, sll, rl, %r11
+ 698              		; used in 64-bit variable shifting	; 	SHFTROTSHFT %r9, %r5, %r4, %r2, sll, rl, %r6
+ 699              		; $1 = shift amount
+ 700              		; $2 = 1st input register (shifted)
+ 701              		; $3 = 2nd input register (rotated)
+ 702              		; $4 = 3rd input register (mask --> shifted)
+ 703              		; $5 = shift instruction
+ 704              		; $6 = rotate instruction
+ 705              		; $7 = temp register
+ 706 0288 962E     		ld.w	%r6, %r9		; temp = shift amount
+ 707              	
+ 708              	__L0028:
+ 709 028a 8668     		cmp		%r6, 8		; if temp <= 8 then goto $$2
+ 710 028c 060E     		jrle	__L0029
+ 711              	
+ 712 028e 858C     		sll		%r5, 8		; shift 1st register
+ 713 0290 849C     		rl		%r4, 8		; rotate 2nd register
+ 714 0292 828C     		sll		%r2, 8		; shift 3rd register
+ 715 0294 FB1F     		jp.d	__L0028
+ 716 0296 8664     		sub		%r6, 8		; temp = temp - 8
+ 717              	
+ 718              	__L0029:
+ 719 0298 658D     		sll		%r5, %r6		; last shift
+GAS LISTING adddf3.s 			page 14
+
+
+ 720 029a 649D     		rl		%r4, %r6		; last rotate
+ 721 029c 628D     		sll		%r2, %r6		; last shift
+ 722              	
+ 723 029e 233E     		not		%r3, %r2		; flip mask for last x bits --> %r3 = 000...111 (mask)
+ 724 02a0 4332     		and		%r3, %r4		; isolate last x bits of %r4
+ 725 02a2 3536     		or		%r5, %r3		; add last x bits of %r4 to %r5
+ 726 02a4 2432     		and		%r4, %r2		; keep the high 32-x bits of %r4
+ 727              	
+ 728 02a6 111F     		jp.d	finish
+ 729              		;@@@ 01/02/15 del sub		%r1, %r13		; 指数部１(%r1) = 指数部１(%r1) - shift(%r13)
+ 730 02a8 9126     		sub		%r1, %r9		; 指数部１(%r1) = 指数部１(%r1) - shift(%r9)
+ 731              	
+ 732              	rshift:
+ 733              		; shift to the right 1 bit
+ 734 02aa 1488     		srl		%r4, 1			; shift low 32-bits to the right 1 bit
+ 735 02ac 136C     		ld.w	%r3, 1			; mask
+ 736 02ae 5332     		and		%r3, %r5		; get LSB of high 32-bits
+ 737 02b0 1398     		rr		%r3, 1			; rotate to MSB position
+ 738 02b2 3436     		or		%r4, %r3		; add to %r4
+ 739 02b4 1588     		srl		%r5, 1			; shift high 32-bits to the right 1 bit
+ 740 02b6 1160     		add		%r1, 1			; exp = exp + 1
+ 741              	
+ 742              		; overflow check	
+ 743 02b8 1FC0F16B 		xcmp	%r1, 0x7ff		; if 指数部１(%r1) < 0x7ff then jump to finish
+ 744 02bc 060C     		jrlt	finish
+ 745              	
+ 746              	overflow:
+ 747 02be FECF00C0 		xld.w	%r5, 0x7ff00000	; put infinity into result
+ 747      056C
+ 748 02c4 081F     		jp.d	end				; delayed jump
+ 749 02c6 046C     		ld.w	%r4, 0
+ 750              	
+ 751              	finish:
+ 752              		; %r0 = sign, %r1 = exponent, %r5 = mantissa
+ 753 02c8 01C0FFDF 		xand	%r5, 0xfffff		; isolate mantissa
+ 753      F573
+ 754              	
+ 755 02ce 81984198 		xrr		%r1, 12			; position exponent bits to [30:23]
+ 756 02d2 1536     		or		%r5, %r1
+ 757              	
+ 758              	end:
+ 759              		;@@@ 01/02/15 del rr		%r0, 1			; position sign bit to MSB
+ 760              		; 	GET_SIGN1	%r0, %r6	; 符号ビット１(%r6) <- 共有レジスタ[符号ビット１](%r0)
+ 761              	__L0030:
+ 762 02d4 062E     		ld.w	%r6,%r0			; 
+ 763 02d6 169C     		rl		%r6,1			; 符号ビットローテート
+ 764 02d8 1670     		and		%r6,1			; 共有レジスタ 符号ビット１取得
+ 765              	
+ 766 02da 1698     		rr		%r6, 1			; position sign bit to MSB	@@@ 01/02/15 add
+ 767              		;@@@ 01/02/15 del or		%r5, %r0		; 戻り値[H](%r5) | 符号ビット１(%r0)
+ 768 02dc 6536     		or		%r5, %r6		; 戻り値[H](%r5) | 符号ビット１(%r0)
+ 769              	
+ 770              		;@@@ 01/01/23 add start hinokuchi
+ 771              		;ld.w	%r13, [%sp+3]	; %r13復帰
+ 772              		;ld.w	%r12, [%sp+2]	; %r12復帰
+ 773              		;ld.w	%r11, [%sp+1]	; %r11復帰
+ 774              		;ld.w	%r10, [%sp+0]	; %r10復帰
+GAS LISTING adddf3.s 			page 15
+
+
+ 775              		;add		%sp, 4
+ 776              		;@@@ 01/01/23 add end
+ 777 02de 4302     		popn	%r3				; restore register values
+ 778 02e0 4006     		ret

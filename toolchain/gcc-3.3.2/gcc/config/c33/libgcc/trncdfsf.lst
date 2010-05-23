@@ -1,0 +1,126 @@
+GAS LISTING trncdfsf.s 			page 1
+
+
+   1              	;*********************************************
+   2              	;*	Copyright (C), 1996-2001 SEIKO EPSON Corp.
+   3              	;*		ALL RIGHTS RESERVED
+   4              	;*
+   5              	;*	filename : trncdfsf.s
+   6              	;*
+   7              	;*	Change type: Double float --> Single float
+   8              	;*		input: (%r7, %r6)
+   9              	;*		output: %r4
+  10              	;*
+  11              	;*	Begin		1996/09/12	V. Chan
+  12              	;*  変更		2001/01/17  O.Hinokuchi
+  13              	;*	gas対応		2001/10/15	watanabe
+  14              	;*
+  15              	;*****************************************
+  16              	
+  17              	.section .text
+  18              	.align 1
+  19              	.global __truncdfsf2
+  20              	
+  21              	__truncdfsf2:
+  22              	
+  23 0000 0102     		pushn	%r1				; save register values
+  24              	
+  25 0002 702E     		ld.w	%r0, %r7		; put sign of input (%r7) into %r0
+  26 0004 109C     		rl		%r0, 1
+  27 0006 1070     		and		%r0, 1
+  28              	
+  29 0008 712E     		ld.w	%r1, %r7		; put exponent into %r1
+  30 000a 118C     		sll		%r1, 1
+  31 000c 81888188 		xsrl 	%r1, 21
+  31      5188
+  32              	
+  33              								; 0x368 - 0x3ff(bias) + 0x7f(bias) = -24
+  34 0012 0DC0816A 		xcmp	%r1, 0x368		; if exp < 0x368 then goto end
+  35 0016 340F     		jrle.d	end				; round to zero case (result = 0)
+  36 0018 046C     		ld.w	%r4, 0
+  37              	
+  38              								; 0x47f - 0x3ff(bias) + 0x7f(bias) = 255
+  39 001a 11C0F16B 		xcmp	%r1, 0x47f		; if exp >= 0x47f then overflow
+  40 001e F0CF00C0 		xld.w	%r4, 0x7f800000	; result = infinity
+  40      046C
+  41 0024 2D0A     		jrge	end
+  42              		
+  43              		; isolate mantissa
+  44 0026 01C0FFDF 		xand	%r7,0xfffff		; clear first 12 bits of %r7
+  44      F773
+  45              		
+  46              								; 0x380 - 0x3ff + 0x7f = 0
+  47 002c 0EC00168 		xcmp	%r1, 0x380		; if exp > 0x380 then goto normal
+  48 0030 1B08     		jrgt	normal			; normal result
+  49              	
+  50              		; case: exp <= 0x380 (-127 --> denormal result)
+  51 0032 02C000C0 		xoor	%r7,0x100000	; add implied bit
+  51      0774
+  52              								; 0x37e - 0x3ff + 0x7f = -2 (2 bit shift)
+  53 0038 0DC0E16B 		xcmp	%r1, 0x37e		; if 0x380 > exp > 0x37e then goto shftleft
+GAS LISTING trncdfsf.s 			page 2
+
+
+  54 003c 0B08     		jrgt	shftleft
+  55              	
+  56              		; case: 0x368 =< exp <= 0x37e
+  57 003e 0DC0E56F 		xld.w	%r5, 0x37e		; shift = 0x37e - exp
+  58 0042 1526     		sub		%r5, %r1
+  59              		
+  60              		;xsrl	%r7, %r5		; mantissa >> 0x37e - exp (max. shift = 22)
+  61              		; variable shift routine (faster than xsrl)
+  62              	shift:
+  63 0044 8568     		cmp		%r5, 8			; if shift <= 8 then goto done
+  64 0046 040E     		jrle	done
+  65              		
+  66              		; case: shift > 8
+  67 0048 8564     		sub		%r5, 8			; shift = shift - 8
+  68 004a FD1F     		jp.d	shift
+  69 004c 8788     		srl		%r7, 8			; result >> 8
+  70              	
+  71              	done:						; case: %r5 < 8
+  72 004e 171F     		jp.d	finish
+  73 0050 5789     		srl		%r7, %r5		; final shift of result
+  74              	
+  75              	shftleft:
+  76              		; case: 0x37e < exp <= 0x380
+  77 0052 0DC0E167 		xsub	%r1,0x37e		; shift = exp - 0x37e (max. shift = 2)
+  78              	
+  79              		; {man1, man1_2} << shift
+  80 0056 178D     		sll		%r7, %r1		; shift high 32-bits to the left x bits (x = shift)
+  81 0058 169D     		rl		%r6, %r1		; rotate low 32-bits to the left x bits
+  82 005a F86F     		ld.w	%r8, -1			; %r8 = 0xffff ffff
+  83 005c 188D     		sll		%r8, %r1		; make a mask for first 32-x bits --> %r8 = 111...000
+  84 005e 893E     		not		%r9, %r8		; flip mask for last x bits --> %r9 = 000...111 (mask)
+  85 0060 6932     		and		%r9, %r6		; isolate last x bits of %r6
+  86 0062 0D1F     		jp.d	finish
+  87 0064 9736     		or		%r7, %r9		; add last x bits of %r6 to %r7
+  88              	
+  89              	normal:
+  90              		; case: exp > 0x380 (normal single float result)
+  91 0066 0EC00164 		xsub	%r1,0x380		; exp = exp - 0x3ff + 0x7f
+  92              	
+  93              		; {man1, man1_2} << 3
+  94 006a 378C     		sll		%r7, 3			; shift high 32-bits to the left 3 bits
+  95 006c 369C     		rl		%r6, 3			; rotate low 32-bits to the left 3 bits
+  96 006e 756C     		ld.w	%r5, 0x7		; make a mask for last 3 bits --> %r5 = 000...00111
+  97 0070 583E     		not		%r8, %r5		; flip mask for first 29 bits --> %r8 = 111...11000
+  98 0072 6532     		and		%r5, %r6		; isolate last 3 bits of %r6
+  99 0074 5736     		or		%r7, %r5		; add last 3 bits of %r6 to %r7
+ 100              	
+ 101 0076 81981198 		xrr		%r1, 9			; position exp
+ 102 007a 1736     		or		%r7, %r1		; add exponent
+ 103              	
+ 104              	finish:
+ 105 007c 742E     		ld.w	%r4, %r7		; put result in output register
+ 106              	
+ 107              	end:
+ 108 007e 1098     		rr		%r0, 1			; position sign bit
+ 109 0080 0436     		or		%r4, %r0		; add sign bit
+ 110              	
+GAS LISTING trncdfsf.s 			page 3
+
+
+ 111 0082 4102     		popn	%r1				; restore register values
+ 112              	
+ 113 0084 4006     		ret

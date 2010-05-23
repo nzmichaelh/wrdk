@@ -1,0 +1,101 @@
+GAS LISTING fcmps.s 			page 1
+
+
+   1              	;*********************************************
+   2              	;*	Copyright (C), 1996-2001 SEIKO EPSON Corp.
+   3              	;*		ALL RIGHTS RESERVED
+   4              	;*
+   5              	;*	filename : fcmps.s
+   6              	;*
+   7              	;*	Single floating point compare
+   8              	;*		input: %r6 & %r7
+   9              	;*		output: %psr
+  10              	;*
+  11              	;*	Begin		1996/10/30	V. Chan
+  12              	;*  変更		2001/01/15  O.Hinokuchi
+  13              	;*  			 ・レジスタ置換
+  14              	;*	gas対応		2001/10/15	watanabe
+  15              	;*
+  16              	;*********************************************
+  17              	
+  18              	.section .text
+  19              	.align 1
+  20              	.global __fcmps
+  21              	
+  22              	;==============================================
+  23              	;＜レジスタ説明＞
+  24              	;	%r2:指数部２
+  25              	;	%r4:符号ビット１[0(+) or 1(-)]
+  26              	;	%r5:符号ビット２[0(+) or 1(-)]/指数部１/mask
+  27              	;	%r6:引数１(float)/仮数部１
+  28              	;	%r7:引数２(float)/仮数部２
+  29              	;==============================================
+  30              	
+  31              	
+  32              	__fcmps:
+  33 0000 0202     		pushn	%r2				; %r0〜%r2 待避
+  34              	
+  35 0002 642E     		ld.w	%r4, %r6		; 符号ビット１(%r4) <- 引数１(%r6)
+  36 0004 149C     		rl		%r4, 1			; rotate left 1 bit
+  37 0006 1470     		and		%r4, 1			; keep LSB
+  38              	
+  39 0008 752E     		ld.w	%r5, %r7		; 符号ビット２(%r5) <- 引数２(%r7)
+  40 000a 159C     		rl		%r5, 1			; rotate left 1 bit
+  41 000c 1570     		and		%r5, 1			; keep LSB
+  42              	
+  43              		; if 符号ビット１(%r4) = 1 and 符号ビット２(%r5) = 0 then CVZN = 1001 (lt)
+  44              		; if 符号ビット１(%r4) = 0 and 符号ビット２(%r5) = 1 then CVZN = 0000 (gt)
+  45 000e 452A     		cmp		%r5, %r4		; if 符号ビット２(%r5) != 符号ビット１(%r4) 
+  46 0010 1F1A     		jrne	end				; then goto end
+  47              	
+  48              		; case: 符号ビット１(%r4) = 符号ビット２(%r5) 
+  49 0012 652E     		ld.w	%r5, %r6		; 指数部１(%r5) <- 引数１(%r6)
+  50 0014 158C     		sll		%r5, 1			; 指数部１(%r5) << 1
+  51 0016 85888588 		xsrl 	%r5, 24			; 指数部１(%r5) >> 24
+  51      8588
+  52              	
+  53 001c 722E     		ld.w	%r2, %r7		; 指数部２(%r2) <- 引数２(%r7)
+  54 001e 128C     		sll		%r2, 1			; 指数部２(%r2) << 1
+  55 0020 82888288 		xsrl 	%r2, 24			; 指数部２(%r2) >> 24
+  55      8288
+GAS LISTING fcmps.s 			page 2
+
+
+  56              	
+  57 0026 1468     		cmp		%r4, 1			; if 符号ビット１(%r4) = 1 
+  58 0028 0418     		jreq	negexp			; then goto negexp
+  59              	
+  60              		; max. 指数部 = 0xff
+  61              		; min. 指数部 = 0x00
+  62 002a 252A     		cmp		%r5, %r2		; if 指数部１(%r5) != 指数部２(%r2) 
+  63 002c 111A     		jrne	end				; then goto end
+  64 002e 031E     		jp		mancmp
+  65              	
+  66              	negexp:
+  67 0030 522A     		cmp		%r2, %r5		; if 指数部２(%r2) !=  指数部１(%r5)
+  68 0032 0E1A     		jrne	end				; then goto end
+  69              	
+  70              	mancmp:
+  71              		; check if Inf or NaN values
+  72 0034 03C0F56B 		xcmp	%r5, 0xff		; if 指数部１(%r5) = 指数部２(%r2) = 特殊数(0xff) 
+  73 0038 0B18     		jreq	end				; then goto end
+  74              	
+  75              		; case: 指数部１(%r5) = 指数部２(%r2)
+  76 003a 0FC0FFDF 		xld.w	%r5, 0x7fffff	; mask(%r5) <- 0x7fffff
+  76      F56F
+  77              	
+  78 0040 5632     		and		%r6, %r5		; 仮数部１(%r6) = 仮数部１(%r6) & mask(%r5)
+  79 0042 5732     		and		%r7, %r5		; 仮数部２(%r7) = 仮数部２(%r7) & mask(%r5)
+  80              	
+  81 0044 1468     		cmp		%r4, 1			; if 符号ビット１(%r4) = 1 
+  82 0046 0318     		jreq	negman			; then goto negman
+  83              	
+  84 0048 762A     		cmp		%r6, %r7		; compare 仮数部１(%r6) : 仮数部２(%r7) 
+  85 004a 021E     		jp		end
+  86              	
+  87              	negman:
+  88 004c 672A     		cmp		%r7, %r6		; compare 仮数部２(%r7) : 仮数部１(%r6) 
+  89              	
+  90              	end:
+  91 004e 4202     		popn	%r2				; %r0〜%r2 復帰
+  92 0050 4006     		ret

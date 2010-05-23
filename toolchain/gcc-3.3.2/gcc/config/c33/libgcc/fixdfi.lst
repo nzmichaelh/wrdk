@@ -1,0 +1,140 @@
+GAS LISTING fixdfi.s 			page 1
+
+
+   1              	;*********************************************
+   2              	;*	Copyright (C), 1996-2001 SEIKO EPSON Corp.
+   3              	;*		ALL RIGHTS RESERVED
+   4              	;*
+   5              	;*	filename : fixdfui.s
+   6              	;*
+   7              	;*	Change type: Double float --> Unsigned integer
+   8              	;*							  --> Signed integer
+   9              	;*		input: (%r7, %r6)
+  10              	;*		output: %r4
+  11              	;*
+  12              	;*	Begin		1996/09/12	V. Chan
+  13              	;*  変更		2001/01/18  O.Hinokuchi
+  14              	;*  			 ・レジスタ置き換え
+  15              	;*				 ・__fixunsdfsi ファイル分割のため削除 
+  16              	;*	gas対応		2001/10/15	watanabe
+  17              	;*
+  18              	;*****************************************
+  19              	
+  20              	.section .text
+  21              	.align 1
+  22              	.global __fixdfsi
+  23              	
+  24              	;==============================================
+  25              	;＜レジスタ説明＞
+  26              	;	%r0:符号ビット(0(+) or 1(-))
+  27              	;	%r4:戻り値(int or uint)
+  28              	;	%r5:指数部(11bit)
+  29              	;	%r6:引数２(Double下位32bit)
+  30              	;	%r7:引数１(Double上位32bit)
+  31              	;	%r8:mask
+  32              	;	%r9:shift
+  33              	;==============================================
+  34              	
+  35              	__fixdfsi:
+  36              	
+  37 0000 0002     		pushn	%r0				; %r0 待避
+  38              	
+  39 0002 702E     		ld.w	%r0, %r7		; 符号ビット(%r0) <- 引数２(%r7) put sign of input (%r7) into %r0
+  40 0004 109C     		rl		%r0, 1			; 符号ビット(%r0) >> 31 と同じ
+  41 0006 1070     		and		%r0, 1			; 符号ビット(%r0) = 符号ビット(%r0) & 1 moved to line 33
+  42              	
+  43 0008 752E     		ld.w	%r5, %r7		; 指数部(%r5) <- 引数１(%r7)  put exponent into %r5
+  44 000a 158C     		sll		%r5, 1			; 指数部(%r7) << 1
+  45 000c 85888588 		xsrl 	%r5, 21			; 指数部(%r7) >> 24	
+  45      5588
+  46              	
+  47 0012 0FC0F56B 		xcmp	%r5, 0x3ff		; if 指数部(%r7) < 0x3ff then goto end
+  48 0016 320D     		jrlt.d	end				; case: round to zero (underflow)
+  49 0018 046C     		ld.w	%r4, 0			; 戻り値(%r4) <- 0 clear output register
+  50              	
+  51 001a 10C0F569 		xcmp	%r5, 0x41f		; if 戻り値(%r4) >= 0x41f then integer overflow
+  52 001e 146C     		ld.w	%r4, 1			; 戻り値(%r4) <- 1
+  53 0020 2A0B     		jrge.d	overflow
+  54 0022 1498     		rr		%r4, 1			; 戻り値(%r4) = 0x8000 0000
+  55              	
+  56              		; isolate mantissa
+GAS LISTING fixdfi.s 			page 2
+
+
+  57 0024 742E     		ld.w	%r4, %r7		; 戻り値(%r4) <- 引数１(%r7) 
+  58 0026 01C0FFDF 		xand	%r4, 0xfffff	; 戻り値(%r4) <- 戻り値(%r4) & 0xfffff) clear first 12 bits of %r7
+  58      F473
+  59 002c 02C000C0 		xoor	%r4, 0x100000	; 戻り値(%r4) <- (戻り値(%r4) | 0x100000) add implied bit
+  59      0474
+  60 0032 10C0396D 		xld.w	%r9, 0x413		;shift(%r9) <- 0x413
+  61              	
+  62 0036 952A     		cmp		%r5, %r9		; 0x3ff + 31 - 11 = 0x413
+  63 0038 0908     		jrgt	shftleft		; if 指数部(%r7) > 0x413 then shift left
+  64              	
+  65              		; case: exp <= 0x413
+  66 003a 5926     		sub		%r9, %r5		; %r9 = 0x413 - exp (max = 20)
+  67              	
+  68              		;xsrl		%r4, %r3		; final shift of result
+  69              		; 32-bit variable shift routine
+  70              	L1:
+  71 003c 8968     		cmp		%r9, 8			; if shift(%r9)  <= 8 then goto L2
+  72 003e 040E     		jrle	L2
+  73              	
+  74 0040 8488     		srl		%r4, 8			; 戻り値(%r4) >> 8
+  75 0042 FD1F     		jp.d	L1
+  76 0044 8964     		sub		%r9, 8			; shift(%r9)  = shift(%r9)  - 8
+  77              	
+  78              	L2:
+  79 0046 121F     		jp.d	finish
+  80 0048 9489     		srl		%r4, %r9		; 戻り値(%r4) >> shift(%r9) last shift
+  81              	
+  82              	shftleft:
+  83 004a 9526     		sub		%r5, %r9		; 指数部(%r5) = 指数部(%r5) - shift(%r9=0x413) (max = 11)
+  84              		
+  85              		; {result, man1_2} << 0x413-exp
+  86              		;xsll	%r4, %r1		; shift high 32-bits to the left x bits (shift amount = x)
+  87              		;xrl	%r6, %r1		; rotate low 32-bits to the left x bits
+  88              		;xsll	%r2, %r1		; make a mask for first 32-x bits --> %r2 = 111...000
+  89              	
+  90 004c F86F     		ld.w	%r8, -1			; mask(%r8) = 0xffff ffff
+  91              		; 64-bit variable shift and rotate routine
+  92              	L3:
+  93 004e 8568     		cmp		%r5, 8			; if 指数部(%r5) <= 8 then goto L2
+  94 0050 060E     		jrle	L4
+  95              	
+  96 0052 848C     		sll		%r4, 8			; 戻り値(%r4) << 8
+  97 0054 869C     		rl		%r6, 8			; 引数２(%r6) rotate << 8
+  98 0056 888C     		sll		%r8, 8			; mask(%r8) << 8
+  99 0058 FB1F     		jp.d	L3
+ 100 005a 8564     		sub		%r5, 8			; 指数部(%r5) = 指数部(%r5) - 8 
+ 101              	
+ 102              	L4:
+ 103 005c 548D     		sll		%r4, %r5		; 戻り値(%r4) << 指数部(%r5)
+ 104 005e 569D     		rl		%r6, %r5		; 引数２(%r6) rotate << 指数部(%r5)
+ 105 0060 588D     		sll		%r8, %r5		; mask(%r8) << 指数部(%r5)
+ 106              	
+ 107 0062 853E     		not		%r5, %r8		; 指数部(%r5) = ~mask(%r8) flip mask for last x bits --> %r9 = 000...111 (mask)
+ 108 0064 6532     		and		%r5, %r6		; 指数部(%r5) = 指数部(%r5) & 引数２(%r6) isolate last x bits of %r6
+ 109 0066 5436     		or		%r4, %r5		; 戻り値(%r4) = 戻り値(%r4) & 指数部(%r5) add last x bits of %r6 to %r4
+ 110 0068 8632     		and		%r6, %r8		; 引数(%r6) = 引数２(%r6) & mask(%r8) keep the high 32-x bits of %r6
+ 111              	
+GAS LISTING fixdfi.s 			page 3
+
+
+ 112              	finish:
+ 113 006a 0068     		cmp		%r0, 0			; if 符号ビット(%r0) = 0 then goto end
+ 114 006c 0718     		jreq	end
+ 115              		
+ 116              		; case: sign = 1
+ 117 006e 443E     		not		%r4, %r4		; 戻り値(%r4) = ~戻り値(%r4)
+ 118 0070 051F     		jp.d	end
+ 119 0072 1460     		add		%r4, 1			; 戻り値(%r4) = 戻り値(%r4) + 1 (２の補数)
+ 120              	
+ 121              	overflow:
+ 122 0074 0068     		cmp		%r0, 0			; check sign
+ 123 0076 021A     		jrne	end				; if 符号ビット(%r0) = 1 then goto end
+ 124 0078 443E     		not		%r4, %r4		; 符号ビット(%r0) <- 0xffffffff
+ 125              	
+ 126              	end:
+ 127 007a 4002     		popn	%r0				; %r0 復帰
+ 128 007c 4006     		ret

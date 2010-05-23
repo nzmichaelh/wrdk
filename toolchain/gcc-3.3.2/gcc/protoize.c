@@ -592,6 +592,7 @@ safe_read (desc, ptr, len)
      int len;
 {
   int left = len;
+
   while (left > 0) {
     int nchars = read (desc, ptr, left);
     if (nchars < 0)
@@ -623,6 +624,7 @@ safe_write (desc, ptr, len, out_fname)
 {
   while (len > 0) {
     int written = write (desc, ptr, len);
+
     if (written < 0)
       {
 	int errno_val = errno;

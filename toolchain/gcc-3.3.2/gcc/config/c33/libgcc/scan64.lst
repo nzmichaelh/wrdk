@@ -1,0 +1,51 @@
+GAS LISTING scan64.s 			page 1
+
+
+   1              	;*********************************************
+   2              	;*	Copyright (C), 1996-2001 SEIKO EPSON Corp.
+   3              	;*		ALL RIGHTS RESERVED
+   4              	;*
+   5              	;*	filename : scan64.s
+   6              	;*
+   7              	;*	64-bit scan function
+   8              	;*		input: %r8, %r9
+   9              	;*		output: %r9
+  10              	;*
+  11              	;*	Begin		1996/09/12	V. Chan
+  12              	;*  変更		2001/01/31  O.Hinokuchi
+  13              	;*	gas対応		2001/10/15	watanabe
+  14              	;*
+  15              	;*****************************************
+  16              	
+  17              	.section .text
+  18              	.align 1
+  19              	.global __scan64
+  20              	
+  21              	__scan64:
+  22              	
+  23 0000 0102     		pushn	%r1				; save register values
+  24              	
+  25 0002 006C     		ld.w	%r0, 0			; loop counter = 0
+  26              	
+  27 0004 0868     		cmp		%r8, 0			; if high 32-bits != 0 then count
+  28 0006 041A     		jrne	loop
+  29              	
+  30              		; case: %r8 = 0
+  31 0008 982E     		ld.w	%r8, %r9		; count low 32-bits instead
+  32 000a 00C0006E 		xld.w	%r0, 32			; loop counter = 32
+  33              	
+  34              	loop:						; count ; of leading 0's
+  35 000e 818E     		scan1	%r1, %r8		; %r1 = count
+  36 0010 0612     		jruge	end				; if count != 8 then goto end
+  37 0012 8069     		cmp		%r0, 24
+  38 0014 0419     		jreq.d	end				; if count = 32 then jump to end
+  39 0016 8060     		add		%r0, 8			; increment loop counter
+  40 0018 FB1F     		jp.d	loop
+  41 001a 888C     		sll		%r8, 8			; shift register to the left 8 bits
+  42              	
+  43              	end:
+  44 001c 0122     		add		%r1, %r0		; count = count + loop counter
+  45 001e 192E     		ld.w	%r9, %r1		; put result into output register
+  46              	
+  47 0020 4102     		popn	%r1				; restore register values
+  48 0022 4006     		ret

@@ -4891,6 +4891,7 @@ get_parm_info (void_at_end)
 	   args are passed in their declared types.  */
 	tree type = TREE_TYPE (decl);
 	DECL_ARG_TYPE (decl) = type;
+
 	if (PROMOTE_PROTOTYPES
 	    && INTEGRAL_TYPE_P (type)
 	    && TYPE_PRECISION (type) < TYPE_PRECISION (integer_type_node))

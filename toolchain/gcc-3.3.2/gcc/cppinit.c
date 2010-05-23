@@ -150,6 +150,17 @@ END
 #undef END
 #undef TRIGRAPH_MAP
 
+/* ADD K.Watanabe V1.7 >>>>>>> */
+/* C33: Output the same content with version 2.95.2, when the assembler source files are preprocessed. 	*/
+/*      This is because gdb can recognize as version 2.95.2.                                           	*/
+int i_Line_Dummy_Output_Flg = 0;			/* 0 -- normal 												*/
+											/* 1 -- dummy output 										*/
+int i_Asm_Adjust_Line_Init_Flg = 0;			/* 0 -- initial value 										*/
+											/* 1 -- Alignment has been done for new line of one line.  	*/
+int i_Asm_CRLF_Line_Init_Flg = 0;			/* 0 -- initial value 										*/
+											/* 1 -- Alignment has been done for new line of one line.  	*/
+/* ADD K.Watanabe V1.7 <<<<<<< */
+
 /* Given a colon-separated list of file names PATH,
    add all the names to the search path for include files.  */
 static void
@@ -1042,6 +1053,8 @@ void
 cpp_finish_options (pfile)
      cpp_reader *pfile;
 {
+	int i_len;		/* ADD K.Watanabe V1.7 */
+	
   /* Mark named operators before handling command line macros.  */
   if (CPP_OPTION (pfile, cplusplus) && CPP_OPTION (pfile, operator_names))
     mark_named_operators (pfile);
@@ -1054,9 +1067,27 @@ cpp_finish_options (pfile)
 
       /* Prevent -Wunused-macros with command-line redefinitions.  */
       pfile->first_unused_line = (unsigned int) -1;
-      _cpp_do_file_change (pfile, LC_RENAME, _("<built-in>"), 1, 0);
+      
+      /* CHG K.Watanabe V1.7 >>>>>>> */
+      /* C33: Output the same content with version 2.95.2, when the assembler source files are preprocessed. */
+      /* _cpp_do_file_change (pfile, LC_RENAME, _("<built-in>"), 1, 0); */
+      i_len = strlen( pfile->map->to_file );
+      if( ( pfile->map->to_file[ i_len- 1 ] != 's' ) && ( pfile->map->to_file[ i_len- 1 ] != 'S' ) ){
+		  _cpp_do_file_change (pfile, LC_RENAME, _("<built-in>"), 1, 0);
+	  }    
+	  /* CHG K.Watanabe V1.7 <<<<<<< */
+            
       init_builtins (pfile);
-      _cpp_do_file_change (pfile, LC_RENAME, _("<command line>"), 1, 0);
+      
+      /* CHG K.Watanabe V1.7 >>>>>>> */
+      /* C33: Output the same content with version 2.95.2, when the assembler source files are preprocessed. */
+      /* _cpp_do_file_change (pfile, LC_RENAME, _("<command line>"), 1, 0); */
+      i_len = strlen( pfile->map->to_file );
+      if( ( pfile->map->to_file[ i_len- 1 ] != 's' ) && ( pfile->map->to_file[ i_len- 1 ] != 'S' ) ){
+	  _cpp_do_file_change (pfile, LC_RENAME, _("<command line>"), 1, 0);
+	  }    
+      /* CHG K.Watanabe V1.7 <<<<<<< */      
+      
       for (p = CPP_OPTION (pfile, pending)->directive_head; p; p = p->next)
 	(*p->handler) (pfile, p->arg);
 
@@ -1064,11 +1095,20 @@ cpp_finish_options (pfile)
 	 pfile->next_include_file is NULL, so _cpp_pop_buffer does not
 	 push -include files.  */
       for (p = CPP_OPTION (pfile, pending)->imacros_head; p; p = p->next)
-	if (push_include (pfile, p))
-	  cpp_scan_nooutput (pfile);
-
-      pfile->next_include_file = &CPP_OPTION (pfile, pending)->include_head;
-      _cpp_maybe_push_include_file (pfile);
+	      if (push_include (pfile, p))
+	      cpp_scan_nooutput (pfile);
+	      
+      pfile->next_include_file = &CPP_OPTION (pfile, pending)->include_head; 
+      /* CHG K.Watanabe V1.7 >>>>>>> */
+/*    _cpp_maybe_push_include_file (pfile); */
+      /* C33: Output the same content with version 2.95.2, when the assembler source files are preprocessed. */
+      i_len = strlen( pfile->map->to_file );
+      if( ( pfile->map->to_file[ i_len- 1 ] == 's' ) || ( pfile->map->to_file[ i_len- 1 ] == 'S' ) ){
+	      i_Line_Dummy_Output_Flg = 1;
+	  }    
+	  _cpp_maybe_push_include_file (pfile); 
+	  i_Line_Dummy_Output_Flg = 0;      
+      /* CHG K.Watanabe V1.7 <<<<<<< */      
     }
 
   pfile->first_unused_line = pfile->line;
@@ -1095,7 +1135,7 @@ _cpp_maybe_push_include_file (pfile)
 	{
 	  /* All done; restore the line map from <command line>.  */
 	  _cpp_do_file_change (pfile, LC_RENAME,
-			       pfile->line_maps.maps[0].to_file, 1, 0);
+			       pfile->line_maps.maps[0].to_file, 1, 0); 
 	  /* Don't come back here again.  */
 	  pfile->next_include_file = NULL;
 	}

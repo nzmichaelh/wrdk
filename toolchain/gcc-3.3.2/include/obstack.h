@@ -418,6 +418,9 @@ __extension__								\
    and that the data added so far to the current object
    shares that much alignment.  */
 
+
+// CHG K.Watanabe V1.8 >>>>>>>
+#if 0
 # define obstack_ptr_grow(OBSTACK,datum)				\
 __extension__								\
 ({ struct obstack *__o = (OBSTACK);					\
@@ -425,6 +428,19 @@ __extension__								\
      _obstack_newchunk (__o, sizeof (void *));				\
    *((void **)__o->next_free)++ = ((void *)datum);			\
    (void) 0; })
+#endif
+
+
+# define obstack_ptr_grow(OBSTACK,datum)				\
+__extension__								\
+({ struct obstack *__o = (OBSTACK);					\
+   if (__o->next_free + sizeof (void *) > __o->chunk_limit)		\
+     _obstack_newchunk (__o, sizeof (void *));				\
+     *((void **)__o->next_free) = ((void *)datum); \
+     __o->next_free += sizeof(void *); \
+   (void) 0; })
+// CHG K.Watanabe V1.8 <<<<<<<
+
 
 # define obstack_int_grow(OBSTACK,datum)				\
 __extension__								\

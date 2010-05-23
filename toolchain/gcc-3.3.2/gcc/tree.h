@@ -413,11 +413,9 @@ extern void tree_vec_elt_check_failed PARAMS ((int, int, const char *,
 
 /* Nonzero if TYPE represents an integral type.  Note that we do not
    include COMPLEX types here.  */
-
 #define INTEGRAL_TYPE_P(TYPE)  \
   (TREE_CODE (TYPE) == INTEGER_TYPE || TREE_CODE (TYPE) == ENUMERAL_TYPE  \
    || TREE_CODE (TYPE) == BOOLEAN_TYPE || TREE_CODE (TYPE) == CHAR_TYPE)
-
 /* Nonzero if TYPE represents a floating-point type, including complex
    floating-point types.  */
 

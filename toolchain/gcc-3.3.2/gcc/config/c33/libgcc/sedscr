@@ -1,0 +1,16 @@
+s/#/;/g
+s/___/__/g
+s/r0/%r0/g
+s/r1/%r1/g
+s/r2/%r2/g
+s/r3/%r3/g
+s/r4/%r4/g
+s/r5/%r5/g
+s/r6/%r6/g
+s/r7/%r7/g
+s/r8/%r8/g
+s/r9/%r9/g
+s/sp/%sp/g
+s/psr/%psr/g
+s/ahr/%ahr/g
+s/alr/%alr/g

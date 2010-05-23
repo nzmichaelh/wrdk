@@ -1,0 +1,107 @@
+GAS LISTING flosidf.s 			page 1
+
+
+   1              	;*********************************************
+   2              	;*	Copyright (C), 1996-2001 SEIKO EPSON Corp.
+   3              	;*		ALL RIGHTS RESERVED
+   4              	;*
+   5              	;*	filename : flosidf.s
+   6              	;*
+   7              	;*	Change type: Signed single integer --> Double float
+   8              	;*		input: %r6
+   9              	;*		output: (%r5, %r4)
+  10              	;*
+  11              	;*	Begin		1996/09/12	V. Chan
+  12              	;*  変更		2001/01/15  O.Hinokuchi
+  13              	;*  			 ・レジスタ置換
+  14              	;*	gas対応		2001/10/15	watanabe
+  15              	;*
+  16              	;*********************************************
+  17              	
+  18              	.section .text
+  19              	.align 1
+  20              	.global __floatsidf
+  21              	
+  22              	;==============================================
+  23              	;＜レジスタ説明＞
+  24              	;	%r0:符号ビット(0(+) or 1(-))
+  25              	;	%r1:指数部(8bit)
+  26              	;	%r4:戻り値[L](double)
+  27              	;	%r5:戻り値[H](double)
+  28              	;	%r6:引数１(int)/loop counter
+  29              	;	%r8:temp
+  30              	;	%r9:count/shift
+  31              	;==============================================
+  32              	
+  33              	__floatsidf:
+  34 0000 0102     		pushn	%r1				; %r0〜%r1 待避
+  35              	
+  36 0002 056C     		ld.w	%r5, 0			; 戻り値[H](%r5) <- 0
+  37              		
+  38 0004 0668     		cmp		%r6, 0			; if 引数１(%r6) = 0 then goto end
+  39 0006 2819     		jreq.d	end
+  40 0008 046C     		ld.w	%r4, 0			; 戻り値[L](%r4) <- 0
+  41              	
+  42 000a 006C     		ld.w	%r0, 0			; 符号ビット(%r0) <- 0
+  43 000c 652E     		ld.w	%r5, %r6		; 戻り値[H](%r5) <- 引数１(%r6)
+  44 000e 582E     		ld.w	%r8, %r5		; temp(%r8) <- 戻り値[H](%r5)
+  45              		
+  46 0010 0568     		cmp		%r5, 0			; if 戻り値[H](%r5) >= 0 then goto count
+  47 0012 060B     		jrge.d	count
+  48 0014 066C     		ld.w	%r6, 0			; loop counter(%r6) <- 0 
+  49              	
+  50              		; case: result1 < 0
+  51 0016 553E     		not		%r5, %r5		; 戻り値[H](%r5) = ~戻り値[H](%r5) + 1
+  52 0018 1560     		add		%r5, 1
+  53 001a 106C     		ld.w	%r0, 1			; 符号ビット(%r0) <- 1
+  54 001c 582E     		ld.w	%r8, %r5		; temp(%r8) <- 戻り値(%r4)
+  55              	
+  56              	count:						; 最上位ビット位置検索
+  57 001e 898E     		scan1	%r9, %r8		; count(%r9) <- temp(8)[b31〜b24]の最上位ビット位置   
+GAS LISTING flosidf.s 			page 2
+
+
+  58 0020 0412     		jruge	continue		; 最上位ビットが見つかったら->continue
+  59 0022 8660     		add		%r6, 8			; loop counter(%r6) = loop counter(%r6) + 8
+  60 0024 FD1F     		jp.d	count
+  61 0026 888C     		sll		%r8, 8			; temp(%r8) << 8 
+  62              	
+  63              	continue:
+  64 0028 6922     		add		%r9, %r6		; count(%r9) = count(%r9) + loop counter(%r6)
+  65 002a F16D     		xld.w	%r1, 31			; 指数部(%r1) = 31 - count(%r9) 
+  66 002c 9126     		sub		%r1, %r9
+  67              	
+  68              		; normalize result
+  69 002e 1960     		add		%r9, 1			; shift(%r9) = count(%r9) + 1
+  70              	
+  71              		;xsll	%r5, %r9		; result1 << count + 1 (clear implied bit)
+  72              		; variable shift routine (faster than xsrl)
+  73              	shift:
+  74 0030 8968     		cmp		%r9, 8			; if shift <= 8 then goto done
+  75 0032 040E     		jrle	done
+  76              		
+  77              		; case: shift > 8
+  78 0034 8964     		sub		%r9, 8			; shift(%r9) = shift(%r9) - 8
+  79 0036 FD1F     		jp.d	shift
+  80 0038 858C     		sll		%r5, 8			; 戻り値[H](%r5) << 8
+  81              	
+  82              	done:						; case: shift(%r9) <= 8
+  83 003a 958D     		sll		%r5, %r9		; 戻り値[H](%r5) << shift(%r9) 
+  84              	
+  85 003c 542E     		ld.w	%r4, %r5		; 戻り値[L](%r4) <- 戻り値[H](%r5)
+  86 003e 85884588 		xsrl	%r5, 12			; 戻り値[H](%r5) >> 12
+  87 0042 848C848C 		xsll	%r4, 20			; 戻り値[L](%r4) << 20
+  87      448C
+  88              	
+  89              		; finishing steps
+  90 0048 0FC0F163 		xadd	%r1, 0x3ff		; 指数部(%r1) = 指数部(%r1) + 0x3ff(bias) (EXT33 Ve%r2)
+  91              	
+  92 004c 81984198 		xrr		%r1, 12			; position exponent bits
+  93 0050 1536     		or		%r5, %r1		; 戻り値[H](%r5) | 指数部(%r1) 
+  94              	
+  95 0052 1098     		rr		%r0, 1			; position sign bit
+  96 0054 0536     		or		%r5, %r0		; 戻り値[H](%r5) | 符号ビット
+  97              	
+  98              	end:
+  99 0056 4102     		popn	%r1				; %r0〜%r1 復帰
+ 100 0058 4006     		ret

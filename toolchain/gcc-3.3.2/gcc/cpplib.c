@@ -26,6 +26,7 @@ Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 #include "cpphash.h"
 #include "obstack.h"
 
+
 /* Chained list of answers to an assertion.  */
 struct answer
 {
@@ -1359,7 +1360,7 @@ do_ifdef (pfile)
      cpp_reader *pfile;
 {
   int skip = 1;
-
+  
   if (! pfile->state.skipping)
     {
       const cpp_hashnode *node = lex_macro_node (pfile);
@@ -1494,7 +1495,7 @@ do_endif (pfile)
 {
   cpp_buffer *buffer = pfile->buffer;
   struct if_stack *ifs = buffer->if_stack;
-
+  
   if (ifs == NULL)
     cpp_error (pfile, DL_ERROR, "#endif without #if");
   else

@@ -899,6 +899,12 @@ insn_current_reference_address (branch)
   rtx dest, seq;
   int seq_uid;
 
+/* ADD K.Watanabe V1.7 >>>>>>> */
+#if 1	/* GNU-GCC-008 2001/6/28 watanabe */
+  int insn_length;
+#endif	/* GNU-GCC-008 2001/6/28 watanabe */
+/* ADD K.Watanabe V1.7 <<<<<<< */
+
   if (! INSN_ADDRESSES_SET_P ())
     return 0;
 
@@ -911,6 +917,18 @@ insn_current_reference_address (branch)
        We assume here that FUNCTION_BOUNDARY / BITS_PER_UNIT is larger than
        any alignment we'd encounter, so we skip the call to align_fuzz.  */
     return insn_current_address;
+    
+/* ADD K.Watanabe V1.7 >>>>>>> */    
+#if 1	/* GNU-GCC-008 2001/6/28 watanabe */
+  insn_length = insn_lengths[seq_uid];
+  if (GET_CODE (PATTERN (seq)) == SEQUENCE)
+    {
+      if (const_num_delay_slots (XVECEXP (PATTERN (seq), 0, 0)) == 1)
+        insn_length -= 2;
+    }
+#endif	/* GNU-GCC-008 2001/6/28 watanabe */
+/* ADD K.Watanabe V1.7 <<<<<<< */
+
   dest = JUMP_LABEL (branch);
 
   /* BRANCH has no proper alignment chain set, so use SEQ.
@@ -918,15 +936,81 @@ insn_current_reference_address (branch)
   if (INSN_SHUID (seq) < INSN_SHUID (dest))
     {
       /* Forward branch.  */
+/* ADD K.Watanabe V1.7 >>>>>>> */      
+#if 0	/* GNU-GCC-008 2001/6/27 watanabe */      
       return (insn_last_address + insn_lengths[seq_uid]
 	      - align_fuzz (seq, dest, length_unit_log, ~0));
+#else	/* GNU-GCC-008 2001/6/27 watanabe */
+/* ADD K.Watanabe V1.7 <<<<<<< */	      
+      if (insn_length == 2)
+        {
+          return (insn_last_address
+	          - align_fuzz (seq, dest, length_unit_log, ~0));
+	}
+      else if (insn_length == 4)
+        {
+          return (insn_last_address + 2
+	          - align_fuzz (seq, dest, length_unit_log, ~0));
+	}
+      else if (insn_length == 6)
+        {
+          return (insn_last_address + 4
+	          - align_fuzz (seq, dest, length_unit_log, ~0));
+	}
+/* ADD K.Watanabe V1.7 >>>>>>> */	
+#if 1	/* GNU-GCC-042 2002/1/30 watanabe */
+      else if (insn_length == 8)
+        {
+          return (insn_last_address + 6
+	          - align_fuzz (seq, dest, length_unit_log, ~0));
+	}
+#endif	/* GNU-GCC-042 2002/1/30 watanabe */
+/* ADD K.Watanabe V1.7 <<<<<<< */
+      else 
+        {
+	  abort();
+	}
+#endif	/* GNU-GCC-008 2001/6/27 watanabe *//* ADD K.Watanabe V1.7 */
     }
   else
     {
       /* Backward branch.  */
+/* ADD K.Watanabe V1.7 >>>>>>> */
+#if 0	/* GNU-GCC-008 2001/6/27 watanabe */    
       return (insn_current_address
 	      + align_fuzz (dest, seq, length_unit_log, ~0));
+#else	/* GNU-GCC-008 2001/6/27 watanabe */
+/* ADD K.Watanabe V1.7 <<<<<<< */
+      if (insn_length == 2)
+        {
+          return (insn_last_address
+	          + align_fuzz (dest, seq, length_unit_log, ~0));
+	}
+      else if (insn_length == 4)
+        {
+          return (insn_last_address + 2
+	          + align_fuzz (dest, seq, length_unit_log, ~0));
+	}
+      else if (insn_length == 6)
+        {
+          return (insn_last_address + 4
+	          + align_fuzz (dest, seq, length_unit_log, ~0));
+	}
+/* ADD K.Watanabe V1.7 >>>>>>> */	
+#if 1	/* GNU-GCC-042 2002/1/30 watanabe */
+      else if (insn_length == 8)
+        {
+          return (insn_last_address + 6
+	          + align_fuzz (dest, seq, length_unit_log, ~0));
+	}
+#endif	/* GNU-GCC-042 2002/1/30 watanabe */	      
+/* ADD K.Watanabe V1.7 <<<<<<< */
+      else
+        {
+	  abort();
+	}
     }
+#endif	/* GNU-GCC-008 2001/6/27 watanabe *//* ADD K.Watanabe V1.7 */
 }
 #endif /* HAVE_ATTR_length */
 

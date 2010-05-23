@@ -1,0 +1,102 @@
+GAS LISTING flosisf.s 			page 1
+
+
+   1              	;*********************************************
+   2              	;*	Copyright (C), 1996-2001 SEIKO EPSON Corp.
+   3              	;*		ALL RIGHTS RESERVED
+   4              	;*
+   5              	;*	filename : flosisf.s
+   6              	;*
+   7              	;*	Change type: Signed single integer --> Single float
+   8              	;*		input: %r6
+   9              	;*		output: %r4
+  10              	;*
+  11              	;*	Begin		1996/09/12	V. Chan
+  12              	;*  変更		2001/01/15  O.Hinokuchi
+  13              	;*  			 ・レジスタ置換
+  14              	;*	gas対応		2001/10/15	watanabe
+  15              	;*
+  16              	;*********************************************
+  17              	
+  18              	.section .text
+  19              	.align 1
+  20              	.global __floatsisf
+  21              	
+  22              	;==============================================
+  23              	;＜レジスタ説明＞
+  24              	;	%r0:符号ビット(0(+) or 1(-))
+  25              	;	%r1:指数部(8bit)
+  26              	;	%r4:戻り値(float)
+  27              	;	%r6:引数１(int)/loop counter
+  28              	;	%r8:temp
+  29              	;	%r9:count/shift
+  30              	;==============================================
+  31              	
+  32              	__floatsisf:
+  33              	
+  34 0000 0102     		pushn	%r1				; %r0〜%r1 待避
+  35              	
+  36 0002 0668     		cmp		%r6, 0			; if 引数１(6) = 0 then goto end
+  37 0004 2419     		jreq.d	end
+  38 0006 046C     		ld.w	%r4, 0			; 戻り値(4) <- 0 
+  39              	
+  40 0008 006C     		ld.w	%r0, 0			; 符号ビット(%r0) <- 0
+  41 000a 642E     		ld.w	%r4, %r6		; 戻り値(%r4) <- 引数１(6)
+  42 000c 682E     		ld.w	%r8, %r6		; count(%r8) <- 引数１(6) 
+  43              	
+  44 000e 0468     		cmp		%r4, 0			; if 戻り値(%r4) >= 0 then goto count
+  45 0010 060B     		jrge.d	count
+  46 0012 066C     		ld.w	%r6, 0			; loop counter(%r6) <- 0 
+  47              	
+  48              		; case: 戻り値(%r4) < 0
+  49 0014 443E     		not		%r4, %r4		; 戻り値(%r4) = ~戻り値(%r4) + 1
+  50 0016 1460     		add		%r4, 1
+  51 0018 106C     		ld.w	%r0, 1			; 符号ビット(%r0) <- 1
+  52 001a 482E     		ld.w	%r8, %r4		; temp(%r8) <- 戻り値(%r4)
+  53              	
+  54              	count:						; 最上位ビット位置検索
+  55 001c 898E     		scan1	%r9, %r8		; count(%r9) <- temp(8)[b31〜b24]の最上位ビット位置   
+  56 001e 0412     		jruge	continue		; 最上位ビットが見つかったら->continue
+  57 0020 8660     		add		%r6, 8			; loop counter(%r6) = loop counter(%r6) + 8
+GAS LISTING flosisf.s 			page 2
+
+
+  58 0022 FD1F     		jp.d	count
+  59 0024 888C     		sll		%r8, 8			; temp(%r8) << 8 
+  60              	
+  61              	continue:
+  62 0026 6922     		add		%r9, %r6		; count(%r9) = count(%r9) + loop counter(%r6)
+  63 0028 F16D     		ld.w	%r1, 31			; 指数部(%r1) = 31 - count(%r9) 
+  64 002a 9126     		sub		%r1, %r9
+  65              	
+  66              		; normalize result
+  67 002c 1960     		add		%r9, 1			; shift(%r9) = count(%r9) + 1
+  68              		
+  69              		;xsll	%r4, %r7		; result << count + 1 (clear implied bit)
+  70              		; variable shift routine (faster than xsrl)
+  71              	shift:
+  72 002e 8968     		cmp		%r9, 8			; if shift(%r9) <= 8 then goto done
+  73 0030 040E     		jrle	done
+  74              		
+  75              		; case: shift(%r9) > 8
+  76 0032 8964     		sub		%r9, 8			; shift(%r9) = shift(%r9) - 8
+  77 0034 FD1F     		jp.d	shift
+  78 0036 848C     		sll		%r4, 8			; 戻り値(%r4) << 8
+  79              	
+  80              	done:						; case: shift(%r9) < 8
+  81 0038 948D     		sll		%r4, %r9		; 戻り値(%r4) << shift(%r9) 
+  82              	
+  83 003a 84881488 		xsrl	%r4, 9			; 戻り値(%r4) >> 9 (normal position)
+  84              	
+  85              		; finishing steps
+  86 003e 01C0F163 		xadd	%r1, 0x7f		; 指数部(%r1) = 指数部(%r1) + 0x7f(bias) (EXT33 Ve%r2)
+  87              	
+  88 0042 81981198 		xrr		%r1, 9			; position exponent bits
+  89 0046 1436     		or		%r4, %r1		; 戻り値(%r4) | 指数部(%r1) 
+  90              	
+  91 0048 1098     		rr		%r0, 1			; position sign bit
+  92 004a 0436     		or		%r4, %r0		; 戻り値(%r4) | 符号ビット
+  93              	
+  94              	end:
+  95 004c 4102     		popn	%r1				; %r0〜%r1 復帰
+  96 004e 4006     		ret

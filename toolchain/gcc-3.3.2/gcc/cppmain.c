@@ -52,6 +52,13 @@ static void cb_ident	  PARAMS ((cpp_reader *, unsigned int,
 static void cb_file_change PARAMS ((cpp_reader *, const struct line_map *));
 static void cb_def_pragma PARAMS ((cpp_reader *, unsigned int));
 
+/* ADD K.Watanabe V1.7 >>>>>>> */
+/* C33: Output the same content with version 2.95.2, when the assembler source files are preprocessed. */
+extern int i_Line_Dummy_Output_Flg;	
+extern int i_Asm_CRLF_Line_Init_Flg;
+char c_Save_Pre_Filename[2000] = { 0 };		/* C33: Save the last output file name. */
+/* ADD K.Watanabe V1.7 <<<<<<< */
+
 /* Preprocess and output.  */
 void
 cpp_preprocess_file (pfile, in_fname, out_stream)
@@ -219,6 +226,8 @@ maybe_print_line (pfile, map, line)
      const struct line_map *map;
      unsigned int line;
 {
+  int i_len;			/* ADD K.Watanabe V1.7 */
+  
   /* End the previous line of text.  */
   if (pfile->print.printed)
     {
@@ -227,6 +236,11 @@ maybe_print_line (pfile, map, line)
       pfile->print.printed = 0;
     }
 
+  /* CHG K.Watanabe V1.7 >>>>>>> */
+  /* C33: In the assembler source files, let it output exactly at the new lines which continue 8 or more lines.
+          The following process is necessary because gnu33 assember is version 2.95.2, and it can't correspond
+          to the format of "#souce file line No."                                                               */
+  #if 0
   if (line >= pfile->print.line && line < pfile->print.line + 8)
     {
       while (line > pfile->print.line)
@@ -237,6 +251,34 @@ maybe_print_line (pfile, map, line)
     }
   else
     print_line (pfile, map, line, "");
+  #endif
+
+  i_len = strlen( pfile->map->to_file );
+  if( ( pfile->map->to_file[ i_len- 1 ] == 's' ) || ( pfile->map->to_file[ i_len- 1 ] == 'S' ) ){
+	  if ( line >= pfile->print.line && line )
+	    {
+	      while (line > pfile->print.line)
+		{
+		  putc ('\n', pfile->print.outf);
+		  pfile->print.line++;
+		}
+	    }
+	  else
+	    print_line (pfile, map, line, "");  
+  } else {
+	  if (line >= pfile->print.line && line < pfile->print.line + 8)
+	    {
+	      while (line > pfile->print.line)
+		{
+		  putc ('\n', pfile->print.outf);
+		  pfile->print.line++;
+		}
+	    }
+	  else
+	    print_line (pfile, map, line, "");
+  }	    
+  /* CHG K.Watanabe V1.7 <<<<<<< */
+  
 }
 
 /* Output a line marker for logical line LINE.  Special flags are "1"
@@ -248,6 +290,11 @@ print_line (pfile, map, line, special_flags)
      unsigned int line;
      const char *special_flags;
 {
+	/* ADD K.Watanabe V1.7 >>>>>>> */
+	int i_len;			
+	int i_ret;
+	/* ADD K.Watanabe V1.7 <<<<<<< */
+	
   /* End any previous line of text.  */
   if (pfile->print.printed)
     putc ('\n', pfile->print.outf);
@@ -265,16 +312,46 @@ print_line (pfile, map, line, special_flags)
       p = cpp_quote_string (to_file_quoted,
 			    (unsigned char *)map->to_file, to_file_len);
       *p = '\0';
-      fprintf (pfile->print.outf, "# %u \"%s\"%s",
-	       SOURCE_LINE (map, pfile->print.line),
-	       to_file_quoted, special_flags);
+      /* ADD K.Watanabe V1.7 >>>>>>> */
+      /* C33: Output the same content with version 2.95.2, when the assembler source files are preprocessed. */
+      
+      if( i_Line_Dummy_Output_Flg == 0 ){		 
+      		/* C33: Do not output the same name at the plural times, when it is the assember source file. */
+		  	i_ret = strcmp( c_Save_Pre_Filename,to_file_quoted );
+	        i_len = strlen( to_file_quoted );
+			if( ( ( to_file_quoted[ i_len- 1 ] == 's' ) || ( to_file_quoted[ i_len- 1 ] == 'S' ) ) 
+																					&& ( i_ret == 0 ) ){
+									;
+			} else {				
+      /* ADD K.Watanabe V1.7 <<<<<<< */
+			      fprintf (pfile->print.outf, "# %u \"%s\"%s",
+				       SOURCE_LINE (map, pfile->print.line),
+				       to_file_quoted, special_flags);
+	    
+			      if (map->sysp == 2)
+					fputs (" 3 4", pfile->print.outf);
+			      else if (map->sysp == 1)
+					fputs (" 3", pfile->print.outf);
 
-      if (map->sysp == 2)
-	fputs (" 3 4", pfile->print.outf);
-      else if (map->sysp == 1)
-	fputs (" 3", pfile->print.outf);
-
-      putc ('\n', pfile->print.outf);
+			      	putc ('\n', pfile->print.outf); 
+      
+      /* ADD K.Watanabe V1.7 >>>>>>> */      
+      /* C33: Output the same content with version 2.95.2, when the assembler source files are preprocessed. */
+			      if( ( ( to_file_quoted[ i_len- 1 ] == 's' ) || ( to_file_quoted[ i_len- 1 ] == 'S' ) )
+														      		&& ( i_Asm_CRLF_Line_Init_Flg == 0 ) ){
+					  i_Asm_CRLF_Line_Init_Flg = 1;
+			      } else if( ( ( to_file_quoted[ i_len- 1 ] == 's' ) || ( to_file_quoted[ i_len- 1 ] == 'S' ) )
+														      		&& ( i_Asm_CRLF_Line_Init_Flg == 1 ) ){
+				      putc ('\n', pfile->print.outf);
+				  } else {
+				     	;
+				  }
+				  /* C33: Do not output the same name at the plural times, when it is the assember source file. */
+				  memset( c_Save_Pre_Filename,0,sizeof( c_Save_Pre_Filename ) );
+				  strcpy( c_Save_Pre_Filename,to_file_quoted );
+			}			  
+	  }
+      /* ADD K.Watanabe V1.7 <<<<<<< */
     }
 }
 

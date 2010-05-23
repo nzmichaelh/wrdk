@@ -1,0 +1,174 @@
+GAS LISTING extsfdf.s 			page 1
+
+
+   1              	;*********************************************
+   2              	;*	Copyright (C), 1996-2001 SEIKO EPSON Corp.
+   3              	;*		ALL RIGHTS RESERVED
+   4              	;*
+   5              	;*	filename : extsfdf.s
+   6              	;*
+   7              	;*	Change type: Single float --> Double float
+   8              	;*		input: %r6
+   9              	;*		output: (%r5, %r4)
+  10              	;*
+  11              	;*	Begin					1996/09/12	V. Chan
+  12              	;*	Fixed bug with variable shift (ln. 108)
+  13              	;*							1997/02/18	V. Chan
+  14              	;*  変更		2001/01/17  O.Hinokuchi
+  15              	;*	gas対応		2001/10/15	watanabe
+  16              	;*
+  17              	;*****************************************
+  18              	
+  19              	.section .text
+  20              	.align 1
+  21              	.global __extendsfdf2
+  22              	
+  23              	__extendsfdf2:
+  24              	
+  25 0000 0302     		pushn	%r3				; save register values
+  26              	
+  27 0002 602E     		ld.w	%r0, %r6		; put sign of input (%r6) into %r0
+  28 0004 109C     		rl		%r0, 1
+  29 0006 1070     		and		%r0, 1
+  30              	
+  31 0008 056C     		ld.w	%r5, 0			; clear output registers
+  32 000a 168C     		sll		%r6, 1			; remove MSB
+  33 000c 1688     		srl		%r6, 1
+  34              	
+  35 000e 0668     		cmp		%r6, 0			; if input = 0 then exit
+  36 0010 4F19     		jreq.d	end
+  37 0012 046C     		ld.w	%r4, 0
+  38              	
+  39 0014 612E     		ld.w	%r1, %r6		; put exponent into %r1
+  40 0016 118C     		sll		%r1, 1
+  41 0018 81888188 		xsrl 	%r1, 24
+  41      8188
+  42              	
+  43 001e 03C0F16B 		xcmp	%r1, 0xff		; if NaN or Inf input then return Inf
+  44 0022 FECF00C0 		xld.w	%r5, 0x7ff00000
+  44      056C
+  45 0028 430B     		jrge.d	end
+  46 002a 046C     		ld.w	%r4, 0
+  47              	
+  48              	
+  49              		; isolate mantissa
+  50 002c 0FC0FFDF 		xand	%r6,0x7fffff		; clear first 9 bits of %r6
+  50      F673
+  51              		
+  52 0032 0168     		cmp		%r1, 0
+  53 0034 2C1B     		jrne.d	expnez			; if exp != 0 then goto expnez
+  54 0036 652E     		ld.w	%r5, %r6		; result1 = input
+GAS LISTING extsfdf.s 			page 2
+
+
+  55              	
+  56              		; case: exp = 0
+  57 0038 592E     		ld.w	%r9, %r5		; copy new result to %r9 for counting
+  58 003a 086C     		ld.w	%r8, 0			; initialize loop counter
+  59              	
+  60              	count:
+  61 003c 978E     		scan1	%r7, %r9		; count = ; of 0's before leading 1 in result
+  62 003e 0412     		jruge	continue		; if count !=8 then goto continue
+  63 0040 8860     		add		%r8, 8			; add 8 to loop counter
+  64 0042 FD1F     		jp.d	count
+  65 0044 898C     		sll		%r9, 8			; shift 8 leading 0's out of %r9
+  66              	
+  67              	continue:
+  68 0046 8722     		add		%r7, %r8		; count = count + loop counter
+  69 0048 0EC0016C 		xld.w	%r1, 0x380		; exp = 0x380
+  70 004c 7126     		sub		%r1, %r7		; exp = exp - count
+  71              		;add	%r1, 9			; moved to line 55
+  72              	
+  73 004e B768     		cmp		%r7, 11
+  74 0050 140B     		jrge.d	shftleft		; if count >= 11 then goto shftleft
+  75 0052 9160     		add		%r1, 9			; exp = exp + 9
+  76              	
+  77              		; case: count < 11
+  78 0054 B26C     		ld.w	%r2, 11
+  79 0056 7226     		sub		%r2, %r7		; %r2 = shift = 11 - count
+  80              	
+  81              		; {result1, result2} >> 11 - count
+  82              		;xsrl	%r4_p, %r2		; shift low 32-bits to the right 11-count bits
+  83              		;xrr	%r5_p, %r2		; rotate high 32-bits to the right 11-count bits
+  84              		;xsrl	%r3, %r2		; make a mask for last 20-count bits --> %r3 = 000...111
+  85              	
+  86 0058 F36F     		ld.w	%r3, -1			; %r3 = 0xffff ffff
+  87              		; 64-bit variable shift and rotate routine
+  88              	L1:
+  89 005a 8268     		cmp		%r2, 8			; if shift amount <= 8 then goto L2
+  90 005c 060E     		jrle	L2
+  91              	
+  92 005e 8488     		srl		%r4, 8			; result1 >> 8
+  93 0060 8598     		rr		%r5, 8			; result2 rotate >> 8
+  94 0062 8388     		srl		%r3, 8			; mask >> 8
+  95 0064 FB1F     		jp.d	L1
+  96 0066 8264     		sub		%r2, 8			; shift amount -= 8 
+  97              	
+  98              	L2:
+  99 0068 2489     		srl		%r4, %r2		; result1 >> %r2
+ 100 006a 2599     		rr		%r5, %r2		; result2 rotate >> %r2
+ 101 006c 2389     		srl		%r3, %r2		; mask >> %r2
+ 102              	
+ 103 006e 383E     		not		%r8, %r3		; flip mask for first 12-count bits --> %r8 = 111...000 (mask)
+ 104 0070 5832     		and		%r8, %r5		; isolate first 12-count bits of %r5
+ 105 0072 8436     		or		%r4, %r8		; add first 12-count bits of %r5 to %r4
+ 106 0074 171F     		jp.d	finish
+ 107 0076 3532     		and		%r5, %r3		; keep the low 20-count bits of %r5
+ 108              	
+ 109              	shftleft:
+ 110 0078 722E     		ld.w	%r2, %r7
+ 111 007a B264     		sub		%r2, 11			; %r2 = shift = count - 11
+GAS LISTING extsfdf.s 			page 3
+
+
+ 112              	
+ 113              		; 	MXSLL	%r5, %r2		; result1 << count - 11
+ 114              	__L0001:
+ 115              		
+ 116              	;	sub		%sp, 1			
+ 117              	;	ld.w	[%sp+0], $2		; rsスタック待避
+ 118              		
+ 119 007c F271     		and		%r2,0x1f			; 最大シフト数=３１
+ 120              	__L0002:
+ 121 007e 8268     		cmp		%r2,0x8			; if rs <= 8
+ 122 0080 040E     		jrle	__L0003				; then $$3
+ 123 0082 858C     		sll		%r5,0x8			; rd << 8
+ 124 0084 FD1F     		jp.d	__L0002
+ 125 0086 8264     		sub		%r2,0x8			; 残シフト回数計算
+ 126              	__L0003:
+ 127 0088 258D     		sll		%r5,%r2
+ 128              	
+ 129              	;	ld.w	$2, [%sp+0]		; rsスタック復帰
+ 130              	;	add		%sp, 1
+ 131              	
+ 132 008a 0C1E     		jp		finish
+ 133              	
+ 134              	expnez:
+ 135 008c 0EC00160 		xadd	%r1, 0x380		; exp = exp + 0x380 (0011 1000 0000 in binary)
+ 136              	
+ 137              		; {result1, result2} >> 3
+ 138 0090 3488     		srl		%r4, 3			; shift low 32-bits to the right 3 bits
+ 139 0092 3598     		rr		%r5, 3			; rotate high 32-bits to the right 3 bits
+ 140 0094 F36F     		ld.w	%r3, -1			; %r3 = 0xffff ffff
+ 141 0096 3388     		srl		%r3, 3			; make a mask for last 29 bits --> %r3 = 0001...111
+ 142 0098 383E     		not		%r8, %r3		; flip mask for first 3 bits --> %r8 = 1110...000
+ 143 009a 5832     		and		%r8, %r5		; isolate first 3 bits of %r5
+ 144 009c 8436     		or		%r4, %r8		; add first 3 bits of %r5 to %r4
+ 145 009e 021F     		jp.d	finish
+ 146 00a0 3532     		and		%r5, %r3		; keep the low 29 bits of %r5
+ 147              	
+ 148              	finish:
+ 149 00a2 01C0FFDF 		xand	%r5, 0xfffff	; remove implied bit
+ 149      F573
+ 150              	
+ 151 00a8 81984198 		xrr		%r1, 12			; position exponent bits
+ 152 00ac 1536     		or		%r5, %r1		; add exponent
+ 153              	
+ 154              	end:
+ 155 00ae 1098     		rr		%r0, 1			; position sign bit
+ 156 00b0 0536     		or		%r5, %r0		; add sign bit
+ 157              	
+ 158 00b2 4302     		popn	%r3				; restore register values
+ 159              	
+ 160              	
+ 161 00b4 4006     		ret
