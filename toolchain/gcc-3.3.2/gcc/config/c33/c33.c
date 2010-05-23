@@ -547,7 +547,7 @@ const_costs (r, c)
      enum rtx_code c;
 
 {
-  HOST_WIDE_INT high, low;
+  //HOST_WIDE_INT high, low;
   switch (c)
     {
     case CONST_INT:
@@ -984,7 +984,8 @@ void print_operand (file, x, code)
 
 	{
 	  const_double_split (x, &high, &low);
-	  fprintf (file, "0x%lx", (long) high);
+	  //fprintf (file, "0x%lx", (long) high);
+	  fprintf (file, "0x%x", high);
 	}
 
       else
@@ -1271,8 +1272,14 @@ output_move_double (operands)
       HOST_WIDE_INT high_low[2];
       int i;
       rtx xop[10];
+#if 1
+      high_low[0] = INTVAL (src) & ((1ULL << BITS_PER_WORD) - 1); // fix for 64 bit
+      //high_low[1] = INTVAL (src) >> BITS_PER_WORD; // might this be more correct than the line below
+      high_low[1] = ((INTVAL (src) & (1ULL << (BITS_PER_WORD - 1))) == 0) ? 0 : -1;
+#else
       high_low[0] = INTVAL (src);
       high_low[1] = (INTVAL (src) >= 0) ? 0 : -1;
+#endif
       for (i = 0; i < 2; i++)
 
 	{
