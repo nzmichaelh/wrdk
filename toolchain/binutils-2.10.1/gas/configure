@@ -1641,6 +1641,7 @@ for this_target in $target $canon_targets ; do
       sparc86x*)	cpu_type=sparc arch=sparc86x  ;;
       sparc*)		cpu_type=sparc arch=sparclite ;; # ??? See tc-sparc.c.
       v850*)		cpu_type=v850 ;;
+      c33*)		cpu_type=c33 ;;
       *)		cpu_type=${cpu} ;;
     esac
 
@@ -1894,6 +1895,8 @@ EOF
       tic30-*-*aout*)	    fmt=aout bfd_gas=yes ;;
       tic30-*-*coff*)       fmt=coff bfd_gas=yes ;;
       tic80-*-*)	    fmt=coff ;;
+
+      c33-*-*)		    fmt=elf bfd_gas=yes ;;
 
       v850-*-*)		    fmt=elf bfd_gas=yes ;;
       v850e-*-*)	    fmt=elf bfd_gas=yes ;;

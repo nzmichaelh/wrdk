@@ -539,6 +539,7 @@ extern const bfd_target bfd_elf32_sh_vec;
 extern const bfd_target bfd_elf32_shl_vec;
 extern const bfd_target bfd_elf32_sparc_vec;
 extern const bfd_target bfd_elf32_v850_vec;
+extern const bfd_target bfd_elf32_c33_vec;
 extern const bfd_target bfd_elf32_fr30_vec;
 extern const bfd_target bfd_elf32_mcore_big_vec;
 extern const bfd_target bfd_elf32_mcore_little_vec;

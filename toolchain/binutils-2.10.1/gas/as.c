@@ -1,5 +1,5 @@
 /* as.c - GAS main program.
-   Copyright (C) 1987, 1990, 91, 92, 93, 94, 95, 96, 97, 98, 99, 2000
+   Copyright (C) 1987, 1990, 91, 92, 93, 94, 95, 96, 97, 98, 99, 2000, 2001
    Free Software Foundation, Inc.
 
    This file is part of GAS, the GNU Assembler.
@@ -26,15 +26,21 @@
  * are shared.
  *
  *
- *			bugs
+ *          bugs
  *
  * : initialisers
- *	Since no-one else says they will support them in future: I
+ *  Since no-one else says they will support them in future: I
  * don't support them now.
  *
  */
 
 #include "ansidecl.h"
+
+#define C33_AS_REVISION "2.15 <2008/05/22>"
+
+/* >>>>> DELETED D.Fujimoto 2007/10/15 e_machine set in elf.c */
+//#define EM_SE_C33      107      /* S1C33 Family of Seiko Epson processor add T.Tazaki 2003/05/14*/
+/* <<<<< DELETED D.Fujimoto 2007/10/15 e_machine set in elf.c */
 
 #define COMMON
 
@@ -43,6 +49,7 @@
 #include "output-file.h"
 #include "sb.h"
 #include "macro.h"
+#include "ext_remove.h"				// add D.Fujimoto 2007/02/28
 
 #ifdef HAVE_ITBL_CPU
 #include "itbl-ops.h"
@@ -63,9 +70,13 @@ static void dump_statistics PARAMS ((void));
 static void perform_an_assembly_pass PARAMS ((int argc, char **argv));
 static int macro_expr PARAMS ((const char *, int, sb *, int *));
 
-int listing;			/* true if a listing is wanted */
+int listing;            /* true if a listing is wanted */
 
-static char *listing_filename = NULL;	/* Name of listing file.  */
+/* add T.Tazaki 2002.04.26 >>> */
+int g_listing = 0;
+/* add T.Tazaki 2002.04.26 <<< */
+
+static char *listing_filename = NULL;   /* Name of listing file.  */
 
 /* Type of debugging to generate.  */
 
@@ -75,7 +86,7 @@ enum debug_info_type debug_type = DEBUG_NONE;
 
 int max_macro_nest = 100;
 
-char *myname;			/* argv[0] */
+char *myname;           /* argv[0] */
 #ifdef BFD_ASSEMBLER
 segT reg_section, expr_section;
 segT text_section, data_section, bss_section;
@@ -157,10 +168,10 @@ select_emulation_mode (argc, argv)
   if (em)
     {
       for (i = 0; i < n_emulations; i++)
-	if (!strcmp (emulations[i]->name, em))
-	  break;
+    if (!strcmp (emulations[i]->name, em))
+      break;
       if (i == n_emulations)
-	as_fatal (_("unrecognized emulation name `%s'"), em);
+    as_fatal (_("unrecognized emulation name `%s'"), em);
       this_emulation = emulations[i];
     }
   else
@@ -190,10 +201,10 @@ common_emul_init ()
   if (this_emulation->fake_label_name == 0)
     {
       if (this_emulation->leading_underscore)
-	this_emulation->fake_label_name = "L0\001";
+    this_emulation->fake_label_name = "L0\001";
       else
-	/* What other parameters should we test?  */
-	this_emulation->fake_label_name = ".L0\001";
+    /* What other parameters should we test?  */
+    this_emulation->fake_label_name = ".L0\001";
     }
 }
 #endif
@@ -207,8 +218,14 @@ print_version_id ()
   printed = 1;
 
 #ifdef BFD_ASSEMBLER
+/* change T.Tazaki 2002.01.31 >>> */
+/*
   fprintf (stderr, _("GNU assembler version %s (%s) using BFD version %s"),
-	   VERSION, TARGET_ALIAS, BFD_VERSION);
+       VERSION, TARGET_ALIAS, BFD_VERSION);
+*/
+  fprintf (stderr, _("GNU assembler version %s (%s) using BFD version %s(rev %s)"),
+       VERSION, TARGET_ALIAS, BFD_VERSION, C33_AS_REVISION);
+/* change T.Tazaki 2002.01.31 <<< */
 #else
   fprintf (stderr, _("GNU assembler version %s (%s)"), VERSION, TARGET_ALIAS);
 #endif
@@ -223,17 +240,17 @@ show_usage (stream)
 
   fprintf (stream, _("\
 Options:\n\
-  -a[sub-option...]	  turn on listings\n\
-                      	  Sub-options [default hls]:\n\
-                      	  c      omit false conditionals\n\
-                      	  d      omit debugging directives\n\
-                      	  h      include high-level source\n\
-                      	  l      include assembly\n\
-                      	  m      include macro expansions\n\
-                      	  n      omit forms processing\n\
-                      	  s      include symbols\n\
-                      	  L      include line debug statistics (if applicable)\n\
-                      	  =FILE  list to FILE (must be last sub-option)\n"));
+  -a[sub-option...]   turn on listings\n\
+                          Sub-options [default hls]:\n\
+                          c      omit false conditionals\n\
+                          d      omit debugging directives\n\
+                          h      include high-level source\n\
+                          l      include assembly\n\
+                          m      include macro expansions\n\
+                          n      omit forms processing\n\
+                          s      include symbols\n\
+                          L      include line debug statistics (if applicable)\n\
+                          =FILE  list to FILE (must be last sub-option)\n"));
 
   fprintf (stream, _("\
   -D                      produce assembler debugging messages\n"));
@@ -320,6 +337,26 @@ Options:\n\
   --listing-cont-lines    set the maximum number of continuation lines used\n\
                           for the output data column of the listing\n"));
 
+/* add 2002.01.25 >>>> */
+
+  fprintf (stream, _("\
+  -mc33adv                set advanced macro assemble mode\n"));
+
+/* add 2002.01.25 <<<< */
+
+/* add T.Tazaki 2003/11/18 >>>> */
+
+  fprintf (stream, _("\
+  -mc33pe                 set PE macro assemble mode\n"));
+
+/* add T.Tazaki 2003/11/18 <<<< */
+
+
+// ADD D.Fujimoto usage for -mc33_ext option 2007/02/28 >>>>>>>
+  fprintf (stream, _("\
+  -mc33_ext               optimize ext code\n"));
+// ADD D.Fujimoto usage for -mc33_ext option 2007/02/28 <<<<<<<
+
   md_show_usage (stream);
 
   fputc ('\n', stream);
@@ -337,6 +374,19 @@ Options:\n\
  * md_parse_option definitions in config/tc-*.c
  */
 
+/* >>>>>>> add tazaki 2001.11.02 */
+int g_iAdvance = 0;     /* 0=STANDARD Architecture Mode */
+                        /* 1=Advanced Architecture Mode */
+/* <<<<<<< add tazaki 2001.11.02 */
+
+/* add T.Tazaki 2003/11/18 >>> */
+int g_iPE = 0;			/* 1=PE Architecture Mode */
+/* add T.Tazaki 2003/11/18 <<< */
+/* add T.Tazaki 2004/07/30 >>> */
+int g_iMedda32 = 0;			/* 1= No use default data area Mode */
+/* add T.Tazaki 2004/07/30 <<< */
+
+
 static void
 parse_args (pargc, pargv)
      int *pargc;
@@ -344,6 +394,14 @@ parse_args (pargc, pargv)
 {
   int old_argc, new_argc;
   char **old_argv, **new_argv;
+
+// ADD D.Fujimoto 2007/06/25 >>>>>>>
+  int flag_plural_src = 0;			// specified plural source files
+// ADD D.Fujimoto 2007/06/25 <<<<<<<
+// ADD D.Fujimoto 2008/01/07 >>>>>>>
+  int check_all_dump_flg = 0;		// flag whether to check the all objects' dump file 
+  int i_len;
+// ADD D.Fujimoto 2008/01/07 <<<<<<<
 
   /* Starting the short option string with '-' is for programs that
      expect options and other ARGV-elements in any order and that care about
@@ -422,7 +480,32 @@ parse_args (pargc, pargv)
 #define OPTION_WARN (OPTION_STD_BASE + 18)
     {"warn", no_argument, NULL, OPTION_WARN},
 #define OPTION_WARN_FATAL (OPTION_STD_BASE + 19)
-    {"fatal-warnings", no_argument, NULL, OPTION_WARN_FATAL}
+    {"fatal-warnings", no_argument, NULL, OPTION_WARN_FATAL},
+    
+/* add tazaki 2001.12.11 Avdanced Option >>>>>> */
+
+#define OPTION_ADVANCE (OPTION_STD_BASE + 20)
+    {"mc33adv", no_argument, NULL, OPTION_ADVANCE},
+    
+/* <<<<<<<< add tazaki 2001.12.11 */
+/* add T.Tazaki 2003/11/18 PE Option >>>>>> */
+
+#define OPTION_PE (OPTION_STD_BASE + 21)
+    {"mc33pe", no_argument, NULL, OPTION_PE},
+    
+/* <<<<<<<< add T.Tazaki 2003/11/18 */
+
+/* -medda32 add T.Tazaki 2004/07/30 >>> */
+#define OPTION_MEDDA32 (OPTION_STD_BASE + 22)
+    {"medda32", no_argument, NULL, OPTION_MEDDA32},
+/* -medda32 add T.Tazaki 2004/07/30 <<< */
+
+// ADD D.Fujimoto mc33_ext option 2007/03/01 >>>>>>>
+#define OPTION_C33_EXT (OPTION_STD_BASE + 23)
+    {"mc33_ext", required_argument, NULL, OPTION_C33_EXT}
+// ADD D.Fujimoto mc33_ext option 2007/03/01 <<<<<<<
+
+
   };
 
   /* Construct the option lists from the standard list and the
@@ -431,7 +514,7 @@ parse_args (pargc, pargv)
   longopts = (struct option *) xmalloc (sizeof (std_longopts) + md_longopts_size);
   memcpy (longopts, std_longopts, sizeof (std_longopts));
   memcpy ((char *) longopts + sizeof (std_longopts),
-	  md_longopts, md_longopts_size);
+      md_longopts, md_longopts_size);
 
   /* Make a local copy of the old argv.  */
   old_argc = *pargc;
@@ -446,300 +529,381 @@ parse_args (pargc, pargv)
   while (1)
     {
       /* getopt_long_only is like getopt_long, but '-' as well as '--' can
-	 indicate a long option.  */
+     indicate a long option.  */
       int longind;
       int optc = getopt_long_only (old_argc, old_argv, shortopts, longopts,
-				   &longind);
+                   &longind);
+
+// ADD D.Fujimoto 2008/01/07 >>>>>>>
+	  // check the all objects' dump file from command line
+	  if( check_all_dump_flg == 1 ){
+		  check_all_dump_flg = 0;
+
+		  // save the dump file name
+		 if( optarg == 0 ){
+			  fprintf (stderr, _("Error : Cannot find the all objects\' dump file.\n") );
+			  xexit (EXIT_FAILURE);
+		 } else {
+			  i_len = strlen( optarg );
+              if( 0 == memcmp( ".dump",&(optarg[i_len-5]),5 ) ){
+				  cp_All_Dump_File_Name = optarg;
+				  optc = getopt_long_only (old_argc, old_argv, shortopts, longopts,&longind);
+			  } else {
+				  fprintf (stderr, _("Error : Cannot find the all objects\' dump file.\n") );
+				  xexit (EXIT_FAILURE);
+			  }
+		  }
+	  }
+// ADD D.Fujimoto 2008/01/07 <<<<<<<
+
 
       if (optc == -1)
-	break;
+    break;
 
       switch (optc)
-	{
-	default:
-	  /* md_parse_option should return 1 if it recognizes optc,
-	     0 if not.  */
-	  if (md_parse_option (optc, optarg) != 0)
-	    break;
-	  /* `-v' isn't included in the general short_opts list, so check for
-	     it explicity here before deciding we've gotten a bad argument.  */
-	  if (optc == 'v')
-	    {
+    {
+    default:
+      /* md_parse_option should return 1 if it recognizes optc,
+         0 if not.  */
+      if (md_parse_option (optc, optarg) != 0)
+        break;
+      /* `-v' isn't included in the general short_opts list, so check for
+         it explicity here before deciding we've gotten a bad argument.  */
+      if (optc == 'v')
+        {
 #ifdef VMS
-	      /* Telling getopt to treat -v's value as optional can result
-		 in it picking up a following filename argument here.  The
-		 VMS code in md_parse_option can return 0 in that case,
-		 but it has no way of pushing the filename argument back.  */
-	      if (optarg && *optarg)
-		new_argv[new_argc++] = optarg,  new_argv[new_argc] = NULL;
-	      else
+          /* Telling getopt to treat -v's value as optional can result
+         in it picking up a following filename argument here.  The
+         VMS code in md_parse_option can return 0 in that case,
+         but it has no way of pushing the filename argument back.  */
+          if (optarg && *optarg)
+        new_argv[new_argc++] = optarg,  new_argv[new_argc] = NULL;
+          else
 #else
-	      case 'v':
+          case 'v':
 #endif
-	      case OPTION_VERBOSE:
-		print_version_id ();
-	      break;
-	    }
-	  /*FALLTHRU*/
+          case OPTION_VERBOSE:
+        print_version_id ();
+          break;
+        }
+      /*FALLTHRU*/
 
-	case '?':
-	  exit (EXIT_FAILURE);
+    case '?':
+      exit (EXIT_FAILURE);
 
-	case 1:			/* File name.  */
-	  if (!strcmp (optarg, "-"))
-	    optarg = "";
-	  new_argv[new_argc++] = optarg;
-	  new_argv[new_argc] = NULL;
-	  break;
+    case 1:         /* File name.  */
+      if (!strcmp (optarg, "-"))
+        optarg = "";
+      new_argv[new_argc++] = optarg;
+      new_argv[new_argc] = NULL;
 
-	case OPTION_HELP:
-	  show_usage (stdout);
-	  exit (EXIT_SUCCESS);
 
-	case OPTION_NOCPP:
-	  break;
+// ADD D.Fujimoto 2007/06/25 >>>>>>>
+#ifdef EXT_REMOVE
+		// save the source file name
+		if( cp_Current_File_Name == 0 ){
+			cp_Current_File_Name = xstrdup(optarg);
+		} else {
+			flag_plural_src = 1;
+		}
+#endif
+// ADD D.Fujimoto 2007/06/25 <<<<<<<
 
-	case OPTION_STATISTICS:
-	  flag_print_statistics = 1;
-	  break;
+      break;
 
-	case OPTION_STRIP_LOCAL_ABSOLUTE:
-	  flag_strip_local_absolute = 1;
-	  break;
+/* add tazaki 2001.11.02 Avdanced Option >>>>>> */
+    case OPTION_ADVANCE:
+        g_iAdvance = 1;
+        break;
 
-	case OPTION_TRADITIONAL_FORMAT:
-	  flag_traditional_format = 1;
-	  break;
+/* add tazaki 2001.11.02 Avdanced Option <<<<<< */
 
-	case OPTION_VERSION:
-	  /* This output is intended to follow the GNU standards document.  */
-	  printf (_("GNU assembler %s\n"), VERSION);
-	  printf (_("Copyright 2000 Free Software Foundation, Inc.\n"));
-	  printf (_("\
+/* add T.Tazaki 2003/11/18 PE Option >>>>>> */
+    case OPTION_PE:
+        g_iPE = 1;
+        break;
+
+/* add T.Tazaki 2003/11/18 PE Option <<<<<< */
+/* add T.Tazaki 2004/07/30 -medda32 Option >>> */
+    case OPTION_MEDDA32:
+        g_iMedda32 = 1;
+        break;
+
+/* add T.Tazaki 2004/07/30 -medda32 Option <<< */
+
+// ADD D.Fujimoto check mc33_ext argument file 2007/06/25 >>>>>>>
+#ifdef EXT_REMOVE
+	case OPTION_C33_EXT:
+		if( optarg != NULL ){
+			int i_len = strlen( optarg );
+			if( 0 != memcmp( ".dump",&(optarg[i_len-5]),5 ) ){
+				fprintf (stderr, _("Error : Cannot find the dump file.\n"));
+				xexit (EXIT_FAILURE);
+			} else {
+				cp_Dump_File_Name = xstrdup(optarg);
+// ADD D.Fujimoto 2008/01/07 >>>>>>>
+				check_all_dump_flg = 1;
+// ADD D.Fujimoto 2008/01/07 <<<<<<<
+			}
+		} else {
+			fprintf (stderr, _("Error : Cannot find the dump file.\n"));
+			xexit (EXIT_FAILURE);
+		}
+		break;
+#endif
+// ADD D.Fujimoto check mc33_ext argument file 2007/06/25 <<<<<<<
+
+    case OPTION_HELP:
+      show_usage (stdout);
+      exit (EXIT_SUCCESS);
+
+    case OPTION_NOCPP:
+      break;
+
+    case OPTION_STATISTICS:
+      flag_print_statistics = 1;
+      break;
+
+    case OPTION_STRIP_LOCAL_ABSOLUTE:
+      flag_strip_local_absolute = 1;
+      break;
+
+    case OPTION_TRADITIONAL_FORMAT:
+      flag_traditional_format = 1;
+      break;
+
+    case OPTION_VERSION:
+      /* This output is intended to follow the GNU standards document.  */
+      printf (_("GNU assembler %s\n"), VERSION);
+      printf (_("Copyright 2000 Free Software Foundation, Inc.\n"));
+      printf (_("\
 This program is free software; you may redistribute it under the terms of\n\
 the GNU General Public License.  This program has absolutely no warranty.\n"));
-	  printf (_("This assembler was configured for a target of `%s'.\n"),
-		  TARGET_ALIAS);
-	  exit (EXIT_SUCCESS);
+      printf (_("This assembler was configured for a target of `%s'.\n"),
+          TARGET_ALIAS);
+      exit (EXIT_SUCCESS);
 
-	case OPTION_EMULATION:
+    case OPTION_EMULATION:
 #ifdef USE_EMULATIONS
-	  if (strcmp (optarg, this_emulation->name))
-	    as_fatal (_("multiple emulation names specified"));
+      if (strcmp (optarg, this_emulation->name))
+        as_fatal (_("multiple emulation names specified"));
 #else
-	  as_fatal (_("emulations not handled in this configuration"));
+      as_fatal (_("emulations not handled in this configuration"));
 #endif
-	  break;
+      break;
 
-	case OPTION_DUMPCONFIG:
-	  fprintf (stderr, _("alias = %s\n"), TARGET_ALIAS);
-	  fprintf (stderr, _("canonical = %s\n"), TARGET_CANONICAL);
-	  fprintf (stderr, _("cpu-type = %s\n"), TARGET_CPU);
+    case OPTION_DUMPCONFIG:
+      fprintf (stderr, _("alias = %s\n"), TARGET_ALIAS);
+      fprintf (stderr, _("canonical = %s\n"), TARGET_CANONICAL);
+      fprintf (stderr, _("cpu-type = %s\n"), TARGET_CPU);
 #ifdef TARGET_OBJ_FORMAT
-	  fprintf (stderr, _("format = %s\n"), TARGET_OBJ_FORMAT);
+      fprintf (stderr, _("format = %s\n"), TARGET_OBJ_FORMAT);
 #endif
 #ifdef TARGET_FORMAT
-	  fprintf (stderr, _("bfd-target = %s\n"), TARGET_FORMAT);
+      fprintf (stderr, _("bfd-target = %s\n"), TARGET_FORMAT);
 #endif
-	  exit (EXIT_SUCCESS);
+      exit (EXIT_SUCCESS);
 
-	case OPTION_DEFSYM:
-	  {
-	    char *s;
-	    long i;
-	    struct defsym_list *n;
+    case OPTION_DEFSYM:
+      {
+        char *s;
+        long i;
+        struct defsym_list *n;
 
-	    for (s = optarg; *s != '\0' && *s != '='; s++)
-	      ;
-	    if (*s == '\0')
-	      as_fatal (_("bad defsym; format is --defsym name=value"));
-	    *s++ = '\0';
-	    i = strtol (s, (char **) NULL, 0);
-	    n = (struct defsym_list *) xmalloc (sizeof *n);
-	    n->next = defsyms;
-	    n->name = optarg;
-	    n->value = i;
-	    defsyms = n;
-	  }
-	  break;
+        for (s = optarg; *s != '\0' && *s != '='; s++)
+          ;
+        if (*s == '\0')
+          as_fatal (_("bad defsym; format is --defsym name=value"));
+        *s++ = '\0';
+        i = strtol (s, (char **) NULL, 0);
+        n = (struct defsym_list *) xmalloc (sizeof *n);
+        n->next = defsyms;
+        n->name = optarg;
+        n->value = i;
+        defsyms = n;
+      }
+      break;
 
-	case OPTION_INSTTBL:
-	case 't':
-	  {
-	    /* optarg is the name of the file containing the instruction 
-	       formats, opcodes, register names, etc. */
-	    struct itbl_file_list *n;
+    case OPTION_INSTTBL:
+    case 't':
+      {
+        /* optarg is the name of the file containing the instruction 
+           formats, opcodes, register names, etc. */
+        struct itbl_file_list *n;
 
-	    if (optarg == NULL)
-	      {
-		as_warn ( _("No file name following -t option\n") );
-		break;
-	      }
-	    
-	    n = (struct itbl_file_list *) xmalloc (sizeof *n);
-	    n->next = itbl_files;
-	    n->name = optarg;
-	    itbl_files = n;
+        if (optarg == NULL)
+          {
+        as_warn ( _("No file name following -t option\n") );
+        break;
+          }
+        
+        n = (struct itbl_file_list *) xmalloc (sizeof *n);
+        n->next = itbl_files;
+        n->name = optarg;
+        itbl_files = n;
 
-	    /* Parse the file and add the new instructions to our internal
-	       table.  If multiple instruction tables are specified, the 
-	       information from this table gets appended onto the existing 
-	       internal table. */
-	    itbl_files->name = xstrdup (optarg);
-	    if (itbl_parse (itbl_files->name) != 0)
-	      {
-		fprintf (stderr, _("Failed to read instruction table %s\n"), 
-			 itbl_files->name);
-		exit (EXIT_SUCCESS);
-	      }
-	  }
-	  break;
+        /* Parse the file and add the new instructions to our internal
+           table.  If multiple instruction tables are specified, the 
+           information from this table gets appended onto the existing 
+           internal table. */
+        itbl_files->name = xstrdup (optarg);
+        if (itbl_parse (itbl_files->name) != 0)
+          {
+        fprintf (stderr, _("Failed to read instruction table %s\n"), 
+             itbl_files->name);
+        exit (EXIT_SUCCESS);
+          }
+      }
+      break;
 
-	case OPTION_DEPFILE:
-	  start_dependencies (optarg);
-	  break;
+    case OPTION_DEPFILE:
+      start_dependencies (optarg);
+      break;
 
-	case OPTION_GSTABS:
-	  debug_type = DEBUG_STABS;
-	  break;
+    case OPTION_GSTABS:
+      debug_type = DEBUG_STABS;
+      break;
  
-	case OPTION_GDWARF2:
-	  debug_type = DEBUG_DWARF2;
-	  break;
+    case OPTION_GDWARF2:
+      debug_type = DEBUG_DWARF2;
+      break;
 
-	case 'J':
-	  flag_signed_overflow_ok = 1;
-	  break;
+    case 'J':
+      flag_signed_overflow_ok = 1;
+      break;
 
 #ifndef WORKING_DOT_WORD
-	case 'K':
-	  flag_warn_displacement = 1;
-	  break;
+    case 'K':
+      flag_warn_displacement = 1;
+      break;
 #endif
 
-	case 'L':
-	  flag_keep_locals = 1;
-	  break;
+    case 'L':
+      flag_keep_locals = 1;
+      break;
 
-	case OPTION_LISTING_LHS_WIDTH:
-	  listing_lhs_width = atoi(optarg);
-	  if (listing_lhs_width_second < listing_lhs_width)
-	    listing_lhs_width_second = listing_lhs_width;
-	  break;
-	case OPTION_LISTING_LHS_WIDTH2:
-	  {
-	    int tmp = atoi(optarg);
-	    if (tmp > listing_lhs_width)
-	      listing_lhs_width_second = tmp;
-	  }
-	  break;
-	case OPTION_LISTING_RHS_WIDTH:
-	  listing_rhs_width = atoi(optarg);
-	  break;
-	case OPTION_LISTING_CONT_LINES:
-	  listing_lhs_cont_lines = atoi(optarg);
-	  break;
+    case OPTION_LISTING_LHS_WIDTH:
+      listing_lhs_width = atoi(optarg);
+      if (listing_lhs_width_second < listing_lhs_width)
+        listing_lhs_width_second = listing_lhs_width;
+      break;
+    case OPTION_LISTING_LHS_WIDTH2:
+      {
+        int tmp = atoi(optarg);
+        if (tmp > listing_lhs_width)
+          listing_lhs_width_second = tmp;
+      }
+      break;
+    case OPTION_LISTING_RHS_WIDTH:
+      listing_rhs_width = atoi(optarg);
+      break;
+    case OPTION_LISTING_CONT_LINES:
+      listing_lhs_cont_lines = atoi(optarg);
+      break;
 
-	case 'M':
-	  flag_mri = 1;
+    case 'M':
+      flag_mri = 1;
 #ifdef TC_M68K
-	  flag_m68k_mri = 1;
+      flag_m68k_mri = 1;
 #endif
-	  break;
+      break;
 
-	case 'R':
-	  flag_readonly_data_in_text = 1;
-	  break;
+    case 'R':
+      flag_readonly_data_in_text = 1;
+      break;
 
-	case 'W':
-	  flag_no_warnings = 1;
-	  break;
+    case 'W':
+      flag_no_warnings = 1;
+      break;
 
-	case OPTION_WARN:
-	  flag_no_warnings = 0;
-	  flag_fatal_warnings = 0;
-	  break;
+    case OPTION_WARN:
+      flag_no_warnings = 0;
+      flag_fatal_warnings = 0;
+      break;
 
-	case OPTION_WARN_FATAL:
-	  flag_no_warnings = 0;
-	  flag_fatal_warnings = 1;
-	  break;
+    case OPTION_WARN_FATAL:
+      flag_no_warnings = 0;
+      flag_fatal_warnings = 1;
+      break;
 
-	case 'Z':
-	  flag_always_generate_output = 1;
-	  break;
+    case 'Z':
+      flag_always_generate_output = 1;
+      break;
 
-	case 'a':
-	  if (optarg)
-	    {
-	      while (*optarg)
-		{
-		  switch (*optarg)
-		    {
-		    case 'c':
-		      listing |= LISTING_NOCOND;
-		      break;
-		    case 'd':
-		      listing |= LISTING_NODEBUG;
-		      break;
-		    case 'h':
-		      listing |= LISTING_HLL;
-		      break;
-		    case 'l':
-		      listing |= LISTING_LISTING;
-		      break;
-		    case 'm':
-		      listing |= LISTING_MACEXP;
-		      break;
-		    case 'n':
-		      listing |= LISTING_NOFORM;
-		      break;
-		    case 's':
-		      listing |= LISTING_SYMBOLS;
-		      break;
-		    case '=':
-		      listing_filename = xstrdup (optarg + 1);
-		      optarg += strlen (listing_filename);
-		      break;
-		    default:
-		      as_fatal (_("invalid listing option `%c'"), *optarg);
-		      break;
-		    }
-		  optarg++;
-		}
-	    }
-	  if (!listing)
-	    listing = LISTING_DEFAULT;
-	  break;
+    case 'a':
+      if (optarg)
+        {
+          while (*optarg)
+        {
+          switch (*optarg)
+            {
+            case 'c':
+              listing |= LISTING_NOCOND;
+              break;
+            case 'd':
+              listing |= LISTING_NODEBUG;
+              break;
+            case 'h':
+              listing |= LISTING_HLL;
+              break;
+            case 'l':
+              listing |= LISTING_LISTING;
+              break;
+            case 'm':
+              listing |= LISTING_MACEXP;
+              break;
+            case 'n':
+              listing |= LISTING_NOFORM;
+              break;
+            case 's':
+              listing |= LISTING_SYMBOLS;
+              break;
+            case '=':
+              listing_filename = xstrdup (optarg + 1);
+              optarg += strlen (listing_filename);
+              break;
+            default:
+              as_fatal (_("invalid listing option `%c'"), *optarg);
+              break;
+            }
+          optarg++;
+        }
+        }
+      if (!listing)
+        listing = LISTING_DEFAULT;
+        
+        g_listing = 1;  /* -a option exist: @rm,@rl Warning */
+                    /* add T.Tazaki 2002.04.26 */
+      break;
 
-	case 'D':
-	  /* DEBUG is implemented: it debugs different */
-	  /* things from other people's assemblers. */
-	  flag_debug = 1;
-	  break;
+    case 'D':
+      /* DEBUG is implemented: it debugs different */
+      /* things from other people's assemblers. */
+      flag_debug = 1;
+      break;
 
-	case 'f':
-	  flag_no_comments = 1;
-	  break;
+    case 'f':
+      flag_no_comments = 1;
+      break;
 
-	case 'I':
-	  {			/* Include file directory */
-	    char *temp = xstrdup (optarg);
-	    add_include_dir (temp);
-	    break;
-	  }
+    case 'I':
+      {         /* Include file directory */
+        char *temp = xstrdup (optarg);
+        add_include_dir (temp);
+        break;
+      }
 
-	case 'o':
-	  out_file_name = xstrdup (optarg);
-	  break;
+    case 'o':
+      out_file_name = xstrdup (optarg);
+      break;
 
-	case 'w':
-	  break;
+    case 'w':
+      break;
 
-	case 'X':
-	  /* -X means treat warnings as errors */
-	  break;
-	}
+    case 'X':
+      /* -X means treat warnings as errors */
+      break;
+    }
     }
 
   free (shortopts);
@@ -747,6 +911,48 @@ the GNU General Public License.  This program has absolutely no warranty.\n"));
 
   *pargc = new_argc;
   *pargv = new_argv;
+
+// ADD D.Fujimoto 2007/06/25 >>>>>>>
+#ifdef EXT_REMOVE
+	// process of -mc33ext option
+	if( flag_plural_src == 1 ){
+		fprintf (stderr, _("Error : Cannot specify plurality source files.\n"));
+		xexit (EXIT_FAILURE);
+	}
+
+	if( cp_Current_File_Name != NULL ){
+		if( strlen(cp_Current_File_Name) > 0 ){
+			chk_is_file_inf( cp_Current_File_Name );	// check whether ".file" exists
+		}
+	}
+
+	if( ( cp_Current_File_Name != NULL ) 
+						&& ( cp_Dump_File_Name != NULL ) && ( out_file_name != NULL ) ){
+		if( strlen(cp_Current_File_Name) > 0 ){
+			xatexit( free_ext_heap_area );		// register "free_ext_heap_area()" into "xexit()"
+			read_cur_file_info( cp_Current_File_Name );
+			read_dump_info( cp_Dump_File_Name,out_file_name );
+
+// ADD D.Fujimoto 2008/01/07 >>>>>>>
+			// read all object dump file
+			read_all_dump_info(cp_All_Dump_File_Name, out_file_name);
+
+			// count duplicate symbols using the all object dump file
+			countDuplicateSymbols(stpp_All_Dump_Inf, ul_All_Dump_Symbol_Cnt);
+// ADD D.Fujimoto 2008/01/07 <<<<<<<
+
+			// get data pointer address
+			if (!g_iMedda32) {
+				g_dpAddress = getDataPointerAddress(DATA_POINTER_SYMBOL);
+			}
+
+			g_c33_ext = 1;
+		}
+	}
+#endif
+// ADD D.Fujimoto 2007/06/25 <<<<<<<
+
+
 }
 
 static long start_time;
@@ -759,6 +965,10 @@ main (argc, argv)
   int macro_alternate;
   int macro_strip_at;
   int keep_it;
+  
+  /* add T.Tazaki 2003/05/14 >>> */
+  FILE *fpOut;
+  /* add T.Tazaki 2003/05/14 <<< */
 
   start_time = get_run_time ();
 
@@ -850,7 +1060,7 @@ main (argc, argv)
       struct defsym_list *next;
 
       sym = symbol_new (defsyms->name, absolute_section, defsyms->value,
-			&zero_address_frag);
+            &zero_address_frag);
       symbol_table_insert (sym);
       next = defsyms->next;
       free (defsyms);
@@ -859,7 +1069,7 @@ main (argc, argv)
 
   PROGRESS (1);
 
-  perform_an_assembly_pass (argc, argv);	/* Assemble it. */
+  perform_an_assembly_pass (argc, argv);    /* Assemble it. */
 
   cond_finish_check (-1);
 
@@ -893,6 +1103,35 @@ main (argc, argv)
   if (keep_it)
 #endif
     output_file_close (out_file_name);
+
+/* add T.Tazaki 2003/05/14 >>> */
+    fpOut = fopen( out_file_name,"r+b" );
+    if( fpOut != NULL )
+    {
+        /* e_machine number set */
+//      fseek( fpOut, 18, SEEK_SET );
+//      fputc( EM_SE_C33, fpOut );
+
+        /* ELF header : e_flags bit31-28=CPU flag set */
+        /*  flag = 0x0  : Standard macro */
+        /*  flag = 'A'  : Advanced macro */
+        /*  flag = 'P'  : PE macro */
+
+        /* Advanced macro mode ? */
+        if( g_iAdvance == 1 )
+        {
+           fseek( fpOut, 39, SEEK_SET );
+           fputc( 'A', fpOut );
+        }
+        else if ( g_iPE == 1 )			/* add T.Tazaki 2003/11/18 */
+        {
+           fseek( fpOut, 39, SEEK_SET );
+           fputc( 'P', fpOut );
+        }
+        fclose( fpOut );
+    }
+/* add T.Tazaki 2003/05/14 <<< */
+
 #endif
 
   if (flag_fatal_warnings && had_warnings() > 0 && had_errors () == 0)
@@ -928,10 +1167,10 @@ dump_statistics ()
   long run_time = get_run_time () - start_time;
 
   fprintf (stderr, _("%s: total time in assembly: %ld.%06ld\n"),
-	   myname, run_time / 1000000, run_time % 1000000);
+       myname, run_time / 1000000, run_time % 1000000);
 #ifdef HAVE_SBRK
   fprintf (stderr, _("%s: data size %ld\n"),
-	   myname, (long) (lim - (char *) &environ));
+       myname, (long) (lim - (char *) &environ));
 #endif
 
   subsegs_print_statistics (stderr);
@@ -948,7 +1187,7 @@ dump_statistics ()
 }
 
 
-/*			perform_an_assembly_pass()
+/*          perform_an_assembly_pass()
  *
  * Here to attempt 1 pass over each input file.
  * We scan argv[*] looking for filenames or exactly "" which is
@@ -1012,11 +1251,11 @@ perform_an_assembly_pass (argc, argv)
      to have relocs, otherwise we don't find out in time. */
   applicable = bfd_applicable_section_flags (stdoutput);
   bfd_set_section_flags (stdoutput, text_section,
-			 applicable & (SEC_ALLOC | SEC_LOAD | SEC_RELOC
-				       | SEC_CODE | SEC_READONLY));
+             applicable & (SEC_ALLOC | SEC_LOAD | SEC_RELOC
+                       | SEC_CODE | SEC_READONLY));
   bfd_set_section_flags (stdoutput, data_section,
-			 applicable & (SEC_ALLOC | SEC_LOAD | SEC_RELOC
-				       | SEC_DATA));
+             applicable & (SEC_ALLOC | SEC_LOAD | SEC_RELOC
+                       | SEC_DATA));
   bfd_set_section_flags (stdoutput, bss_section, applicable & SEC_ALLOC);
   seg_info (bss_section)->bss = 1;
   subseg_new (BFD_ABS_SECTION_NAME, 0);
@@ -1036,22 +1275,22 @@ perform_an_assembly_pass (argc, argv)
   obj_begin ();
 #endif
 
-  argv++;			/* skip argv[0] */
-  argc--;			/* skip argv[0] */
+  argv++;           /* skip argv[0] */
+  argc--;           /* skip argv[0] */
   while (argc--)
     {
       if (*argv)
-	{			/* Is it a file-name argument? */
-	  PROGRESS (1);
-	  saw_a_file++;
-	  /* argv->"" if stdin desired, else->filename */
-	  read_a_source_file (*argv);
-	}
-      argv++;			/* completed that argv */
+    {           /* Is it a file-name argument? */
+      PROGRESS (1);
+      saw_a_file++;
+      /* argv->"" if stdin desired, else->filename */
+      read_a_source_file (*argv);
+    }
+      argv++;           /* completed that argv */
     }
   if (!saw_a_file)
     read_a_source_file ("");
-}				/* perform_an_assembly_pass() */
+}               /* perform_an_assembly_pass() */
 
 /* The interface between the macro code and gas expression handling.  */
 

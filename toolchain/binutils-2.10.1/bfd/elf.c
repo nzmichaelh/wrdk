@@ -392,6 +392,7 @@ _bfd_elf_make_section_from_shdr (abfd, hdr, name)
      The symbols will be defined as weak, so that multiple definitions
      are permitted.  The GNU linker extension is to actually discard
      all but one of the sections.  */
+
   if (strncmp (name, ".gnu.linkonce", sizeof ".gnu.linkonce" - 1) == 0)
     flags |= SEC_LINK_ONCE | SEC_LINK_DUPLICATES_DISCARD;
 
@@ -3306,6 +3307,12 @@ prep_headers (abfd)
     case bfd_arch_pj:
       i_ehdrp->e_machine = EM_PJ;
       break;
+/* >>>>> ADDED D.Fujimoto 2007/10/15  Seiko Epson processor (S1C33) */
+	// this flag will be written in o and elf files
+    case bfd_arch_c33:
+      i_ehdrp->e_machine = EM_SE_C33;
+      break;
+/* <<<<< ADDED D.Fujimoto 2007/10/15  Seiko Epson processor (S1C33) */
       /* also note that EM_M32, AT&T WE32100 is unknown to bfd */
     default:
       i_ehdrp->e_machine = EM_NONE;

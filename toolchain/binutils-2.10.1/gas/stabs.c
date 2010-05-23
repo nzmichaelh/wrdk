@@ -107,12 +107,12 @@ get_stab_string_offset (string, stabstr_secname)
 #ifdef BFD_ASSEMBLER
       bfd_set_section_flags (stdoutput, seg, SEC_READONLY | SEC_DEBUGGING);
       if (seg->name == stabstr_secname)
-	seg->name = xstrdup (stabstr_secname);
+    seg->name = xstrdup (stabstr_secname);
 #endif
     }
 
   if (length > 0)
-    {				/* Ordinary case. */
+    {               /* Ordinary case. */
       p = frag_more (length + 1);
       strcpy (p, string);
 
@@ -128,7 +128,7 @@ get_stab_string_offset (string, stabstr_secname)
 
 #ifdef AOUT_STABS
 #ifndef OBJ_PROCESS_STAB
-#define OBJ_PROCESS_STAB(SEG,W,S,T,O,D)	aout_process_stab(W,S,T,O,D)
+#define OBJ_PROCESS_STAB(SEG,W,S,T,O,D) aout_process_stab(W,S,T,O,D)
 #endif
 
 static void aout_process_stab PARAMS ((int, const char *, int, int, int));
@@ -148,7 +148,7 @@ aout_process_stab (what, string, type, other, desc)
      ends in "\" and the debug info is continued in the next .stabs
      directive) from being separated by other random symbols.  */
   symbol = symbol_create (string, undefined_section, 0,
-			  (struct frag *) NULL);
+              (struct frag *) NULL);
   if (what == 's' || what == 'n')
     {
       /* Pick up the value from the input line.  */
@@ -203,13 +203,13 @@ s_stab_generic (what, stab_secname, stabstr_secname)
       string = demand_copy_C_string (&length);
       SKIP_WHITESPACE ();
       if (*input_line_pointer == ',')
-	input_line_pointer++;
+    input_line_pointer++;
       else
-	{
-	  as_warn (_(".stabs: Missing comma"));
-	  ignore_rest_of_line ();
-	  return;
-	}
+    {
+      as_warn (_(".stabs: Missing comma"));
+      ignore_rest_of_line ();
+      return;
+    }
     }
 
   if (get_absolute_expression_and_terminator (&longint) != ',')
@@ -232,11 +232,11 @@ s_stab_generic (what, stab_secname, stabstr_secname)
   if (what == 's' || what == 'n')
     {
       if (*input_line_pointer != ',')
-	{
-	  as_warn (_(".stab%c: Missing comma"), what);
-	  ignore_rest_of_line ();
-	  return;
-	}
+    {
+      as_warn (_(".stab%c: Missing comma"), what);
+      ignore_rest_of_line ();
+      return;
+    }
       input_line_pointer++;
       SKIP_WHITESPACE ();
     }
@@ -251,12 +251,12 @@ s_stab_generic (what, stab_secname, stabstr_secname)
 
       SKIP_WHITESPACE ();
       if (*input_line_pointer == ',')
-	{
-	  input_line_pointer++;
-	  what = 'n';
-	}
+    {
+      input_line_pointer++;
+      what = 'n';
+    }
       else
-	input_line_pointer = save_location;
+    input_line_pointer = save_location;
     }
 #endif /* OBJ_ELF */
 #endif /* TC_PPC */
@@ -265,15 +265,15 @@ s_stab_generic (what, stab_secname, stabstr_secname)
   if (listing)
     {
       switch (type)
-	{
-	case N_SLINE:
-	  listing_source_line ((unsigned int) desc);
-	  break;
-	case N_SO:
-	case N_SOL:
-	  listing_source_file (string);
-	  break;
-	}
+    {
+    case N_SLINE:
+      listing_source_line ((unsigned int) desc);
+      break;
+    case N_SO:
+    case N_SOL:
+      listing_source_file (string);
+      break;
+    }
     }
 #endif /* ! NO_LISTING */
 
@@ -303,40 +303,40 @@ s_stab_generic (what, stab_secname, stabstr_secname)
 #endif
 
       if (cached_secname && !strcmp (cached_secname, stab_secname))
-	{
-	  seg = cached_sec;
-	  subseg_set (seg, 0);
-	}
+    {
+      seg = cached_sec;
+      subseg_set (seg, 0);
+    }
       else
-	{
-	  seg = subseg_new (stab_secname, 0);
-	  if (cached_secname)
-	    free (cached_secname);
-	  cached_secname = xstrdup (stab_secname);
-	  cached_sec = seg;
-	}
+    {
+      seg = subseg_new (stab_secname, 0);
+      if (cached_secname)
+        free (cached_secname);
+      cached_secname = xstrdup (stab_secname);
+      cached_sec = seg;
+    }
 
       if (! seg_info (seg)->hadone)
-	{
+    {
 #ifdef BFD_ASSEMBLER
-	  bfd_set_section_flags (stdoutput, seg,
-				 SEC_READONLY | SEC_RELOC | SEC_DEBUGGING);
+      bfd_set_section_flags (stdoutput, seg,
+                 SEC_READONLY | SEC_RELOC | SEC_DEBUGGING);
 #endif
 #ifdef INIT_STAB_SECTION
-	  INIT_STAB_SECTION (seg);
+      INIT_STAB_SECTION (seg);
 #endif
-	  seg_info (seg)->hadone = 1;
-	}
+      seg_info (seg)->hadone = 1;
+    }
 
       stroff = get_stab_string_offset (string, stabstr_secname);
       if (what == 's')
-	{
-	  /* release the string */
-	  obstack_free (&notes, string);
-	}
+    {
+      /* release the string */
+      obstack_free (&notes, string);
+    }
 
       /* At least for now, stabs in a special stab section are always
-	 output as 12 byte blocks of information.  */
+     output as 12 byte blocks of information.  */
       p = frag_more (8);
       md_number_to_chars (p, (valueT) stroff, 4);
       md_number_to_chars (p + 4, (valueT) type, 1);
@@ -344,27 +344,27 @@ s_stab_generic (what, stab_secname, stabstr_secname)
       md_number_to_chars (p + 6, (valueT) desc, 2);
 
       if (what == 's' || what == 'n')
-	{
-	  /* Pick up the value from the input line.  */
-	  cons (4);
-	  input_line_pointer--;
-	}
+    {
+      /* Pick up the value from the input line.  */
+      cons (4);
+      input_line_pointer--;
+    }
       else
-	{
-	  const char *fake;
-	  symbolS *symbol;
-	  expressionS exp;
+    {
+      const char *fake;
+      symbolS *symbol;
+      expressionS exp;
 
-	  /* Arrange for a value representing the current location.  */
-	  fake = FAKE_LABEL_NAME;
-	  symbol = symbol_new (fake, saved_seg, dot, saved_frag);
+      /* Arrange for a value representing the current location.  */
+      fake = FAKE_LABEL_NAME;
+      symbol = symbol_new (fake, saved_seg, dot, saved_frag);
 
-	  exp.X_op = O_symbol;
-	  exp.X_add_symbol = symbol;
-	  exp.X_add_number = 0;
+      exp.X_op = O_symbol;
+      exp.X_add_symbol = symbol;
+      exp.X_add_number = 0;
 
-	  emit_expr (&exp, 4);
-	}
+      emit_expr (&exp, 4);
+    }
 
 #ifdef OBJ_PROCESS_STAB
       OBJ_PROCESS_STAB (seg, what, string, type, other, desc);
@@ -425,10 +425,10 @@ s_xstab (what)
       strcpy (stabstr_secname, stab_secname);
       strcat (stabstr_secname, "str");
       if (saved_secname)
-	{
-	  free (saved_secname);
-	  free (saved_strsecname);
-	}
+    {
+      free (saved_secname);
+      free (saved_strsecname);
+    }
       saved_secname = stab_secname;
       saved_strsecname = stabstr_secname;
     }
@@ -471,11 +471,16 @@ s_desc (ignore)
       S_SET_DESC (symbolP, temp);
     }
   demand_empty_rest_of_line ();
-}				/* s_desc() */
+}               /* s_desc() */
 
 #endif /* defined (S_SET_DESC) */
 
 /* Generate stabs debugging information to denote the main source file.  */
+
+/* add T.Tazaki 2002.02.26 >>> */
+extern char *c33_stabs_input_file;
+extern enum debug_info_type debug_type;
+/* add T.Tazaki 2002.02.26 <<< */
 
 void
 stabs_generate_asm_file ()
@@ -484,6 +489,10 @@ stabs_generate_asm_file ()
   unsigned int lineno;
 
   as_where (&file, &lineno);
+  
+  if( *c33_stabs_input_file != NULL )       /* add T.Tazaki 2002.02.26 */
+      file = c33_stabs_input_file;      /* add T.Tazaki 2002.02.26 */
+
   generate_asm_file (N_SO, file);
 }
 
@@ -498,8 +507,11 @@ generate_asm_file (type, file)
   static char *last_file;
   static int label_count;
   char *hold;
-  char *buf = xmalloc (2 * strlen (file) + 10);
-  char sym[30];
+//  char *buf = xmalloc (2 * strlen (file) + 10);/* buf fix 2003/06/17 */
+//  char *buf = xmalloc (2 * strlen (file) + 12); /* buf fix 2003/06/17 */
+  char *buf = xmalloc (2 * strlen (file) + 30); /* buf fix 2004/01/05 */
+//  char sym[30];/* buf fix 2004/01/05 */
+  char sym[60];/* buf fix 2004/01/05 */
 
   /* Rather than try to do this in some efficient fashion, we just
      generate a string and then parse it again.  That lets us use the
@@ -538,7 +550,7 @@ generate_asm_file (type, file)
       colon (sym);
 
       if (last_file != NULL)
-	free (last_file);
+    free (last_file);
       last_file = xstrdup (file);
     }
 
@@ -568,6 +580,9 @@ stabs_generate_asm_lineno ()
 
   as_where (&file, &lineno);
 
+  if( *c33_stabs_input_file != NULL )       /* add T.Tazaki 2002.02.26 */
+      file = c33_stabs_input_file;      /* add T.Tazaki 2002.02.26 */
+
   generate_asm_file (N_SOL, file);
 
   sprintf (sym, "%sL%d", FAKE_LABEL_NAME, label_count);
@@ -577,7 +592,7 @@ stabs_generate_asm_lineno ()
     {
       buf = (char *) alloca (100 + strlen (current_function_label));
       sprintf (buf, "%d,0,%d,%s-%s\n", N_SLINE, lineno,
-	       sym, current_function_label);
+           sym, current_function_label);
     }
   else
     {
@@ -614,7 +629,7 @@ stabs_generate_asm_func (funcname, startlabname)
 
   as_where (&file, &lineno);
   asprintf (&buf, "\"%s:F1\",%d,0,%d,%s",
-	    funcname, N_FUN, lineno + 1, startlabname);
+        funcname, N_FUN, lineno + 1, startlabname);
   input_line_pointer = buf;
   s_stab ('s');
   free (buf);

@@ -1377,6 +1377,9 @@ evsta.c: $(srcdir)/emulparams/vsta.sh \
 ev850.c: $(srcdir)/emulparams/v850.sh \
   $(srcdir)/emultempl/elf32.em $(srcdir)/scripttempl/v850.sc ${GEN_DEPENDS}
 	${GENSCRIPTS} v850 "$(tdir_v850)"
+ec33.c: $(srcdir)/emulparams/c33.sh \
+  $(srcdir)/emultempl/elf32.em $(srcdir)/scripttempl/c33.sc ${GEN_DEPENDS}
+	${GENSCRIPTS} c33 "$(tdir_c33)"
 ew65.c: $(srcdir)/emulparams/w65.sh \
   $(srcdir)/emultempl/generic.em $(srcdir)/scripttempl/w65.sc ${GEN_DEPENDS}
 	${GENSCRIPTS} w65 "$(tdir_w65)"

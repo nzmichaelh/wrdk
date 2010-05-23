@@ -119,6 +119,9 @@ display_file PARAMS ((char *filename, char *target));
 static void
 dump_section_header PARAMS ((bfd *, asection *, PTR));
 
+static int 
+has_debug_sections(bfd *abfd);		/* add D.Fujimoto 2006.06.12 */
+
 static void
 dump_headers PARAMS ((bfd *));
 
@@ -343,8 +346,15 @@ dump_section_header (abfd, section, ignored)
   printf_vma (bfd_get_section_vma (abfd, section));
   printf ("  ");
   printf_vma (section->lma);
-  printf ("  %08lx  2**%u", section->filepos,
-	  bfd_get_section_alignment (abfd, section));
+  /* .comm ---> alignment 2**2 fixed 		add tazaki 2001.11.06 */
+/*  if ( strcmp( bfd_get_section_name (abfd, section),".comm" ) ){	*/
+	  printf ("  %08lx  2**%u", section->filepos,
+		  bfd_get_section_alignment (abfd, section));
+/*
+  }else{
+	  printf ("  %08lx  2**2", section->filepos );
+  }
+*/
   if (! wide_output)
     printf ("\n                ");
   printf ("  ");
@@ -405,8 +415,33 @@ dump_section_header (abfd, section, ignored)
     }
 
   printf ("\n");
+
 #undef PF
 }
+
+/* >>>>> check if debugging sections are present 		add D.Fujimoto 2006.06.12 */
+static int has_debug_sections(abfd)
+	bfd *abfd ATTRIBUTE_UNUSED;
+{
+	int ret = 0;
+	const char *section_name;
+    asection *p;
+
+	for (p = abfd->sections; p != NULL; p = p->next) {
+		section_name = p->name;
+
+		// search for section names starting with .stab or .comment
+		if (strncmp(section_name, ".stab", sizeof(".stab") - 1) == 0 || 
+			strncmp(section_name, ".comment", sizeof(".comment") - 1) == 0) {
+			ret = 1;
+			break;
+		}
+
+    }
+
+	return ret;
+}
+/* <<<<< check if debugging sections are present 		add D.Fujimoto 2006.06.12 */
 
 static void
 dump_headers (abfd)
@@ -425,6 +460,13 @@ dump_headers (abfd)
   printf ("\n");
 
   bfd_map_over_sections (abfd, dump_section_header, (PTR) NULL);
+
+  /* >>>>> display message concerning debugging sections 		add D.Fujimoto 2006.06.12 */
+  if (has_debug_sections(abfd)) {
+    printf ("\n*** Debugging sections will not be loaded to the target ***\n\n");
+  }
+  /* <<<<< display message concerning debugging sections 		add D.Fujimoto 2006.06.12 */
+
 }
 
 static asymbol **
@@ -1251,6 +1293,9 @@ disassemble_bytes (info, disassemble_fn, insns, data,
   bfd_vma addr_offset;
   int opb = info->octets_per_byte;
 
+  bfd_byte iData1,iData2;	/* add tazaki 2001.07.31 */
+  int iFlag;				/* add tazaki 2001.07.31 */
+  
   aux = (struct objdump_disasm_info *) info->application_data;
   section = aux->sec;
 
@@ -1334,7 +1379,8 @@ disassemble_bytes (info, disassemble_fn, insns, data,
 		*s = ' ';
 	      if (*s == '\0')
 		*--s = '0';
-	      printf ("%s:\t", buf + skip_addr_chars);
+/*	      printf ("%s:\t", buf + skip_addr_chars);	*/
+	      printf ("%s: ", buf + skip_addr_chars); /* tazaki 2001.11.02 */
 	    }
 	  else
 	    {
@@ -1411,24 +1457,39 @@ disassemble_bytes (info, disassemble_fn, insns, data,
 	      else
 		bpc = 1;
 
-	      for (j = addr_offset * opb; j < addr_offset * opb + pb; j += bpc)
+	    iFlag = 0;	/* add tazaki 2001.07.31 */
+
+	    for (j = addr_offset * opb; j < addr_offset * opb + pb; j += bpc)
 		{
 		  int k;
+/* del tazaki 2001.07.31 >>>>>
 		  if (bpc > 1 && info->display_endian == BFD_ENDIAN_LITTLE)
-		    {
+		  {
 		      for (k = bpc - 1; k >= 0; k--)
-			printf ("%02x", (unsigned) data[j + k]);
+					printf ("%02x", (unsigned) data[j + k]);
 		      putchar (' ');
-		    }
-		  else
-		    {
+		  }
+		  else{
 		      for (k = 0; k < bpc; k++)
-			printf ("%02x", (unsigned) data[j + k]);
+					printf ("%02x", (unsigned) data[j + k]);
 		      putchar (' ');
-		    }
+		  }
+<<<< del */
+/* add tazaki 2001.07.31 >>>> */
+		  if( iFlag == 0 ){
+		  	iData2 = data[j + 0];
+			iFlag = 1;
+		  }else{
+		  	iData1 = data[j + 0];
+			iFlag = 0;
+		  }
+/* add <<<< */
 		}
+		
+		printf( "%02x%02x",iData1,iData2 );	/* add tazaki 2001.07.31 */
 
-	      for (; pb < octets_per_line; pb += bpc)
+/* del tazaki 2001.11.06 >>>>>>>>>>>>>
+	    for (; pb < octets_per_line; pb += bpc)
 		{
 		  int k;
 
@@ -1437,12 +1498,12 @@ disassemble_bytes (info, disassemble_fn, insns, data,
 		  putchar (' ');
 		}
 
-	      /* Separate raw data from instruction by extra space.  */
 	      if (insns)
-		putchar ('\t');
+				putchar ('\t');	
 	      else
-		printf ("    ");
-	    }
+				printf ("    "); 
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< */
+      }
 
 	  if (! insns)
 	    printf ("%s", buf);
@@ -1512,7 +1573,7 @@ disassemble_bytes (info, disassemble_fn, insns, data,
 	      q = **relppp;
 
 	      if (wide_output)
-		putchar ('\t');
+		putchar ('\t');		
 	      else
 		printf ("\t\t\t");
 

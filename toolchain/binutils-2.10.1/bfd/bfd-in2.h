@@ -1420,6 +1420,8 @@ enum bfd_architecture
 #define bfd_mach_avr2          2
 #define bfd_mach_avr3          3
 #define bfd_mach_avr4          4
+  bfd_arch_c33,								/* ’Ç‰Á 2001.2.19 ide */
+#define bfd_mach_c33          0				/* ’Ç‰Á 2001.2.19 ide */
   bfd_arch_last
   };
 
@@ -1515,11 +1517,32 @@ typedef enum bfd_reloc_status
         /* The symbol to relocate against was undefined. */
   bfd_reloc_undefined,
 
+/* add tazaki 2001.11.20 >>>>> */
+  bfd_reloc_over_doff_globalpointer,
+  bfd_reloc_over_goff_globalpointer,
+  bfd_reloc_over_soff_globalpointer,
+  bfd_reloc_over_toff_globalpointer,
+  bfd_reloc_over_zoff_globalpointer,
+  bfd_reloc_doff_over_64mb,
+  bfd_reloc_doff_over_8kb,
+  bfd_reloc_goff_over_8kb,
+  bfd_reloc_soff_over_64mb,
+  bfd_reloc_soff_over_8kb,
+  bfd_reloc_toff_over_64mb,
+  bfd_reloc_toff_over_8kb,
+  bfd_reloc_zoff_over_64mb,
+  bfd_reloc_zoff_over_8kb,
+  bfd_reloc_dpoff_over_512kb,
+  bfd_reloc_dpoff_over_64b,
+/* add tazaki 2001.11.20 <<<<< */
+
         /* The relocation was performed, but may not be ok - presently
           generated only when linking i960 coff files with i960 b.out
           symbols.  If this type is returned, the error_message argument
           to bfd_perform_relocation will be set.  */
   bfd_reloc_dangerous
+  
+
  }
  bfd_reloc_status_type;
 
@@ -2376,6 +2399,39 @@ value of SUBI insn. */
 into 22 bits. */
   BFD_RELOC_AVR_CALL,
 
+
+  /* cc33 relocations */
+  BFD_RELOC_C33_AH,
+  BFD_RELOC_C33_AL,
+  BFD_RELOC_C33_RH,
+  BFD_RELOC_C33_RM,
+  BFD_RELOC_C33_RL,
+  BFD_RELOC_C33_S_RH,	/* add tazaki 2002.05.02 */
+  BFD_RELOC_C33_S_RM,	/* add tazaki 2002.05.02 */
+  BFD_RELOC_C33_S_RL,	/* add tazaki 2002.05.02 */
+  BFD_RELOC_C33_JP,	/* add tazaki 2002.04.22 */
+  BFD_RELOC_C33_H,
+  BFD_RELOC_C33_M,
+  BFD_RELOC_C33_L,
+  BFD_RELOC_C33_DH, /* add tazaki 2002.01.11 */
+  BFD_RELOC_C33_DL, /* add tazaki 2002.01.11 */
+  BFD_RELOC_C33_GL, /* add tazaki 2001.07.13 */
+  BFD_RELOC_C33_SH, /* add tazaki 2001.11.07 */
+  BFD_RELOC_C33_SL, /* add tazaki 2001.07.13 */
+  BFD_RELOC_C33_TH, /* add tazaki 2001.11.07 */
+  BFD_RELOC_C33_TL, /* add tazaki 2001.07.13 */
+  BFD_RELOC_C33_ZH, /* add tazaki 2001.11.07 */
+  BFD_RELOC_C33_ZL, /* add tazaki 2001.07.13 */
+  BFD_RELOC_C33_DPH,/* add tazaki 2001.11.08 */
+  BFD_RELOC_C33_DPM,/* add tazaki 2001.11.08 */
+  BFD_RELOC_C33_DPL,/* add tazaki 2001.11.08 */
+  BFD_RELOC_C33_LOOP,/* add tazaki 2002.03.05 */
+  BFD_RELOC_C33_PUSHN_R0, /* add tazaki 2004/08/19 */
+  BFD_RELOC_C33_PUSHN_R1, /* add tazaki 2004/08/19 */
+  BFD_RELOC_C33_PUSH_R1,  /* add tazaki 2004/08/19 */
+
+
+
 /* These two relocations are used by the linker to determine which of
 the entries in a C++ virtual function table are actually used.  When
 the --gc-sections option is given, the linker will zero out the entries
@@ -2395,7 +2451,9 @@ is stored in the reloc's addend.  For Rel hosts, we are forced to put
 this offset in the reloc's section offset. */
   BFD_RELOC_VTABLE_INHERIT,
   BFD_RELOC_VTABLE_ENTRY,
-  BFD_RELOC_UNUSED };
+  BFD_RELOC_UNUSED,
+  
+   };
 typedef enum bfd_reloc_code_real bfd_reloc_code_real_type;
 reloc_howto_type *
 

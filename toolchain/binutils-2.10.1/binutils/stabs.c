@@ -556,6 +556,13 @@ parse_stab (dhandle, handle, type, desc, value, string)
       if (*string == '\0')
 	return true;
 
+	/* >>>>> add T.Tazaki 2002/01/29 */
+	if ( strncmp( string +strlen( string ) - 2 , ".c", 2 ) 
+	    != 0 ){
+	    info->function_start_offset = 0x0;
+	}
+	/* <<<<< add T.Tazaki 2002/01/29 */
+
       /* Just accumulate strings until we see a non N_SO symbol.  If
          the string starts with a directory separator or some other
 	 form of absolute path specification, we discard the previously

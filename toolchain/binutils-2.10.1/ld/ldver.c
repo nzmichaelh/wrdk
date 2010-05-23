@@ -26,14 +26,22 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 #include "ldemul.h"
 #include "ldmain.h"
 
+#define C33_LD_REVISION "2.15 <2008/05/22>"
+
 const char *ld_program_version = VERSION;
 
 void
 ldversion (noisy)
      int noisy;
 {
+/* change T.Tazaki 2002.01.31 >>> */
+/*
   fprintf (stdout, _("GNU ld version %s (with BFD %s)\n"),
-	   ld_program_version, BFD_VERSION);
+       ld_program_version, BFD_VERSION);
+*/
+  fprintf (stdout, _("GNU ld version %s (with BFD %s) (rev %s)\n"),
+       ld_program_version, BFD_VERSION, C33_LD_REVISION );
+/* change T.Tazaki 2002.01.31 <<< */
 
   if (noisy) 
     {
@@ -41,9 +49,9 @@ ldversion (noisy)
     
       printf (_("  Supported emulations:\n"));
       while (*ptr) 
-	{
-	  printf ("   %s\n", (*ptr)->emulation_name);
-	  ptr++;
-	}
+    {
+      printf ("   %s\n", (*ptr)->emulation_name);
+      ptr++;
+    }
     }
 }

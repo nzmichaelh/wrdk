@@ -1234,7 +1234,18 @@ _bfd_stab_section_find_nearest_line (abfd, symbols, section, offset, pfound,
 	case N_BSLINE:
 	  /* A line number.  The value is relative to the start of the
              current function.  */
+	  /* >>>>> change  T.Tazaik 2002/01/29 */
+	  /*
 	  val = indexentry->val + bfd_get_32 (abfd, stab + VALOFF);
+	  */
+	  if ( strncmp( 
+	   ( indexentry->file_name ) + strlen( indexentry->file_name ) - 2  ,
+	  ".c", 2 ) == 0 ) {
+	      val = indexentry->val + bfd_get_32 (abfd, stab + VALOFF);
+	  } else {
+	      val = bfd_get_32 (abfd, stab + VALOFF);
+	  }
+	  /* <<<<< change T.Tazaik 2002/01/29 */
 	  if (val <= offset)
 	    {
 	      *pline = bfd_get_16 (abfd, stab + DESCOFF);

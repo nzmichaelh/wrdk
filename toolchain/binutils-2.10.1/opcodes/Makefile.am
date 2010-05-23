@@ -85,6 +85,8 @@ CFILES = \
 	tic80-opc.c \
 	v850-dis.c \
 	v850-opc.c \
+	c33-dis.c \
+	c33-opc.c \
 	vax-dis.c \
 	w65-dis.c \
 	z8k-dis.c \
@@ -145,6 +147,8 @@ ALL_MACHINES = \
 	tic30-dis.lo \
 	tic80-dis.lo \
 	tic80-opc.lo \
+	c33-dis.lo \
+	c33-opc.lo \
 	v850-dis.lo \
 	v850-opc.lo \
 	vax-dis.lo \
@@ -369,6 +373,10 @@ tic80-opc.lo: tic80-opc.c $(INCDIR)/ansidecl.h $(INCDIR)/opcode/tic80.h
 v850-dis.lo: v850-dis.c $(INCDIR)/ansidecl.h $(INCDIR)/opcode/v850.h \
   $(INCDIR)/dis-asm.h $(BFD_H) opintl.h
 v850-opc.lo: v850-opc.c $(INCDIR)/ansidecl.h $(INCDIR)/opcode/v850.h \
+  opintl.h
+c33-dis.lo: c33-dis.c $(INCDIR)/ansidecl.h $(INCDIR)/opcode/c33.h \
+  $(INCDIR)/dis-asm.h $(BFD_H) opintl.h
+c33-opc.lo: c33-opc.c $(INCDIR)/ansidecl.h $(INCDIR)/opcode/c33.h \
   opintl.h
 vax-dis.lo: vax-dis.c $(INCDIR)/opcode/vax.h $(INCDIR)/dis-asm.h \
   $(BFD_H) $(INCDIR)/ansidecl.h

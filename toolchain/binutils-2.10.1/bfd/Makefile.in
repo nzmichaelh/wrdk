@@ -183,6 +183,7 @@ ALL_MACHINES = \
 	cpu-tic30.lo \
 	cpu-tic80.lo \
 	cpu-v850.lo \
+	cpu-c33.lo \
 	cpu-vax.lo \
 	cpu-we32k.lo \
 	cpu-w65.lo \
@@ -221,6 +222,7 @@ ALL_MACHINES_CFILES = \
 	cpu-tic30.c \
 	cpu-tic80.c \
 	cpu-v850.c \
+	cpu-c33.c \
 	cpu-vax.c \
 	cpu-we32k.c \
 	cpu-w65.c \
@@ -297,6 +299,7 @@ BFD32_BACKENDS = \
 	elf32-sh.lo \
 	elf32-sparc.lo \
 	elf32-v850.lo \
+	elf32-c33.lo \
 	elf32.lo \
 	elflink.lo \
 	epoc-pe-arm.lo \
@@ -428,6 +431,7 @@ BFD32_BACKENDS_CFILES = \
 	elf32-sh.c \
 	elf32-sparc.c \
 	elf32-v850.c \
+	elf32-c33.c \
 	elf32.c \
 	elflink.c \
 	epoc-pe-arm.c \
@@ -1244,6 +1248,7 @@ cpu-sparc.lo: cpu-sparc.c
 cpu-tic30.lo: cpu-tic30.c
 cpu-tic80.lo: cpu-tic80.c
 cpu-v850.lo: cpu-v850.c
+cpu-c33.lo: cpu-c33.c
 cpu-vax.lo: cpu-vax.c
 cpu-we32k.lo: cpu-we32k.c
 cpu-w65.lo: cpu-w65.c
@@ -1446,6 +1451,9 @@ elf32-sparc.lo: elf32-sparc.c $(INCDIR)/bfdlink.h elf-bfd.h \
 elf32-v850.lo: elf32-v850.c $(INCDIR)/bfdlink.h elf-bfd.h \
   $(INCDIR)/elf/common.h $(INCDIR)/elf/internal.h $(INCDIR)/elf/external.h \
   $(INCDIR)/elf/v850.h $(INCDIR)/elf/reloc-macros.h elf32-target.h
+elf32-c33.lo: elf32-c33.c $(INCDIR)/bfdlink.h elf-bfd.h \
+  $(INCDIR)/elf/common.h $(INCDIR)/elf/internal.h $(INCDIR)/elf/external.h \
+  $(INCDIR)/elf/c33.h $(INCDIR)/elf/reloc-macros.h elf32-target.h
 elf32.lo: elf32.c elfcode.h $(INCDIR)/bfdlink.h elf-bfd.h \
   $(INCDIR)/elf/common.h $(INCDIR)/elf/internal.h $(INCDIR)/elf/external.h \
   elfcore.h elflink.h

@@ -202,6 +202,12 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
    Written in the absense of an ABI.  */
 #define EM_AVR			0x1057
 
+/* C33 magic number */
+#define EM_SE_C33		107	/* S1C33 Family of Seiko Epson processor */
+
+/* C17 magic number */
+#define EM_SE_C17		139	/* C17 Family of Seiko Epson processor */
+
 /* See the above comment before you add a new EM_* value here.  */
 
 /* Values for e_version */

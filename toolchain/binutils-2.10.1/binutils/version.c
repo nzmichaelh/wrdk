@@ -21,6 +21,8 @@ Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 #include "bfd.h"
 #include "bucomm.h"
 
+#define BINUTILS_REVISION   "2.15 <2008/05/22>"
+
 /* This is the version numbers for the binutils.  They all change in
    lockstep -- it's easier that way. */
 
@@ -35,7 +37,12 @@ print_version (name)
 {
   /* This output is intended to follow the GNU standards document.  */
   /* xgettext:c-format */
+/* change T.Tazaki 2002.01.31 >>> */
+/*
   printf ("GNU %s %s\n", name, program_version);
+*/
+  printf ("GNU %s %s (rev %s)\n", name, program_version, BINUTILS_REVISION);
+/* change T.Tazaki 2002.01.31 <<< */
   printf (_("Copyright 1997, 98, 99, 2000 Free Software Foundation, Inc.\n"));
   printf (_("\
 This program is free software; you may redistribute it under the terms of\n\

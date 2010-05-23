@@ -474,6 +474,7 @@ readelf.o: readelf.c ../bfd/bfd.h $(INCDIR)/ansidecl.h \
   $(INCDIR)/elf/common.h $(INCDIR)/elf/external.h $(INCDIR)/elf/internal.h \
   $(INCDIR)/elf/dwarf2.h $(INCDIR)/elf/i386.h $(INCDIR)/elf/reloc-macros.h \
   $(INCDIR)/elf/v850.h $(INCDIR)/elf/ppc.h $(INCDIR)/elf/mips.h \
+  $(INCDIR)/elf/c33.h \
   $(INCDIR)/elf/alpha.h $(INCDIR)/elf/arm.h $(INCDIR)/elf/m68k.h \
   $(INCDIR)/elf/sparc.h $(INCDIR)/elf/m32r.h $(INCDIR)/elf/d10v.h \
   $(INCDIR)/elf/d30v.h $(INCDIR)/elf/sh.h $(INCDIR)/elf/mn10200.h \

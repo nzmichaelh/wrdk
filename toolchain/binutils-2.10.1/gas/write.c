@@ -48,7 +48,7 @@
 #define TC_FORCE_RELOCATION_SECTION(FIXP,SEG) TC_FORCE_RELOCATION(FIXP)
 #endif
 
-#ifndef	MD_PCREL_FROM_SECTION
+#ifndef MD_PCREL_FROM_SECTION
 #define MD_PCREL_FROM_SECTION(FIXP, SEC) md_pcrel_from(FIXP)
 #endif
 
@@ -77,9 +77,9 @@ struct frag *text_frag_root;
 struct frag *data_frag_root;
 struct frag *bss_frag_root;
 
-struct frag *text_last_frag;	/* Last frag in segment. */
-struct frag *data_last_frag;	/* Last frag in segment. */
-static struct frag *bss_last_frag;	/* Last frag in segment. */
+struct frag *text_last_frag;    /* Last frag in segment. */
+struct frag *data_last_frag;    /* Last frag in segment. */
+static struct frag *bss_last_frag;      /* Last frag in segment. */
 #endif
 
 #ifndef BFD
@@ -87,7 +87,7 @@ static object_headers headers;
 #endif
 
 long string_byte_count;
-char *next_object_file_charP;	/* Tracks object file bytes. */
+char *next_object_file_charP;   /* Tracks object file bytes. */
 
 #ifndef OBJ_VMS
 int magic_number_for_object_file = DEFAULT_MAGIC_NUMBER_FOR_OBJECT_FILE;
@@ -99,14 +99,14 @@ static int n_fixups;
 
 #ifdef BFD_ASSEMBLER
 static fixS *fix_new_internal PARAMS ((fragS *, int where, int size,
-				       symbolS *add, symbolS *sub,
-				       offsetT offset, int pcrel,
-				       bfd_reloc_code_real_type r_type));
+                                       symbolS *add, symbolS *sub,
+                                       offsetT offset, int pcrel,
+                                       bfd_reloc_code_real_type r_type));
 #else
 static fixS *fix_new_internal PARAMS ((fragS *, int where, int size,
-				       symbolS *add, symbolS *sub,
-				       offsetT offset, int pcrel,
-				       int r_type));
+                                       symbolS *add, symbolS *sub,
+                                       offsetT offset, int pcrel,
+                                       int r_type));
 #endif
 #if defined (BFD_ASSEMBLER) || (!defined (BFD) && !defined (OBJ_VMS))
 static long fixup_segment PARAMS ((fixS * fixP, segT this_segment_type));
@@ -134,24 +134,24 @@ static void relax_and_size_all_segments PARAMS ((void));
 #endif
 
 /*
- *			fix_new()
+ *                      fix_new()
  *
  * Create a fixS in obstack 'notes'.
  */
 static fixS *
 fix_new_internal (frag, where, size, add_symbol, sub_symbol, offset, pcrel,
-		  r_type)
-     fragS *frag;		/* Which frag? */
-     int where;			/* Where in that frag? */
-     int size;			/* 1, 2, or 4 usually. */
-     symbolS *add_symbol;	/* X_add_symbol. */
-     symbolS *sub_symbol;	/* X_op_symbol. */
-     offsetT offset;		/* X_add_number. */
-     int pcrel;			/* TRUE if PC-relative relocation. */
+                  r_type)
+     fragS *frag;               /* Which frag? */
+     int where;                 /* Where in that frag? */
+     int size;                  /* 1, 2, or 4 usually. */
+     symbolS *add_symbol;       /* X_add_symbol. */
+     symbolS *sub_symbol;       /* X_op_symbol. */
+     offsetT offset;            /* X_add_number. */
+     int pcrel;                 /* TRUE if PC-relative relocation. */
 #ifdef BFD_ASSEMBLER
      bfd_reloc_code_real_type r_type; /* Relocation type */
 #else
-     int r_type;		/* Relocation type */
+     int r_type;                /* Relocation type */
 #endif
 {
   fixS *fixP;
@@ -206,11 +206,11 @@ fix_new_internal (frag, where, size, add_symbol, sub_symbol, offset, pcrel,
 
 #ifdef BFD_ASSEMBLER
     fixS **seg_fix_rootP = (frags_chained
-			    ? &seg_info (now_seg)->fix_root
-			    : &frchain_now->fix_root);
+                            ? &seg_info (now_seg)->fix_root
+                            : &frchain_now->fix_root);
     fixS **seg_fix_tailP = (frags_chained
-			    ? &seg_info (now_seg)->fix_tail
-			    : &frchain_now->fix_tail);
+                            ? &seg_info (now_seg)->fix_tail
+                            : &frchain_now->fix_tail);
 #endif
 
 #ifdef REVERSE_SORT_RELOCS
@@ -239,20 +239,20 @@ fix_new_internal (frag, where, size, add_symbol, sub_symbol, offset, pcrel,
 
 fixS *
 fix_new (frag, where, size, add_symbol, offset, pcrel, r_type)
-     fragS *frag;		/* Which frag? */
-     int where;			/* Where in that frag? */
-     int size;			/* 1, 2, or 4 usually. */
-     symbolS *add_symbol;	/* X_add_symbol. */
-     offsetT offset;		/* X_add_number. */
-     int pcrel;			/* TRUE if PC-relative relocation. */
+     fragS *frag;               /* Which frag? */
+     int where;                 /* Where in that frag? */
+     int size;                  /* 1, 2, or 4 usually. */
+     symbolS *add_symbol;       /* X_add_symbol. */
+     offsetT offset;            /* X_add_number. */
+     int pcrel;                 /* TRUE if PC-relative relocation. */
 #ifdef BFD_ASSEMBLER
      bfd_reloc_code_real_type r_type; /* Relocation type */
 #else
-     int r_type;		/* Relocation type */
+     int r_type;                /* Relocation type */
 #endif
 {
   return fix_new_internal (frag, where, size, add_symbol,
-			   (symbolS *) NULL, offset, pcrel, r_type);
+                           (symbolS *) NULL, offset, pcrel, r_type);
 }
 
 /* Create a fixup for an expression.  Currently we only support fixups
@@ -261,15 +261,15 @@ fix_new (frag, where, size, add_symbol, offset, pcrel, r_type)
 
 fixS *
 fix_new_exp (frag, where, size, exp, pcrel, r_type)
-     fragS *frag;		/* Which frag? */
-     int where;			/* Where in that frag? */
-     int size;			/* 1, 2, or 4 usually. */
-     expressionS *exp;		/* Expression.  */
-     int pcrel;			/* TRUE if PC-relative relocation. */
+     fragS *frag;               /* Which frag? */
+     int where;                 /* Where in that frag? */
+     int size;                  /* 1, 2, or 4 usually. */
+     expressionS *exp;          /* Expression.  */
+     int pcrel;                 /* TRUE if PC-relative relocation. */
 #ifdef BFD_ASSEMBLER
      bfd_reloc_code_real_type r_type; /* Relocation type */
 #else
-     int r_type;		/* Relocation type */
+     int r_type;                /* Relocation type */
 #endif
 {
   symbolS *add = NULL;
@@ -283,14 +283,14 @@ fix_new_exp (frag, where, size, exp, pcrel, r_type)
 
     case O_add:
       /* This comes up when _GLOBAL_OFFSET_TABLE_+(.-L0) is read, if
-	 the difference expression cannot immediately be reduced.  */
+         the difference expression cannot immediately be reduced.  */
       {
-	symbolS *stmp = make_expr_symbol (exp);
-	exp->X_op = O_symbol;
-	exp->X_op_symbol = 0;
-	exp->X_add_symbol = stmp;
-	exp->X_add_number = 0;
-	return fix_new_exp (frag, where, size, exp, pcrel, r_type);
+        symbolS *stmp = make_expr_symbol (exp);
+        exp->X_op = O_symbol;
+        exp->X_op_symbol = 0;
+        exp->X_add_symbol = stmp;
+        exp->X_add_number = 0;
+        return fix_new_exp (frag, where, size, exp, pcrel, r_type);
       }
 
     case O_symbol_rva:
@@ -329,7 +329,7 @@ fix_new_exp (frag, where, size, exp, pcrel, r_type)
     }
 
   return fix_new_internal (frag, where, size, add, sub, off,
-			   pcrel, r_type);
+                           pcrel, r_type);
 }
 
 /* Append a string onto another string, bumping the pointer along.  */
@@ -362,7 +362,7 @@ record_alignment (seg, align)
      /* Segment to which alignment pertains */
      segT seg;
      /* Alignment, as a power of 2 (e.g., 1 => 2-byte boundary, 2 => 4-byte
-	boundary, etc.)  */
+        boundary, etc.)  */
      int align;
 {
   if (seg == absolute_section)
@@ -413,13 +413,13 @@ chain_frchains_together_1 (section, frchp)
       assert (prev_frag->fr_type != 0);
 #ifdef BFD_ASSEMBLER
       if (frchp->fix_root != (fixS *) NULL)
-	{
-	  if (seg_info (section)->fix_root == (fixS *) NULL)
-	    seg_info (section)->fix_root = frchp->fix_root;
-	  prev_fix->fx_next = frchp->fix_root;
-	  seg_info (section)->fix_tail = frchp->fix_tail;
-	  prev_fix = frchp->fix_tail;
-	}
+        {
+          if (seg_info (section)->fix_root == (fixS *) NULL)
+            seg_info (section)->fix_root = frchp->fix_root;
+          prev_fix->fx_next = frchp->fix_root;
+          seg_info (section)->fix_tail = frchp->fix_tail;
+          prev_fix = frchp->fix_tail;
+        }
 #endif
     }
   assert (prev_frag->fr_type != 0);
@@ -494,14 +494,14 @@ cvt_frag_to_fill (headersP, sec, fragP)
 #endif
       know (fragP->fr_next != NULL);
       fragP->fr_offset = (fragP->fr_next->fr_address
-			  - fragP->fr_address
-			  - fragP->fr_fix) / fragP->fr_var;
+                          - fragP->fr_address
+                          - fragP->fr_fix) / fragP->fr_var;
       if (fragP->fr_offset < 0)
-	{
-	  as_bad_where (fragP->fr_file, fragP->fr_line,
-			_("attempt to .org/.space backwards? (%ld)"),
-			(long) fragP->fr_offset);
-	}
+        {
+          as_bad_where (fragP->fr_file, fragP->fr_line,
+                        _("attempt to .org/.space backwards? (%ld)"),
+                        (long) fragP->fr_offset);
+        }
       fragP->fr_type = rs_fill;
       break;
 
@@ -510,17 +510,17 @@ cvt_frag_to_fill (headersP, sec, fragP)
 
     case rs_leb128:
       {
-	valueT value = S_GET_VALUE (fragP->fr_symbol);
-	int size;
+        valueT value = S_GET_VALUE (fragP->fr_symbol);
+        int size;
 
-	size = output_leb128 (fragP->fr_literal + fragP->fr_fix, value,
-			      fragP->fr_subtype);
+        size = output_leb128 (fragP->fr_literal + fragP->fr_fix, value,
+                              fragP->fr_subtype);
 
-	fragP->fr_fix += size;
-	fragP->fr_type = rs_fill;
-	fragP->fr_var = 0;
-	fragP->fr_offset = 0;
-	fragP->fr_symbol = NULL;
+        fragP->fr_fix += size;
+        fragP->fr_type = rs_fill;
+        fragP->fr_var = 0;
+        fragP->fr_offset = 0;
+        fragP->fr_symbol = NULL;
       }
       break;
 
@@ -536,8 +536,8 @@ cvt_frag_to_fill (headersP, sec, fragP)
 #endif
 
       assert (fragP->fr_next == NULL
-	      || ((offsetT) (fragP->fr_next->fr_address - fragP->fr_address)
-		  == fragP->fr_fix));
+              || ((offsetT) (fragP->fr_next->fr_address - fragP->fr_address)
+                  == fragP->fr_fix));
 
       /*
        * After md_convert_frag, we make the frag into a ".space 0".
@@ -550,18 +550,18 @@ cvt_frag_to_fill (headersP, sec, fragP)
 #ifndef WORKING_DOT_WORD
     case rs_broken_word:
       {
-	struct broken_word *lie;
+        struct broken_word *lie;
 
-	if (fragP->fr_subtype)
-	  {
-	    fragP->fr_fix += md_short_jump_size;
-	    for (lie = (struct broken_word *) (fragP->fr_symbol);
-		 lie && lie->dispfrag == fragP;
-		 lie = lie->next_broken_word)
-	      if (lie->added == 1)
-		fragP->fr_fix += md_long_jump_size;
-	  }
-	frag_wane (fragP);
+        if (fragP->fr_subtype)
+          {
+            fragP->fr_fix += md_short_jump_size;
+            for (lie = (struct broken_word *) (fragP->fr_symbol);
+                 lie && lie->dispfrag == fragP;
+                 lie = lie->next_broken_word)
+              if (lie->added == 1)
+                fragP->fr_fix += md_long_jump_size;
+          }
+        frag_wane (fragP);
       }
       break;
 #endif
@@ -596,11 +596,11 @@ relax_and_size_seg (abfd, sec, xxx)
     {
       relax_segment (seginfo->frchainP->frch_root, sec);
       for (fragp = seginfo->frchainP->frch_root; fragp; fragp = fragp->fr_next)
-	cvt_frag_to_fill (sec, fragp);
+        cvt_frag_to_fill (sec, fragp);
       for (fragp = seginfo->frchainP->frch_root;
-	   fragp->fr_next;
-	   fragp = fragp->fr_next)
-	/* walk to last elt */;
+           fragp->fr_next;
+           fragp = fragp->fr_next)
+        /* walk to last elt */;
       size = fragp->fr_address + fragp->fr_fix;
     }
   else
@@ -629,7 +629,7 @@ relax_and_size_seg (abfd, sec, xxx)
       fragS *last = seginfo->frchainP->frch_last;
       fragp = seginfo->frchainP->frch_root;
       while (fragp->fr_next != last)
-	fragp = fragp->fr_next;
+        fragp = fragp->fr_next;
       last->fr_address = size;
       fragp->fr_offset += newsize - size;
     }
@@ -662,19 +662,19 @@ dump_section_relocs (abfd, sec, stream_)
       symbolS *s = fixp->fx_addsy;
 
       fprintf (stream, "  %08lx: type %d ", (unsigned long) fixp,
-	       (int) fixp->fx_r_type);
+               (int) fixp->fx_r_type);
       if (s == NULL)
-	fprintf (stream, "no sym\n");
+        fprintf (stream, "no sym\n");
       else
-	{
-	  print_symbol_value_1 (stream, s);
-	  fprintf (stream, "\n");
-	}
+        {
+          print_symbol_value_1 (stream, s);
+          fprintf (stream, "\n");
+        }
       fixp = fixp->fx_next;
     }
 }
 #else
-#define dump_section_relocs(ABFD,SEC,STREAM)	((void) 0)
+#define dump_section_relocs(ABFD,SEC,STREAM)    ((void) 0)
 #endif
 
 #ifndef EMIT_SECTION_SYMBOLS
@@ -700,184 +700,184 @@ adjust_reloc_syms (abfd, sec, xxx)
       /* ignore it */;
     else if (fixp->fx_addsy)
       {
-	symbolS *sym;
-	asection *symsec;
+        symbolS *sym;
+        asection *symsec;
 
 #ifdef DEBUG5
-	fprintf (stderr, "\n\nadjusting fixup:\n");
-	print_fixup (fixp);
+        fprintf (stderr, "\n\nadjusting fixup:\n");
+        print_fixup (fixp);
 #endif
 
-	sym = fixp->fx_addsy;
+        sym = fixp->fx_addsy;
 
-	/* All symbols should have already been resolved at this
-	   point.  It is possible to see unresolved expression
-	   symbols, though, since they are not in the regular symbol
-	   table.  */
-	if (sym != NULL)
-	  resolve_symbol_value (sym, 1);
-	
-	if (fixp->fx_subsy != NULL)
-	  resolve_symbol_value (fixp->fx_subsy, 1);
+        /* All symbols should have already been resolved at this
+           point.  It is possible to see unresolved expression
+           symbols, though, since they are not in the regular symbol
+           table.  */
+        if (sym != NULL)
+          resolve_symbol_value (sym, 1);
+        
+        if (fixp->fx_subsy != NULL)
+          resolve_symbol_value (fixp->fx_subsy, 1);
 
-	/* If this symbol is equated to an undefined symbol, convert
+        /* If this symbol is equated to an undefined symbol, convert
            the fixup to being against that symbol.  */
-	if (sym != NULL && symbol_equated_p (sym)
-	    && (! S_IS_DEFINED (sym) || S_IS_COMMON (sym)))
-	  {
-	    fixp->fx_offset += symbol_get_value_expression (sym)->X_add_number;
-	    sym = symbol_get_value_expression (sym)->X_add_symbol;
-	    fixp->fx_addsy = sym;
-	  }
+        if (sym != NULL && symbol_equated_p (sym)
+            && (! S_IS_DEFINED (sym) || S_IS_COMMON (sym)))
+          {
+            fixp->fx_offset += symbol_get_value_expression (sym)->X_add_number;
+            sym = symbol_get_value_expression (sym)->X_add_symbol;
+            fixp->fx_addsy = sym;
+          }
 
-	if (sym != NULL && symbol_mri_common_p (sym))
-	  {
-	    /* These symbols are handled specially in fixup_segment.  */
-	    goto done;
-	  }
+        if (sym != NULL && symbol_mri_common_p (sym))
+          {
+            /* These symbols are handled specially in fixup_segment.  */
+            goto done;
+          }
 
-	symsec = S_GET_SEGMENT (sym);
+        symsec = S_GET_SEGMENT (sym);
 
-	if (symsec == NULL)
-	  abort ();
-	
-	if (bfd_is_abs_section (symsec))
-	  {
-	    /* The fixup_segment routine will not use this symbol in a
+        if (symsec == NULL)
+          abort ();
+        
+        if (bfd_is_abs_section (symsec))
+          {
+            /* The fixup_segment routine will not use this symbol in a
                relocation unless TC_FORCE_RELOCATION returns 1.  */
-	    if (TC_FORCE_RELOCATION (fixp))
-	      {
-		symbol_mark_used_in_reloc (fixp->fx_addsy);
+            if (TC_FORCE_RELOCATION (fixp))
+              {
+                symbol_mark_used_in_reloc (fixp->fx_addsy);
 #ifdef UNDEFINED_DIFFERENCE_OK
-		if (fixp->fx_subsy != NULL)
-		  symbol_mark_used_in_reloc (fixp->fx_subsy);
+                if (fixp->fx_subsy != NULL)
+                  symbol_mark_used_in_reloc (fixp->fx_subsy);
 #endif
-	      }
-	    goto done;
-	  }
+              }
+            goto done;
+          }
 
-	/* If it's one of these sections, assume the symbol is
-	   definitely going to be output.  The code in
-	   md_estimate_size_before_relax in tc-mips.c uses this test
-	   as well, so if you change this code you should look at that
-	   code.  */
-	if (bfd_is_und_section (symsec)
-	    || bfd_is_com_section (symsec))
-	  {
-	    symbol_mark_used_in_reloc (fixp->fx_addsy);
+        /* If it's one of these sections, assume the symbol is
+           definitely going to be output.  The code in
+           md_estimate_size_before_relax in tc-mips.c uses this test
+           as well, so if you change this code you should look at that
+           code.  */
+        if (bfd_is_und_section (symsec)
+            || bfd_is_com_section (symsec))
+          {
+            symbol_mark_used_in_reloc (fixp->fx_addsy);
 #ifdef UNDEFINED_DIFFERENCE_OK
-	    /* We have the difference of an undefined symbol and some
-	       other symbol.  Make sure to mark the other symbol as used
-	       in a relocation so that it will always be output.  */
-	    if (fixp->fx_subsy)
-	      symbol_mark_used_in_reloc (fixp->fx_subsy);
+            /* We have the difference of an undefined symbol and some
+               other symbol.  Make sure to mark the other symbol as used
+               in a relocation so that it will always be output.  */
+            if (fixp->fx_subsy)
+              symbol_mark_used_in_reloc (fixp->fx_subsy);
 #endif
-	    goto done;
-	  }
+            goto done;
+          }
 
-	/* Don't try to reduce relocs which refer to non-local symbols
+        /* Don't try to reduce relocs which refer to non-local symbols
            in .linkonce sections.  It can lead to confusion when a
            debugging section refers to a .linkonce section.  I hope
            this will always be correct.  */
-	if (symsec != sec && ! S_IS_LOCAL (sym))
-	  {
-	    boolean linkonce;
+        if (symsec != sec && ! S_IS_LOCAL (sym))
+          {
+            boolean linkonce;
 
-	    linkonce = false;
+            linkonce = false;
 #ifdef BFD_ASSEMBLER
-	    if ((bfd_get_section_flags (stdoutput, symsec) & SEC_LINK_ONCE)
-		!= 0)
-	      linkonce = true;
+            if ((bfd_get_section_flags (stdoutput, symsec) & SEC_LINK_ONCE)
+                != 0)
+              linkonce = true;
 #endif
 #ifdef OBJ_ELF
-	    /* The GNU toolchain uses an extension for ELF: a section
+            /* The GNU toolchain uses an extension for ELF: a section
                beginning with the magic string .gnu.linkonce is a
                linkonce section.  */
-	    if (strncmp (segment_name (symsec), ".gnu.linkonce",
-			 sizeof ".gnu.linkonce" - 1) == 0)
-	      linkonce = true;
+            if (strncmp (segment_name (symsec), ".gnu.linkonce",
+                         sizeof ".gnu.linkonce" - 1) == 0)
+              linkonce = true;
 #endif
 
-	    if (linkonce)
-	      {
-		symbol_mark_used_in_reloc (fixp->fx_addsy);
+            if (linkonce)
+              {
+                symbol_mark_used_in_reloc (fixp->fx_addsy);
 #ifdef UNDEFINED_DIFFERENCE_OK
-		if (fixp->fx_subsy != NULL)
-		  symbol_mark_used_in_reloc (fixp->fx_subsy);
+                if (fixp->fx_subsy != NULL)
+                  symbol_mark_used_in_reloc (fixp->fx_subsy);
 #endif
-		goto done;
-	      }
-	  }
+                goto done;
+              }
+          }
 
-	/* Since we're reducing to section symbols, don't attempt to reduce
-	   anything that's already using one.  */
-	if (symbol_section_p (sym))
-	  {
-	    symbol_mark_used_in_reloc (fixp->fx_addsy);
-	    goto done;
-	  }
+        /* Since we're reducing to section symbols, don't attempt to reduce
+           anything that's already using one.  */
+        if (symbol_section_p (sym))
+          {
+            symbol_mark_used_in_reloc (fixp->fx_addsy);
+            goto done;
+          }
 
 #ifdef BFD_ASSEMBLER
-	/* We can never adjust a reloc against a weak symbol.  If we
+        /* We can never adjust a reloc against a weak symbol.  If we
            did, and the weak symbol was overridden by a real symbol
            somewhere else, then our relocation would be pointing at
            the wrong area of memory.  */
-	if (S_IS_WEAK (sym))
-	  {
-	    symbol_mark_used_in_reloc (fixp->fx_addsy);
-	    goto done;
-	  }
+        if (S_IS_WEAK (sym))
+          {
+            symbol_mark_used_in_reloc (fixp->fx_addsy);
+            goto done;
+          }
 #endif
 
-	/* Is there some other reason we can't adjust this one?  (E.g.,
-	   call/bal links in i960-bout symbols.)  */
+        /* Is there some other reason we can't adjust this one?  (E.g.,
+           call/bal links in i960-bout symbols.)  */
 #ifdef obj_fix_adjustable
-	if (! obj_fix_adjustable (fixp))
-	  {
-	    symbol_mark_used_in_reloc (fixp->fx_addsy);
-	    goto done;
-	  }
+        if (! obj_fix_adjustable (fixp))
+          {
+            symbol_mark_used_in_reloc (fixp->fx_addsy);
+            goto done;
+          }
 #endif
 
-	/* Is there some other (target cpu dependent) reason we can't adjust
-	   this one?  (E.g. relocations involving function addresses on
-	   the PA.  */
+        /* Is there some other (target cpu dependent) reason we can't adjust
+           this one?  (E.g. relocations involving function addresses on
+           the PA.  */
 #ifdef tc_fix_adjustable
-	if (! tc_fix_adjustable (fixp))
-	  {
-	    symbol_mark_used_in_reloc (fixp->fx_addsy);
-	    goto done;
-	  }
+        if (! tc_fix_adjustable (fixp))
+          {
+            symbol_mark_used_in_reloc (fixp->fx_addsy);
+            goto done;
+          }
 #endif
 
-	/* If the section symbol isn't going to be output, the relocs
-	   at least should still work.  If not, figure out what to do
-	   when we run into that case.
+        /* If the section symbol isn't going to be output, the relocs
+           at least should still work.  If not, figure out what to do
+           when we run into that case.
 
-	   We refetch the segment when calling section_symbol, rather
-	   than using symsec, because S_GET_VALUE may wind up changing
-	   the section when it calls resolve_symbol_value. */
-	fixp->fx_offset += S_GET_VALUE (sym);
-	fixp->fx_addsy = section_symbol (S_GET_SEGMENT (sym));
-	symbol_mark_used_in_reloc (fixp->fx_addsy);
+           We refetch the segment when calling section_symbol, rather
+           than using symsec, because S_GET_VALUE may wind up changing
+           the section when it calls resolve_symbol_value. */
+        fixp->fx_offset += S_GET_VALUE (sym);
+        fixp->fx_addsy = section_symbol (S_GET_SEGMENT (sym));
+        symbol_mark_used_in_reloc (fixp->fx_addsy);
 #ifdef DEBUG5
-	fprintf (stderr, "\nadjusted fixup:\n");
-	print_fixup (fixp);
+        fprintf (stderr, "\nadjusted fixup:\n");
+        print_fixup (fixp);
 #endif
 
       done:
-	;
+        ;
       }
 #if 1/*def RELOC_REQUIRES_SYMBOL*/
     else
       {
-	/* There was no symbol required by this relocation.  However,
-	   BFD doesn't really handle relocations without symbols well.
-	   (At least, the COFF support doesn't.)  So for now we fake up
-	   a local symbol in the absolute section.  */
+        /* There was no symbol required by this relocation.  However,
+           BFD doesn't really handle relocations without symbols well.
+           (At least, the COFF support doesn't.)  So for now we fake up
+           a local symbol in the absolute section.  */
 
-	fixp->fx_addsy = section_symbol (absolute_section);
-/*	fixp->fx_addsy->sy_used_in_reloc = 1; */
+        fixp->fx_addsy = section_symbol (absolute_section);
+/*      fixp->fx_addsy->sy_used_in_reloc = 1; */
       }
 #endif
 
@@ -921,62 +921,62 @@ write_relocs (abfd, sec, xxx)
       symbolS *sym;
 
       if (fixp->fx_done)
-	{
-	  n--;
-	  continue;
-	}
+        {
+          n--;
+          continue;
+        }
 
       /* If this is an undefined symbol which was equated to another
          symbol, then use generate the reloc against the latter symbol
          rather than the former.  */
       sym = fixp->fx_addsy;
       while (symbol_equated_p (sym)
-	     && (! S_IS_DEFINED (sym) || S_IS_COMMON (sym)))
-	{
-	  symbolS *n;
+             && (! S_IS_DEFINED (sym) || S_IS_COMMON (sym)))
+        {
+          symbolS *n;
 
-	  /* We must avoid looping, as that can occur with a badly
-	     written program.  */
-	  n = symbol_get_value_expression (sym)->X_add_symbol;
-	  if (n == sym)
-	    break;
-	  fixp->fx_offset += symbol_get_value_expression (sym)->X_add_number;
-	  sym = n;
-	}
+          /* We must avoid looping, as that can occur with a badly
+             written program.  */
+          n = symbol_get_value_expression (sym)->X_add_symbol;
+          if (n == sym)
+            break;
+          fixp->fx_offset += symbol_get_value_expression (sym)->X_add_number;
+          sym = n;
+        }
       fixp->fx_addsy = sym;
 
       reloc = tc_gen_reloc (sec, fixp);
       if (!reloc)
-	{
-	  n--;
-	  continue;
-	}
+        {
+          n--;
+          continue;
+        }
 
 #if 0
       /* This test is triggered inappropriately for the SH.  */
       if (fixp->fx_where + fixp->fx_size
-	  > fixp->fx_frag->fr_fix + fixp->fx_frag->fr_offset)
-	abort ();
+          > fixp->fx_frag->fr_fix + fixp->fx_frag->fr_offset)
+        abort ();
 #endif
 
       s = bfd_install_relocation (stdoutput, reloc,
-				  fixp->fx_frag->fr_literal,
-				  fixp->fx_frag->fr_address,
-				  sec, &err);
+                                  fixp->fx_frag->fr_literal,
+                                  fixp->fx_frag->fr_address,
+                                  sec, &err);
       switch (s)
-	{
-	case bfd_reloc_ok:
-	  break;
-	case bfd_reloc_overflow:
-	  as_bad_where (fixp->fx_file, fixp->fx_line, _("relocation overflow"));
-	  break;
-	case bfd_reloc_outofrange:
-	  as_bad_where (fixp->fx_file, fixp->fx_line, _("relocation out of range"));
-	  break;
-	default:
-	  as_fatal (_("%s:%u: bad return from bfd_install_relocation: %x"),
-		    fixp->fx_file, fixp->fx_line, s);
-	}
+        {
+        case bfd_reloc_ok:
+          break;
+        case bfd_reloc_overflow:
+          as_bad_where (fixp->fx_file, fixp->fx_line, _("relocation overflow"));
+          break;
+        case bfd_reloc_outofrange:
+          as_bad_where (fixp->fx_file, fixp->fx_line, _("relocation out of range"));
+          break;
+        default:
+          as_fatal (_("%s:%u: bad return from bfd_install_relocation: %x"),
+                    fixp->fx_file, fixp->fx_line, s);
+        }
       relocs[i++] = reloc;
     }
 #else
@@ -994,50 +994,50 @@ write_relocs (abfd, sec, xxx)
       int j;
 
       if (fixp->fx_done)
-	{
-	  n--;
-	  continue;
-	}
+        {
+          n--;
+          continue;
+        }
 
       /* If this is an undefined symbol which was equated to another
          symbol, then use generate the reloc against the latter symbol
          rather than the former.  */
       sym = fixp->fx_addsy;
       while (symbol_equated_p (sym)
-	     && (! S_IS_DEFINED (sym) || S_IS_COMMON (sym)))
-	sym = symbol_get_value_expression (sym)->X_add_symbol;
+             && (! S_IS_DEFINED (sym) || S_IS_COMMON (sym)))
+        sym = symbol_get_value_expression (sym)->X_add_symbol;
       fixp->fx_addsy = sym;
 
       reloc = tc_gen_reloc (sec, fixp);
 
       for (j = 0; reloc[j]; j++)
-	{
+        {
           relocs[i++] = reloc[j];
           assert(i <= n);
-	}
+        }
       data = fixp->fx_frag->fr_literal + fixp->fx_where;
       if (fixp->fx_where + fixp->fx_size
-	  > fixp->fx_frag->fr_fix + fixp->fx_frag->fr_offset)
-	as_bad_where (fixp->fx_file, fixp->fx_line,
-		      _("internal error: fixup not contained within frag"));
+          > fixp->fx_frag->fr_fix + fixp->fx_frag->fr_offset)
+        as_bad_where (fixp->fx_file, fixp->fx_line,
+                      _("internal error: fixup not contained within frag"));
       for (j = 0; reloc[j]; j++)
         {
-	  s = bfd_install_relocation (stdoutput, reloc[j],
-				      fixp->fx_frag->fr_literal,
-				      fixp->fx_frag->fr_address,
-				      sec, &err);
+          s = bfd_install_relocation (stdoutput, reloc[j],
+                                      fixp->fx_frag->fr_literal,
+                                      fixp->fx_frag->fr_address,
+                                      sec, &err);
           switch (s)
-	    {
-	    case bfd_reloc_ok:
-	      break;
-	    case bfd_reloc_overflow:
-	      as_bad_where (fixp->fx_file, fixp->fx_line,
-			    _("relocation overflow"));
-	      break;
-	    default:
-	      as_fatal (_("%s:%u: bad return from bfd_install_relocation"),
-			fixp->fx_file, fixp->fx_line);
-	    }
+            {
+            case bfd_reloc_ok:
+              break;
+            case bfd_reloc_overflow:
+              as_bad_where (fixp->fx_file, fixp->fx_line,
+                            _("relocation overflow"));
+              break;
+            default:
+              as_fatal (_("%s:%u: bad return from bfd_install_relocation"),
+                        fixp->fx_file, fixp->fx_line);
+            }
         }
     }
   n = i;
@@ -1051,13 +1051,13 @@ write_relocs (abfd, sec, xxx)
     nsyms = bfd_get_symcount (stdoutput);
     for (i = 0; i < n; i++)
       if (((*relocs[i]->sym_ptr_ptr)->flags & BSF_SECTION_SYM) == 0)
-	{
-	  for (j = 0; j < nsyms; j++)
-	    if (sympp[j] == *relocs[i]->sym_ptr_ptr)
-	      break;
-	  if (j == nsyms)
-	    abort ();
-	}
+        {
+          for (j = 0; j < nsyms; j++)
+            if (sympp[j] == *relocs[i]->sym_ptr_ptr)
+              break;
+          if (j == nsyms)
+            abort ();
+        }
   }
 #endif
 
@@ -1065,8 +1065,8 @@ write_relocs (abfd, sec, xxx)
     bfd_set_reloc (stdoutput, sec, relocs, n);
   else
     bfd_set_section_flags (abfd, sec,
-			   (bfd_get_section_flags (abfd, sec)
-			    & (flagword) ~SEC_RELOC));
+                           (bfd_get_section_flags (abfd, sec)
+                            & (flagword) ~SEC_RELOC));
 
 #ifdef SET_SECTION_RELOCS
   SET_SECTION_RELOCS (sec, relocs, n);
@@ -1080,10 +1080,10 @@ write_relocs (abfd, sec, xxx)
     fprintf (stderr, "relocs for sec %s\n", sec->name);
     for (i = 0; i < n; i++)
       {
-	r = relocs[i];
-	s = *r->sym_ptr_ptr;
-	fprintf (stderr, "  reloc %2d @%08x off %4x : sym %-10s addend %x\n",
-		 i, r, r->address, s->name, r->addend);
+        r = relocs[i];
+        s = *r->sym_ptr_ptr;
+        fprintf (stderr, "  reloc %2d @%08x off %4x : sym %-10s addend %x\n",
+                 i, r, r->address, s->name, r->addend);
       }
   }
 #endif
@@ -1115,73 +1115,73 @@ write_contents (abfd, sec, xxx)
 
       assert (f->fr_type == rs_fill);
       if (f->fr_fix)
-	{
-	  x = bfd_set_section_contents (stdoutput, sec,
-					f->fr_literal, (file_ptr) offset,
-					(bfd_size_type) f->fr_fix);
-	  if (x == false)
-	    {
-	      bfd_perror (stdoutput->filename);
-	      as_perror (_("FATAL: Can't write %s"), stdoutput->filename);
-	      exit (EXIT_FAILURE);
-	    }
-	  offset += f->fr_fix;
-	}
+        {
+          x = bfd_set_section_contents (stdoutput, sec,
+                                        f->fr_literal, (file_ptr) offset,
+                                        (bfd_size_type) f->fr_fix);
+          if (x == false)
+            {
+              bfd_perror (stdoutput->filename);
+              as_perror (_("FATAL: Can't write %s"), stdoutput->filename);
+              exit (EXIT_FAILURE);
+            }
+          offset += f->fr_fix;
+        }
       fill_literal = f->fr_literal + f->fr_fix;
       fill_size = f->fr_var;
       count = f->fr_offset;
       assert (count >= 0);
       if (fill_size && count)
-	{
-	  char buf[256];
-	  if (fill_size > sizeof(buf))
-	    {
-	      /* Do it the old way. Can this ever happen? */
-	      while (count--)
-		{
-		  x = bfd_set_section_contents (stdoutput, sec,
-						fill_literal,
-						(file_ptr) offset,
-						(bfd_size_type) fill_size);
-		  if (x == false)
-		    {
-		      bfd_perror (stdoutput->filename);
-		      as_perror (_("FATAL: Can't write %s"), stdoutput->filename);
-		      exit (EXIT_FAILURE);
-		    }
-		  offset += fill_size;
-		}
-	    }
-	  else
-	    {
-	      /* Build a buffer full of fill objects and output it as
-		 often as necessary. This saves on the overhead of
-		 potentially lots of bfd_set_section_contents calls.  */
-	      int n_per_buf, i;
-	      if (fill_size == 1)
-		{
-		  n_per_buf = sizeof (buf);
-		  memset (buf, *fill_literal, n_per_buf);
-		}
-	      else
-		{
-		  char *bufp;
-		  n_per_buf = sizeof(buf)/fill_size;
-		  for (i = n_per_buf, bufp = buf; i; i--, bufp += fill_size)
-		    memcpy(bufp, fill_literal, fill_size);
-		}
-	      for (; count > 0; count -= n_per_buf)
-		{
-		  n_per_buf = n_per_buf > count ? count : n_per_buf;
-		  x = bfd_set_section_contents (stdoutput, sec,
-						buf, (file_ptr) offset,
-						(bfd_size_type) n_per_buf * fill_size);
-		  if (x != true)
-		    as_fatal (_("Cannot write to output file."));
-		  offset += n_per_buf * fill_size;
-		}
-	    }
-	}
+        {
+          char buf[256];
+          if (fill_size > sizeof(buf))
+            {
+              /* Do it the old way. Can this ever happen? */
+              while (count--)
+                {
+                  x = bfd_set_section_contents (stdoutput, sec,
+                                                fill_literal,
+                                                (file_ptr) offset,
+                                                (bfd_size_type) fill_size);
+                  if (x == false)
+                    {
+                      bfd_perror (stdoutput->filename);
+                      as_perror (_("FATAL: Can't write %s"), stdoutput->filename);
+                      exit (EXIT_FAILURE);
+                    }
+                  offset += fill_size;
+                }
+            }
+          else
+            {
+              /* Build a buffer full of fill objects and output it as
+                 often as necessary. This saves on the overhead of
+                 potentially lots of bfd_set_section_contents calls.  */
+              int n_per_buf, i;
+              if (fill_size == 1)
+                {
+                  n_per_buf = sizeof (buf);
+                  memset (buf, *fill_literal, n_per_buf);
+                }
+              else
+                {
+                  char *bufp;
+                  n_per_buf = sizeof(buf)/fill_size;
+                  for (i = n_per_buf, bufp = buf; i; i--, bufp += fill_size)
+                    memcpy(bufp, fill_literal, fill_size);
+                }
+              for (; count > 0; count -= n_per_buf)
+                {
+                  n_per_buf = n_per_buf > count ? count : n_per_buf;
+                  x = bfd_set_section_contents (stdoutput, sec,
+                                                buf, (file_ptr) offset,
+                                                (bfd_size_type) n_per_buf * fill_size);
+                  if (x != true)
+                    as_fatal (_("Cannot write to output file."));
+                  offset += n_per_buf * fill_size;
+                }
+            }
+        }
     }
 }
 #endif
@@ -1248,21 +1248,21 @@ relax_and_size_all_segments ()
 
       H_SET_DATA_SIZE (&headers, data_last_frag->fr_address);
       data_last_frag->fr_address = H_GET_DATA_SIZE (&headers);
-      slide = H_GET_TEXT_SIZE (&headers);	/* & in file of the data segment. */
+      slide = H_GET_TEXT_SIZE (&headers);       /* & in file of the data segment. */
 #ifdef OBJ_BOUT
 #define RoundUp(N,S) (((N)+(S)-1)&-(S))
       /* For b.out: If the data section has a strict alignment
-	 requirement, its load address in the .o file will be
-	 rounded up from the size of the text section.  These
-	 two values are *not* the same!  Similarly for the bss
-	 section....  */
+         requirement, its load address in the .o file will be
+         rounded up from the size of the text section.  These
+         two values are *not* the same!  Similarly for the bss
+         section....  */
       slide = RoundUp (slide, 1 << section_alignment[SEG_DATA]);
 #endif
 
       for (fragP = data_frag_root; fragP; fragP = fragP->fr_next)
-	{
-	  fragP->fr_address += slide;
-	}			/* for each data frag */
+        {
+          fragP->fr_address += slide;
+        }                       /* for each data frag */
 
       know (text_last_frag != 0);
       text_last_frag->fr_next = data_frag_root;
@@ -1285,7 +1285,7 @@ relax_and_size_all_segments ()
   }
 #else /* ! OBJ_BOUT */
   bss_address_frag.fr_address = (H_GET_TEXT_SIZE (&headers) +
-				 H_GET_DATA_SIZE (&headers));
+                                 H_GET_DATA_SIZE (&headers));
 
 #endif /* ! OBJ_BOUT */
 
@@ -1295,14 +1295,14 @@ relax_and_size_all_segments ()
       relax_addressT slide = bss_address_frag.fr_address;
 
       for (fragP = bss_frag_root; fragP; fragP = fragP->fr_next)
-	{
-	  fragP->fr_address += slide;
-	}			/* for each bss frag */
+        {
+          fragP->fr_address += slide;
+        }                       /* for each bss frag */
     }
 
   if (bss_last_frag)
     H_SET_BSS_SIZE (&headers,
-		    bss_last_frag->fr_address - bss_frag_root->fr_address);
+                    bss_last_frag->fr_address - bss_frag_root->fr_address);
   else
     H_SET_BSS_SIZE (&headers, 0);
 }
@@ -1332,13 +1332,13 @@ set_symtab ()
       int i;
 
       asympp = (asymbol **) bfd_alloc (stdoutput,
-				       nsyms * sizeof (asymbol *));
+                                       nsyms * sizeof (asymbol *));
       symp = symbol_rootP;
       for (i = 0; i < nsyms; i++, symp = symbol_next (symp))
-	{
-	  asympp[i] = symbol_get_bfdsym (symp);
-	  symbol_mark_written (symp);
-	}
+        {
+          asympp[i] = symbol_get_bfdsym (symp);
+          symbol_mark_written (symp);
+        }
     }
   else
     asympp = 0;
@@ -1375,14 +1375,14 @@ subsegs_finish ()
          any alignment is meaningless, and, moreover, will look weird
          if we are generating a listing.  */
       frag_align (had_errors () ? 0 : SUB_SEGMENT_ALIGN (now_seg),
-		  subseg_text_p (now_seg) ? NOP_OPCODE : 0,
-		  0);
+                  subseg_text_p (now_seg) ? NOP_OPCODE : 0,
+                  0);
 
       /* frag_align will have left a new frag.
-	 Use this last frag for an empty ".fill".
+         Use this last frag for an empty ".fill".
 
-	 For this segment ...
-	 Create a last frag. Do not leave a "being filled in frag".  */
+         For this segment ...
+         Create a last frag. Do not leave a "being filled in frag".  */
 
       frag_wane (frag_now);
       frag_now->fr_fix = 0;
@@ -1396,7 +1396,7 @@ void
 write_object_file ()
 {
 #if ! defined (BFD_ASSEMBLER) || ! defined (WORKING_DOT_WORD)
-  fragS *fragP;			/* Track along all frags. */
+  fragS *fragP;                 /* Track along all frags. */
 #endif
 
   /* Do we really want to write it?  */
@@ -1408,21 +1408,21 @@ write_object_file ()
        regardless of warnings and errors.  */
     if (flag_always_generate_output)
       {
-	if (n_warns || n_errs)
-	  as_warn (_("%d error%s, %d warning%s, generating bad object file.\n"),
-		   n_errs, n_errs == 1 ? "" : "s",
-		   n_warns, n_warns == 1 ? "" : "s");
+        if (n_warns || n_errs)
+          as_warn (_("%d error%s, %d warning%s, generating bad object file.\n"),
+                   n_errs, n_errs == 1 ? "" : "s",
+                   n_warns, n_warns == 1 ? "" : "s");
       }
     else
       {
-	if (n_errs)
-	  as_fatal (_("%d error%s, %d warning%s, no object file generated.\n"),
-		    n_errs, n_errs == 1 ? "" : "s",
-		    n_warns, n_warns == 1 ? "" : "s");
+        if (n_errs)
+          as_fatal (_("%d error%s, %d warning%s, no object file generated.\n"),
+                    n_errs, n_errs == 1 ? "" : "s",
+                    n_warns, n_warns == 1 ? "" : "s");
       }
   }
 
-#ifdef	OBJ_VMS
+#ifdef  OBJ_VMS
   /* Under VMS we try to be compatible with VAX-11 "C".  Thus, we call
      a routine to check for the definition of the procedure "_main",
      and if so -- fix it up so that it can be program entry point. */
@@ -1441,17 +1441,17 @@ write_object_file ()
     seclist = &stdoutput->sections;
     while (seclist && *seclist)
       {
-	sec = *seclist;
-	while (sec == reg_section || sec == expr_section)
-	  {
-	    sec = sec->next;
-	    *seclist = sec;
-	    stdoutput->section_count--;
-	    if (!sec)
-	      break;
-	  }
-	if (*seclist)
-	  seclist = &(*seclist)->next;
+        sec = *seclist;
+        while (sec == reg_section || sec == expr_section)
+          {
+            sec = sec->next;
+            *seclist = sec;
+            stdoutput->section_count--;
+            if (!sec)
+              break;
+          }
+        if (*seclist)
+          seclist = &(*seclist)->next;
       }
     i = 0;
     bfd_map_over_sections (stdoutput, renumber_sections, &i);
@@ -1527,7 +1527,7 @@ write_object_file ()
          which may call fix_new.  We need to ensure that fix_new adds
          the fixup to the right section.  */
       if (fragP == data_frag_root)
-	subseg_change (SEG_DATA, 0);
+        subseg_change (SEG_DATA, 0);
 
       cvt_frag_to_fill (&headers, SEG_TEXT, fragP);
 
@@ -1535,11 +1535,11 @@ write_object_file ()
 #ifndef NDEBUG
       if (!(fragP->fr_next == NULL
 #ifdef OBJ_BOUT
-	    || fragP->fr_next == data_frag_root
+            || fragP->fr_next == data_frag_root
 #endif
-	    || ((fragP->fr_next->fr_address - fragP->fr_address)
-		== (fragP->fr_fix + fragP->fr_offset * fragP->fr_var))))
-	abort ();
+            || ((fragP->fr_next->fr_address - fragP->fr_address)
+                == (fragP->fr_fix + fragP->fr_offset * fragP->fr_var))))
+        abort ();
 #endif
     }
 #endif /* ! BFD_ASSEMBLER */
@@ -1552,108 +1552,108 @@ write_object_file ()
     prevP = &broken_words;
     for (lie = broken_words; lie; lie = lie->next_broken_word)
       if (!lie->added)
-	{
-	  expressionS exp;
+        {
+          expressionS exp;
 
-	  subseg_change (lie->seg, lie->subseg);
-	  exp.X_op = O_subtract;
-	  exp.X_add_symbol = lie->add;
-	  exp.X_op_symbol = lie->sub;
-	  exp.X_add_number = lie->addnum;
+          subseg_change (lie->seg, lie->subseg);
+          exp.X_op = O_subtract;
+          exp.X_add_symbol = lie->add;
+          exp.X_op_symbol = lie->sub;
+          exp.X_add_number = lie->addnum;
 #ifdef BFD_ASSEMBLER
 #ifdef TC_CONS_FIX_NEW
-	  TC_CONS_FIX_NEW (lie->frag,
-		       lie->word_goes_here - lie->frag->fr_literal,
-		       2, &exp);
+          TC_CONS_FIX_NEW (lie->frag,
+                       lie->word_goes_here - lie->frag->fr_literal,
+                       2, &exp);
 #else
-	  fix_new_exp (lie->frag,
-		       lie->word_goes_here - lie->frag->fr_literal,
-		       2, &exp, 0, BFD_RELOC_16);
+          fix_new_exp (lie->frag,
+                       lie->word_goes_here - lie->frag->fr_literal,
+                       2, &exp, 0, BFD_RELOC_16);
 #endif
 #else
 #if defined(TC_SPARC) || defined(TC_A29K) || defined(NEED_FX_R_TYPE)
-	  fix_new_exp (lie->frag,
-		       lie->word_goes_here - lie->frag->fr_literal,
-		       2, &exp, 0, NO_RELOC);
+          fix_new_exp (lie->frag,
+                       lie->word_goes_here - lie->frag->fr_literal,
+                       2, &exp, 0, NO_RELOC);
 #else
 #ifdef TC_NS32K
-	  fix_new_ns32k_exp (lie->frag,
-			     lie->word_goes_here - lie->frag->fr_literal,
-			     2, &exp, 0, 0, 2, 0, 0);
+          fix_new_ns32k_exp (lie->frag,
+                             lie->word_goes_here - lie->frag->fr_literal,
+                             2, &exp, 0, 0, 2, 0, 0);
 #else
-	  fix_new_exp (lie->frag,
-		       lie->word_goes_here - lie->frag->fr_literal,
-		       2, &exp, 0, 0);
+          fix_new_exp (lie->frag,
+                       lie->word_goes_here - lie->frag->fr_literal,
+                       2, &exp, 0, 0);
 #endif /* TC_NS32K */
 #endif /* TC_SPARC|TC_A29K|NEED_FX_R_TYPE */
 #endif /* BFD_ASSEMBLER */
-	  *prevP = lie->next_broken_word;
-	}
+          *prevP = lie->next_broken_word;
+        }
       else
-	prevP = &(lie->next_broken_word);
+        prevP = &(lie->next_broken_word);
 
     for (lie = broken_words; lie;)
       {
-	struct broken_word *untruth;
-	char *table_ptr;
-	addressT table_addr;
-	addressT from_addr, to_addr;
-	int n, m;
+        struct broken_word *untruth;
+        char *table_ptr;
+        addressT table_addr;
+        addressT from_addr, to_addr;
+        int n, m;
 
-	subseg_change (lie->seg, lie->subseg);
-	fragP = lie->dispfrag;
+        subseg_change (lie->seg, lie->subseg);
+        fragP = lie->dispfrag;
 
-	/* Find out how many broken_words go here.  */
-	n = 0;
-	for (untruth = lie; untruth && untruth->dispfrag == fragP; untruth = untruth->next_broken_word)
-	  if (untruth->added == 1)
-	    n++;
+        /* Find out how many broken_words go here.  */
+        n = 0;
+        for (untruth = lie; untruth && untruth->dispfrag == fragP; untruth = untruth->next_broken_word)
+          if (untruth->added == 1)
+            n++;
 
-	table_ptr = lie->dispfrag->fr_opcode;
-	table_addr = lie->dispfrag->fr_address + (table_ptr - lie->dispfrag->fr_literal);
-	/* Create the jump around the long jumps.  This is a short
-	   jump from table_ptr+0 to table_ptr+n*long_jump_size.  */
-	from_addr = table_addr;
-	to_addr = table_addr + md_short_jump_size + n * md_long_jump_size;
-	md_create_short_jump (table_ptr, from_addr, to_addr, lie->dispfrag, lie->add);
-	table_ptr += md_short_jump_size;
-	table_addr += md_short_jump_size;
+        table_ptr = lie->dispfrag->fr_opcode;
+        table_addr = lie->dispfrag->fr_address + (table_ptr - lie->dispfrag->fr_literal);
+        /* Create the jump around the long jumps.  This is a short
+           jump from table_ptr+0 to table_ptr+n*long_jump_size.  */
+        from_addr = table_addr;
+        to_addr = table_addr + md_short_jump_size + n * md_long_jump_size;
+        md_create_short_jump (table_ptr, from_addr, to_addr, lie->dispfrag, lie->add);
+        table_ptr += md_short_jump_size;
+        table_addr += md_short_jump_size;
 
-	for (m = 0; lie && lie->dispfrag == fragP; m++, lie = lie->next_broken_word)
-	  {
-	    if (lie->added == 2)
-	      continue;
-	    /* Patch the jump table */
-	    /* This is the offset from ??? to table_ptr+0 */
-	    to_addr = table_addr - S_GET_VALUE (lie->sub);
+        for (m = 0; lie && lie->dispfrag == fragP; m++, lie = lie->next_broken_word)
+          {
+            if (lie->added == 2)
+              continue;
+            /* Patch the jump table */
+            /* This is the offset from ??? to table_ptr+0 */
+            to_addr = table_addr - S_GET_VALUE (lie->sub);
 #ifdef BFD_ASSEMBLER
-	    to_addr -= symbol_get_frag (lie->sub)->fr_address;
+            to_addr -= symbol_get_frag (lie->sub)->fr_address;
 #endif
-	    md_number_to_chars (lie->word_goes_here, to_addr, 2);
-	    for (untruth = lie->next_broken_word; untruth && untruth->dispfrag == fragP; untruth = untruth->next_broken_word)
-	      {
-		if (untruth->use_jump == lie)
-		  md_number_to_chars (untruth->word_goes_here, to_addr, 2);
-	      }
+            md_number_to_chars (lie->word_goes_here, to_addr, 2);
+            for (untruth = lie->next_broken_word; untruth && untruth->dispfrag == fragP; untruth = untruth->next_broken_word)
+              {
+                if (untruth->use_jump == lie)
+                  md_number_to_chars (untruth->word_goes_here, to_addr, 2);
+              }
 
-	    /* Install the long jump */
-	    /* this is a long jump from table_ptr+0 to the final target */
-	    from_addr = table_addr;
-	    to_addr = S_GET_VALUE (lie->add) + lie->addnum;
+            /* Install the long jump */
+            /* this is a long jump from table_ptr+0 to the final target */
+            from_addr = table_addr;
+            to_addr = S_GET_VALUE (lie->add) + lie->addnum;
 #ifdef BFD_ASSEMBLER
-	    to_addr += symbol_get_frag (lie->add)->fr_address;
+            to_addr += symbol_get_frag (lie->add)->fr_address;
 #endif
-	    md_create_long_jump (table_ptr, from_addr, to_addr, lie->dispfrag, lie->add);
-	    table_ptr += md_long_jump_size;
-	    table_addr += md_long_jump_size;
-	  }
+            md_create_long_jump (table_ptr, from_addr, to_addr, lie->dispfrag, lie->add);
+            table_ptr += md_long_jump_size;
+            table_addr += md_long_jump_size;
+          }
       }
   }
 #endif /* not WORKING_DOT_WORD */
 
 #ifndef BFD_ASSEMBLER
-#ifndef	OBJ_VMS
-  {				/* not vms */
+#ifndef OBJ_VMS
+  {                             /* not vms */
     char *the_object_file;
     long object_file_size;
     /*
@@ -1672,7 +1672,7 @@ write_object_file ()
     H_SET_MAGIC_NUMBER (&headers, magic_number_for_object_file);
     H_SET_ENTRY_POINT (&headers, 0);
 
-    obj_pre_write_hook (&headers);	/* extra coff stuff */
+    obj_pre_write_hook (&headers);      /* extra coff stuff */
 
     object_file_size = H_GET_FILE_SIZE (&headers);
     next_object_file_charP = the_object_file = xmalloc (object_file_size);
@@ -1688,23 +1688,23 @@ write_object_file ()
      */
     for (fragP = text_frag_root; fragP; fragP = fragP->fr_next)
       {
-	register long count;
-	register char *fill_literal;
-	register long fill_size;
+        register long count;
+        register char *fill_literal;
+        register long fill_size;
 
-	PROGRESS (1);
-	know (fragP->fr_type == rs_fill);
-	append (&next_object_file_charP, fragP->fr_literal, (unsigned long) fragP->fr_fix);
-	fill_literal = fragP->fr_literal + fragP->fr_fix;
-	fill_size = fragP->fr_var;
-	know (fragP->fr_offset >= 0);
+        PROGRESS (1);
+        know (fragP->fr_type == rs_fill);
+        append (&next_object_file_charP, fragP->fr_literal, (unsigned long) fragP->fr_fix);
+        fill_literal = fragP->fr_literal + fragP->fr_fix;
+        fill_size = fragP->fr_var;
+        know (fragP->fr_offset >= 0);
 
-	for (count = fragP->fr_offset; count; count--)
-	  {
-	    append (&next_object_file_charP, fill_literal, (unsigned long) fill_size);
-	  }			/* for each  */
+        for (count = fragP->fr_offset; count; count--)
+          {
+            append (&next_object_file_charP, fill_literal, (unsigned long) fill_size);
+          }                     /* for each  */
 
-      }				/* for each code frag. */
+      }                         /* for each code frag. */
 
     know ((next_object_file_charP - the_object_file) == (H_GET_HEADER_SIZE (&headers) + H_GET_TEXT_SIZE (&headers) + H_GET_DATA_SIZE (&headers)));
 
@@ -1743,8 +1743,8 @@ write_object_file ()
 
     if (string_byte_count > 0)
       {
-	obj_emit_strings (&next_object_file_charP);
-      }				/* only if we have a string table */
+        obj_emit_strings (&next_object_file_charP);
+      }                         /* only if we have a string table */
 
 #ifdef BFD_HEADERS
     bfd_seek (stdoutput, 0, 0);
@@ -1755,15 +1755,15 @@ write_object_file ()
     output_file_append (the_object_file, object_file_size, out_file_name);
     free (the_object_file);
 #endif
-  }				/* non vms output */
+  }                             /* non vms output */
 #else /* OBJ_VMS */
   /*
-   *	Now do the VMS-dependent part of writing the object file
+   *    Now do the VMS-dependent part of writing the object file
    */
   vms_write_object_file (H_GET_TEXT_SIZE (&headers),
-			 H_GET_DATA_SIZE (&headers),
-			 H_GET_BSS_SIZE (&headers),
-			 text_frag_root, data_frag_root);
+                         H_GET_DATA_SIZE (&headers),
+                         H_GET_BSS_SIZE (&headers),
+                         text_frag_root, data_frag_root);
 #endif /* OBJ_VMS */
 #else /* BFD_ASSEMBLER */
 
@@ -1774,7 +1774,7 @@ write_object_file ()
       symbolS *symp;
 
       for (symp = symbol_rootP; symp; symp = symbol_next (symp))
-	resolve_symbol_value (symp, 1);
+        resolve_symbol_value (symp, 1);
     }
   resolve_local_symbol_values ();
 
@@ -1795,98 +1795,107 @@ write_object_file ()
       symbolS *symp;
 
       for (symp = symbol_rootP; symp; symp = symbol_next (symp))
-	{
-	  int punt = 0;
-	  const char *name;
+        {
+          int punt = 0;
+          const char *name;
 
-	  if (symbol_mri_common_p (symp))
-	    {
-	      if (S_IS_EXTERNAL (symp))
-		as_bad (_("%s: global symbols not supported in common sections"),
-			S_GET_NAME (symp));
-	      symbol_remove (symp, &symbol_rootP, &symbol_lastP);
-	      continue;
-	    }
+          if (symbol_mri_common_p (symp))
+            {
+              if (S_IS_EXTERNAL (symp))
+                as_bad (_("%s: global symbols not supported in common sections"),
+                        S_GET_NAME (symp));
+              symbol_remove (symp, &symbol_rootP, &symbol_lastP);
+              continue;
+            }
 
-	  name = S_GET_NAME (symp);
-	  if (name)
-	    {
-	      const char *name2 = decode_local_label_name ((char *)S_GET_NAME (symp));
-	      /* They only differ if `name' is a fb or dollar local
-		 label name.  */
-	      if (name2 != name && ! S_IS_DEFINED (symp))
-		as_bad (_("local label %s is not defined"), name2);
-	    }
+          name = S_GET_NAME (symp);
+          if (name)
+            {
+              const char *name2 = decode_local_label_name ((char *)S_GET_NAME (symp));
+              /* They only differ if `name' is a fb or dollar local
+                 label name.  */
+              if (name2 != name && ! S_IS_DEFINED (symp)){
+                /* add T.Tazaki 2003/01/14 short source name length ==> error : bug fix */
+                /* del T.Tazaki 2003/06/17 >>> */
+//              if( !strncmp( name2,"\"0\" (",5 ) )
+//              {
+//                      continue;               /* skip */
+//              }
+                /* del T.Tazaki 2003/06/17 <<< */
+                /* add T.Tazaki 2003/01/14 short source name length ==> error : bug fix */
+                as_bad (_("local label %s is not defined"), name2);
+              }
+            }
 
-	  /* Do it again, because adjust_reloc_syms might introduce
-	     more symbols.  They'll probably only be section symbols,
-	     but they'll still need to have the values computed.  */
-	  resolve_symbol_value (symp, 1);
+          /* Do it again, because adjust_reloc_syms might introduce
+             more symbols.  They'll probably only be section symbols,
+             but they'll still need to have the values computed.  */
+          resolve_symbol_value (symp, 1);
 
-	  /* Skip symbols which were equated to undefined or common
+          /* Skip symbols which were equated to undefined or common
              symbols.  */
-	  if (symbol_equated_p (symp)
-	      && (! S_IS_DEFINED (symp) || S_IS_COMMON (symp)))
-	    {
-	      symbol_remove (symp, &symbol_rootP, &symbol_lastP);
-	      continue;
-	    }
+          if (symbol_equated_p (symp)
+              && (! S_IS_DEFINED (symp) || S_IS_COMMON (symp)))
+            {
+              symbol_remove (symp, &symbol_rootP, &symbol_lastP);
+              continue;
+            }
 
-	  /* So far, common symbols have been treated like undefined symbols.
-	     Put them in the common section now.  */
-	  if (S_IS_DEFINED (symp) == 0
-	      && S_GET_VALUE (symp) != 0)
-	    S_SET_SEGMENT (symp, bfd_com_section_ptr);
+          /* So far, common symbols have been treated like undefined symbols.
+             Put them in the common section now.  */
+          if (S_IS_DEFINED (symp) == 0
+              && S_GET_VALUE (symp) != 0)
+            S_SET_SEGMENT (symp, bfd_com_section_ptr);
 #if 0
-	  printf ("symbol `%s'\n\t@%x: value=%d flags=%x seg=%s\n",
-		  S_GET_NAME (symp), symp,
-		  S_GET_VALUE (symp),
-		  symbol_get_bfdsym (symp)->flags,
-		  segment_name (S_GET_SEGMENT (symp)));
+          printf ("symbol `%s'\n\t@%x: value=%d flags=%x seg=%s\n",
+                  S_GET_NAME (symp), symp,
+                  S_GET_VALUE (symp),
+                  symbol_get_bfdsym (symp)->flags,
+                  segment_name (S_GET_SEGMENT (symp)));
 #endif
 
 #ifdef obj_frob_symbol
-	  obj_frob_symbol (symp, punt);
+          obj_frob_symbol (symp, punt);
 #endif
 #ifdef tc_frob_symbol
-	  if (! punt || symbol_used_in_reloc_p (symp))
-	    tc_frob_symbol (symp, punt);
+          if (! punt || symbol_used_in_reloc_p (symp))
+            tc_frob_symbol (symp, punt);
 #endif
 
-	  /* If we don't want to keep this symbol, splice it out of
-	     the chain now.  If EMIT_SECTION_SYMBOLS is 0, we never
-	     want section symbols.  Otherwise, we skip local symbols
-	     and symbols that the frob_symbol macros told us to punt,
-	     but we keep such symbols if they are used in relocs.  */
-	  if ((! EMIT_SECTION_SYMBOLS
-	       && symbol_section_p (symp))
-	      /* Note that S_IS_EXTERN and S_IS_LOCAL are not always
-		 opposites.  Sometimes the former checks flags and the
-		 latter examines the name...  */
-	      || (!S_IS_EXTERN (symp)
-		  && (S_IS_LOCAL (symp) || punt)
-		  && ! symbol_used_in_reloc_p (symp)))
-	    {
-	      symbol_remove (symp, &symbol_rootP, &symbol_lastP);
-	      /* After symbol_remove, symbol_next(symp) still returns
-		 the one that came after it in the chain.  So we don't
-		 need to do any extra cleanup work here.  */
+          /* If we don't want to keep this symbol, splice it out of
+             the chain now.  If EMIT_SECTION_SYMBOLS is 0, we never
+             want section symbols.  Otherwise, we skip local symbols
+             and symbols that the frob_symbol macros told us to punt,
+             but we keep such symbols if they are used in relocs.  */
+          if ((! EMIT_SECTION_SYMBOLS
+               && symbol_section_p (symp))
+              /* Note that S_IS_EXTERN and S_IS_LOCAL are not always
+                 opposites.  Sometimes the former checks flags and the
+                 latter examines the name...  */
+              || (!S_IS_EXTERN (symp)
+                  && (S_IS_LOCAL (symp) || punt)
+                  && ! symbol_used_in_reloc_p (symp)))
+            {
+              symbol_remove (symp, &symbol_rootP, &symbol_lastP);
+              /* After symbol_remove, symbol_next(symp) still returns
+                 the one that came after it in the chain.  So we don't
+                 need to do any extra cleanup work here.  */
 
-	      continue;
-	    }
+              continue;
+            }
 
-	  /* Make sure we really got a value for the symbol.  */
-	  if (! symbol_resolved_p (symp))
-	    {
-	      as_bad (_("can't resolve value for symbol \"%s\""),
-		      S_GET_NAME (symp));
-	      symbol_mark_resolved (symp);
-	    }
+          /* Make sure we really got a value for the symbol.  */
+          if (! symbol_resolved_p (symp))
+            {
+              as_bad (_("can't resolve value for symbol \"%s\""),
+                      S_GET_NAME (symp));
+              symbol_mark_resolved (symp);
+            }
 
-	  /* Set the value into the BFD symbol.  Up til now the value
-	     has only been kept in the gas symbolS struct.  */
-	  symbol_get_bfdsym (symp)->value = S_GET_VALUE (symp);
-	}
+          /* Set the value into the BFD symbol.  Up til now the value
+             has only been kept in the gas symbolS struct.  */
+          symbol_get_bfdsym (symp)->value = S_GET_VALUE (symp);
+        }
     }
 
   PROGRESS (1);
@@ -1930,7 +1939,7 @@ write_object_file ()
 #endif /* ! BFD */
 
 /*
- *			relax_segment()
+ *                      relax_segment()
  *
  * Now we have a segment, not a crowd of sub-segments, we can make fr_address
  * values.
@@ -1986,30 +1995,30 @@ relax_frag (fragP, stretch)
 #ifndef DIFF_EXPR_OK
 #if !defined (MANY_SEGMENTS) && !defined (BFD_ASSEMBLER)
       know ((S_GET_SEGMENT (symbolP) == SEG_ABSOLUTE)
-	    || (S_GET_SEGMENT (symbolP) == SEG_DATA)
-	    || (S_GET_SEGMENT (symbolP) == SEG_BSS)
-	    || (S_GET_SEGMENT (symbolP) == SEG_TEXT));
+            || (S_GET_SEGMENT (symbolP) == SEG_DATA)
+            || (S_GET_SEGMENT (symbolP) == SEG_BSS)
+            || (S_GET_SEGMENT (symbolP) == SEG_TEXT));
 #endif
       know (symbolP->sy_frag);
 #endif
       know (!(S_GET_SEGMENT (symbolP) == absolute_section)
-	    || symbolP->sy_frag == &zero_address_frag);
-      target +=	S_GET_VALUE (symbolP) + symbol_get_frag (symbolP)->fr_address;
+            || symbolP->sy_frag == &zero_address_frag);
+      target += S_GET_VALUE (symbolP) + symbol_get_frag (symbolP)->fr_address;
 
       /* If frag has yet to be reached on this pass,
-	 assume it will move by STRETCH just as we did.
-	 If this is not so, it will be because some frag
-	 between grows, and that will force another pass.
+         assume it will move by STRETCH just as we did.
+         If this is not so, it will be because some frag
+         between grows, and that will force another pass.
 
-	 Beware zero-length frags.
+         Beware zero-length frags.
 
-	 There should be a faster way to do this.  */
+         There should be a faster way to do this.  */
 
       if (symbol_get_frag (symbolP)->fr_address >= was_address
-	  && is_dnrange (fragP, symbol_get_frag (symbolP)))
-	{
-	  target += stretch;
-	}
+          && is_dnrange (fragP, symbol_get_frag (symbolP)))
+        {
+          target += stretch;
+        }
     }
 
   aim = target - address - fragP->fr_fix;
@@ -2029,29 +2038,29 @@ relax_frag (fragP, stretch)
     {
       /* Look backwards. */
       for (next_state = this_type->rlx_more; next_state;)
-	if (aim >= this_type->rlx_backward)
-	  next_state = 0;
-	else
-	  {
-	    /* Grow to next state. */
-	    this_state = next_state;
-	    this_type = table + this_state;
-	    next_state = this_type->rlx_more;
-	  }
+        if (aim >= this_type->rlx_backward)
+          next_state = 0;
+        else
+          {
+            /* Grow to next state. */
+            this_state = next_state;
+            this_type = table + this_state;
+            next_state = this_type->rlx_more;
+          }
     }
   else
     {
       /* Look forwards. */
       for (next_state = this_type->rlx_more; next_state;)
-	if (aim <= this_type->rlx_forward)
-	  next_state = 0;
-	else
-	  {
-	    /* Grow to next state. */
-	    this_state = next_state;
-	    this_type = table + this_state;
-	    next_state = this_type->rlx_more;
-	  }
+        if (aim <= this_type->rlx_forward)
+          next_state = 0;
+        else
+          {
+            /* Grow to next state. */
+            this_state = next_state;
+            this_type = table + this_state;
+            next_state = this_type->rlx_more;
+          }
     }
 
   growth = this_type->rlx_length - start_type->rlx_length;
@@ -2066,8 +2075,8 @@ relax_frag (fragP, stretch)
    lowest order bits all 0s, return size of adjustment made.  */
 static relax_addressT
 relax_align (address, alignment)
-     register relax_addressT address;	/* Address now. */
-     register int alignment;	/* Alignment (binary). */
+     register relax_addressT address;   /* Address now. */
+     register int alignment;    /* Alignment (binary). */
 {
   relax_addressT mask;
   relax_addressT new_address;
@@ -2105,283 +2114,283 @@ relax_segment (segment_frag_root, segment)
       address += fragP->fr_fix;
 
       switch (fragP->fr_type)
-	{
-	case rs_fill:
-	  address += fragP->fr_offset * fragP->fr_var;
-	  break;
+        {
+        case rs_fill:
+          address += fragP->fr_offset * fragP->fr_var;
+          break;
 
-	case rs_align:
-	case rs_align_code:
-	  {
-	    addressT offset = relax_align (address, (int) fragP->fr_offset);
+        case rs_align:
+        case rs_align_code:
+          {
+            addressT offset = relax_align (address, (int) fragP->fr_offset);
 
-	    if (fragP->fr_subtype != 0 && offset > fragP->fr_subtype)
-	      offset = 0;
+            if (fragP->fr_subtype != 0 && offset > fragP->fr_subtype)
+              offset = 0;
 
-	    if (offset % fragP->fr_var != 0)
-	      {
-		as_bad (_("alignment padding (%lu bytes) not a multiple of %ld"),
-			(unsigned long) offset, (long) fragP->fr_var);
-		offset -= (offset % fragP->fr_var);
-	      }
+            if (offset % fragP->fr_var != 0)
+              {
+                as_bad (_("alignment padding (%lu bytes) not a multiple of %ld"),
+                        (unsigned long) offset, (long) fragP->fr_var);
+                offset -= (offset % fragP->fr_var);
+              }
 
-	    address += offset;
-	  }
-	  break;
+            address += offset;
+          }
+          break;
 
-	case rs_org:
-	case rs_space:
-	  /* Assume .org is nugatory. It will grow with 1st relax.  */
-	  break;
+        case rs_org:
+        case rs_space:
+          /* Assume .org is nugatory. It will grow with 1st relax.  */
+          break;
 
-	case rs_machine_dependent:
-	  address += md_estimate_size_before_relax (fragP, segment);
-	  break;
+        case rs_machine_dependent:
+          address += md_estimate_size_before_relax (fragP, segment);
+          break;
 
 #ifndef WORKING_DOT_WORD
-	  /* Broken words don't concern us yet */
-	case rs_broken_word:
-	  break;
+          /* Broken words don't concern us yet */
+        case rs_broken_word:
+          break;
 #endif
 
-	case rs_leb128:
-	  /* Initial guess is always 1; doing otherwise can result in 
-	     stable solutions that are larger than the minimum.  */
-	  address += fragP->fr_offset = 1;
-	  break;
+        case rs_leb128:
+          /* Initial guess is always 1; doing otherwise can result in 
+             stable solutions that are larger than the minimum.  */
+          address += fragP->fr_offset = 1;
+          break;
 
-	case rs_cfa:
-	  address += eh_frame_estimate_size_before_relax (fragP);
-	  break;
+        case rs_cfa:
+          address += eh_frame_estimate_size_before_relax (fragP);
+          break;
 
-	default:
-	  BAD_CASE (fragP->fr_type);
-	  break;
-	}			/* switch(fr_type) */
-    }				/* for each frag in the segment */
+        default:
+          BAD_CASE (fragP->fr_type);
+          break;
+        }                       /* switch(fr_type) */
+    }                           /* for each frag in the segment */
 
   /* Do relax().  */
   {
-    long stretch;	/* May be any size, 0 or negative. */
+    long stretch;       /* May be any size, 0 or negative. */
     /* Cumulative number of addresses we have */
     /* relaxed this pass. */
     /* We may have relaxed more than one address. */
-    long stretched;	/* Have we stretched on this pass? */
+    long stretched;     /* Have we stretched on this pass? */
     /* This is 'cuz stretch may be zero, when, in fact some piece of code
        grew, and another shrank.  If a branch instruction doesn't fit anymore,
        we could be scrod.  */
 
     do
       {
-	stretch = stretched = 0;
-	for (fragP = segment_frag_root; fragP; fragP = fragP->fr_next)
-	  {
-	    long growth = 0;
-	    addressT was_address;
-	    offsetT offset;
-	    symbolS *symbolP;
+        stretch = stretched = 0;
+        for (fragP = segment_frag_root; fragP; fragP = fragP->fr_next)
+          {
+            long growth = 0;
+            addressT was_address;
+            offsetT offset;
+            symbolS *symbolP;
 
-	    was_address = fragP->fr_address;
-	    address = fragP->fr_address += stretch;
-	    symbolP = fragP->fr_symbol;
-	    offset = fragP->fr_offset;
+            was_address = fragP->fr_address;
+            address = fragP->fr_address += stretch;
+            symbolP = fragP->fr_symbol;
+            offset = fragP->fr_offset;
 
-	    switch (fragP->fr_type)
-	      {
-	      case rs_fill:	/* .fill never relaxes. */
-		growth = 0;
-		break;
+            switch (fragP->fr_type)
+              {
+              case rs_fill:     /* .fill never relaxes. */
+                growth = 0;
+                break;
 
 #ifndef WORKING_DOT_WORD
-		/* JF:  This is RMS's idea.  I do *NOT* want to be blamed
-		   for it I do not want to write it.  I do not want to have
-		   anything to do with it.  This is not the proper way to
-		   implement this misfeature.  */
-	      case rs_broken_word:
-		{
-		  struct broken_word *lie;
-		  struct broken_word *untruth;
+                /* JF:  This is RMS's idea.  I do *NOT* want to be blamed
+                   for it I do not want to write it.  I do not want to have
+                   anything to do with it.  This is not the proper way to
+                   implement this misfeature.  */
+              case rs_broken_word:
+                {
+                  struct broken_word *lie;
+                  struct broken_word *untruth;
 
-		  /* Yes this is ugly (storing the broken_word pointer
-		     in the symbol slot).  Still, this whole chunk of
-		     code is ugly, and I don't feel like doing anything
-		     about it.  Think of it as stubbornness in action.  */
-		  growth = 0;
-		  for (lie = (struct broken_word *) (fragP->fr_symbol);
-		       lie && lie->dispfrag == fragP;
-		       lie = lie->next_broken_word)
-		    {
+                  /* Yes this is ugly (storing the broken_word pointer
+                     in the symbol slot).  Still, this whole chunk of
+                     code is ugly, and I don't feel like doing anything
+                     about it.  Think of it as stubbornness in action.  */
+                  growth = 0;
+                  for (lie = (struct broken_word *) (fragP->fr_symbol);
+                       lie && lie->dispfrag == fragP;
+                       lie = lie->next_broken_word)
+                    {
 
-		      if (lie->added)
-			continue;
+                      if (lie->added)
+                        continue;
 
-		      offset = (symbol_get_frag (lie->add)->fr_address
-				+ S_GET_VALUE (lie->add)
-				+ lie->addnum
-				- (symbol_get_frag (lie->sub)->fr_address
-				   + S_GET_VALUE (lie->sub)));
-		      if (offset <= -32768 || offset >= 32767)
-			{
-			  if (flag_warn_displacement)
-			    {
-			      char buf[50];
-			      sprint_value (buf, (addressT) lie->addnum);
-			      as_warn (_(".word %s-%s+%s didn't fit"),
-				       S_GET_NAME (lie->add),
-				       S_GET_NAME (lie->sub),
-				       buf);
-			    }
-			  lie->added = 1;
-			  if (fragP->fr_subtype == 0)
-			    {
-			      fragP->fr_subtype++;
-			      growth += md_short_jump_size;
-			    }
-			  for (untruth = lie->next_broken_word;
-			       untruth && untruth->dispfrag == lie->dispfrag;
-			       untruth = untruth->next_broken_word)
-			    if ((symbol_get_frag (untruth->add)
-				 == symbol_get_frag (lie->add))
-				&& (S_GET_VALUE (untruth->add)
-				    == S_GET_VALUE (lie->add)))
-			      {
-				untruth->added = 2;
-				untruth->use_jump = lie;
-			      }
-			  growth += md_long_jump_size;
-			}
-		    }
+                      offset = (symbol_get_frag (lie->add)->fr_address
+                                + S_GET_VALUE (lie->add)
+                                + lie->addnum
+                                - (symbol_get_frag (lie->sub)->fr_address
+                                   + S_GET_VALUE (lie->sub)));
+                      if (offset <= -32768 || offset >= 32767)
+                        {
+                          if (flag_warn_displacement)
+                            {
+                              char buf[50];
+                              sprint_value (buf, (addressT) lie->addnum);
+                              as_warn (_(".word %s-%s+%s didn't fit"),
+                                       S_GET_NAME (lie->add),
+                                       S_GET_NAME (lie->sub),
+                                       buf);
+                            }
+                          lie->added = 1;
+                          if (fragP->fr_subtype == 0)
+                            {
+                              fragP->fr_subtype++;
+                              growth += md_short_jump_size;
+                            }
+                          for (untruth = lie->next_broken_word;
+                               untruth && untruth->dispfrag == lie->dispfrag;
+                               untruth = untruth->next_broken_word)
+                            if ((symbol_get_frag (untruth->add)
+                                 == symbol_get_frag (lie->add))
+                                && (S_GET_VALUE (untruth->add)
+                                    == S_GET_VALUE (lie->add)))
+                              {
+                                untruth->added = 2;
+                                untruth->use_jump = lie;
+                              }
+                          growth += md_long_jump_size;
+                        }
+                    }
 
-		  break;
-		}		/* case rs_broken_word */
+                  break;
+                }               /* case rs_broken_word */
 #endif
-	      case rs_align:
-	      case rs_align_code:
-		{
-		  addressT oldoff, newoff;
+              case rs_align:
+              case rs_align_code:
+                {
+                  addressT oldoff, newoff;
 
-		  oldoff = relax_align (was_address + fragP->fr_fix,
-					(int) offset);
-		  newoff = relax_align (address + fragP->fr_fix,
-					(int) offset);
+                  oldoff = relax_align (was_address + fragP->fr_fix,
+                                        (int) offset);
+                  newoff = relax_align (address + fragP->fr_fix,
+                                        (int) offset);
 
-		  if (fragP->fr_subtype != 0)
-		    {
-		      if (oldoff > fragP->fr_subtype)
-			oldoff = 0;
-		      if (newoff > fragP->fr_subtype)
-			newoff = 0;
-		    }
+                  if (fragP->fr_subtype != 0)
+                    {
+                      if (oldoff > fragP->fr_subtype)
+                        oldoff = 0;
+                      if (newoff > fragP->fr_subtype)
+                        newoff = 0;
+                    }
 
-		  growth = newoff - oldoff;
-		}
-		break;
+                  growth = newoff - oldoff;
+                }
+                break;
 
-	      case rs_org:
-		{
-		  long target = offset;
-		  long after;
+              case rs_org:
+                {
+                  long target = offset;
+                  long after;
 
-		  if (symbolP)
-		    {
+                  if (symbolP)
+                    {
 #if !defined (MANY_SEGMENTS) && !defined (BFD_ASSEMBLER)
-		      know ((S_GET_SEGMENT (symbolP) == SEG_ABSOLUTE)
-			    || (S_GET_SEGMENT (symbolP) == SEG_DATA)
-			    || (S_GET_SEGMENT (symbolP) == SEG_TEXT)
-			    || S_GET_SEGMENT (symbolP) == SEG_BSS);
-		      know (symbolP->sy_frag);
-		      know (!(S_GET_SEGMENT (symbolP) == SEG_ABSOLUTE)
-			    || (symbolP->sy_frag == &zero_address_frag));
+                      know ((S_GET_SEGMENT (symbolP) == SEG_ABSOLUTE)
+                            || (S_GET_SEGMENT (symbolP) == SEG_DATA)
+                            || (S_GET_SEGMENT (symbolP) == SEG_TEXT)
+                            || S_GET_SEGMENT (symbolP) == SEG_BSS);
+                      know (symbolP->sy_frag);
+                      know (!(S_GET_SEGMENT (symbolP) == SEG_ABSOLUTE)
+                            || (symbolP->sy_frag == &zero_address_frag));
 #endif
-		      target += (S_GET_VALUE (symbolP)
-				 + symbol_get_frag (symbolP)->fr_address);
-		    }		/* if we have a symbol */
+                      target += (S_GET_VALUE (symbolP)
+                                 + symbol_get_frag (symbolP)->fr_address);
+                    }           /* if we have a symbol */
 
-		  know (fragP->fr_next);
-		  after = fragP->fr_next->fr_address;
-		  growth = target - after;
-		  if (growth < 0)
-		    {
-		      /* Growth may be negative, but variable part of frag
-			 cannot have fewer than 0 chars.  That is, we can't
-			 .org backwards. */
-		      as_bad_where (fragP->fr_file, fragP->fr_line,
-				    _("attempt to .org backwards ignored"));
+                  know (fragP->fr_next);
+                  after = fragP->fr_next->fr_address;
+                  growth = target - after;
+                  if (growth < 0)
+                    {
+                      /* Growth may be negative, but variable part of frag
+                         cannot have fewer than 0 chars.  That is, we can't
+                         .org backwards. */
+                      as_bad_where (fragP->fr_file, fragP->fr_line,
+                                    _("attempt to .org backwards ignored"));
 
-		      /* We've issued an error message.  Change the
+                      /* We've issued an error message.  Change the
                          frag to avoid cascading errors.  */
-		      fragP->fr_type = rs_align;
-		      fragP->fr_subtype = 0;
-		      fragP->fr_offset = 0;
-		      fragP->fr_fix = after - address;
-		      growth = stretch;
-		    }
+                      fragP->fr_type = rs_align;
+                      fragP->fr_subtype = 0;
+                      fragP->fr_offset = 0;
+                      fragP->fr_fix = after - address;
+                      growth = stretch;
+                    }
 
-		  growth -= stretch;	/* This is an absolute growth factor */
-		  break;
-		}
+                  growth -= stretch;    /* This is an absolute growth factor */
+                  break;
+                }
 
-	      case rs_space:
-		if (symbolP)
-		  {
-		    growth = S_GET_VALUE (symbolP);
-		    if (symbol_get_frag (symbolP) != &zero_address_frag
-			|| S_IS_COMMON (symbolP)
-			|| ! S_IS_DEFINED (symbolP))
-		      as_bad_where (fragP->fr_file, fragP->fr_line,
-				    _(".space specifies non-absolute value"));
-		    fragP->fr_symbol = 0;
-		    if (growth < 0)
-		      {
-			as_warn (_(".space or .fill with negative value, ignored"));
-			growth = 0;
-		      }
-		  }
-		else
-		  growth = 0;
-		break;
+              case rs_space:
+                if (symbolP)
+                  {
+                    growth = S_GET_VALUE (symbolP);
+                    if (symbol_get_frag (symbolP) != &zero_address_frag
+                        || S_IS_COMMON (symbolP)
+                        || ! S_IS_DEFINED (symbolP))
+                      as_bad_where (fragP->fr_file, fragP->fr_line,
+                                    _(".space specifies non-absolute value"));
+                    fragP->fr_symbol = 0;
+                    if (growth < 0)
+                      {
+                        as_warn (_(".space or .fill with negative value, ignored"));
+                        growth = 0;
+                      }
+                  }
+                else
+                  growth = 0;
+                break;
 
-	      case rs_machine_dependent:
+              case rs_machine_dependent:
 #ifdef md_relax_frag
-		growth = md_relax_frag (fragP, stretch);
+                growth = md_relax_frag (fragP, stretch);
 #else
 #ifdef TC_GENERIC_RELAX_TABLE
-		/* The default way to relax a frag is to look through
-		   TC_GENERIC_RELAX_TABLE.  */
-		growth = relax_frag (fragP, stretch);
+                /* The default way to relax a frag is to look through
+                   TC_GENERIC_RELAX_TABLE.  */
+                growth = relax_frag (fragP, stretch);
 #endif /* TC_GENERIC_RELAX_TABLE */
 #endif
-		break;
+                break;
 
-	      case rs_leb128:
-		{
-		  valueT value;
-		  int size;
+              case rs_leb128:
+                {
+                  valueT value;
+                  int size;
 
-		  value = resolve_symbol_value (fragP->fr_symbol, 0);
-		  size = sizeof_leb128 (value, fragP->fr_subtype);
-		  growth = size - fragP->fr_offset;
-		  fragP->fr_offset = size;
-		}
-		break;
+                  value = resolve_symbol_value (fragP->fr_symbol, 0);
+                  size = sizeof_leb128 (value, fragP->fr_subtype);
+                  growth = size - fragP->fr_offset;
+                  fragP->fr_offset = size;
+                }
+                break;
 
-	      case rs_cfa:
-		growth = eh_frame_relax_frag (fragP);
-		break;
+              case rs_cfa:
+                growth = eh_frame_relax_frag (fragP);
+                break;
 
-	      default:
-		BAD_CASE (fragP->fr_type);
-		break;
-	      }
-	    if (growth)
-	      {
-		stretch += growth;
-		stretched++;
-	      }
-	  }			/* For each frag in the segment. */
+              default:
+                BAD_CASE (fragP->fr_type);
+                break;
+              }
+            if (growth)
+              {
+                stretch += growth;
+                stretched++;
+              }
+          }                     /* For each frag in the segment. */
       }
-    while (stretched);		/* Until nothing further to relax. */
-  }				/* do_relax */
+    while (stretched);          /* Until nothing further to relax. */
+  }                             /* do_relax */
 
   /*
    * We now have valid fr_address'es for each frag.
@@ -2391,7 +2400,7 @@ relax_segment (segment_frag_root, segment)
    * All fr_address's are correct, relative to their own segment.
    * We have made all the fixS we will ever make.
    */
-}				/* relax_segment() */
+}                               /* relax_segment() */
 
 #if defined (BFD_ASSEMBLER) || (!defined (BFD) && !defined (OBJ_VMS))
 
@@ -2413,7 +2422,7 @@ relax_segment (segment_frag_root, segment)
 static long
 fixup_segment (fixP, this_segment_type)
      register fixS *fixP;
-     segT this_segment_type;	/* N_TYPE bits for segment. */
+     segT this_segment_type;    /* N_TYPE bits for segment. */
 {
   long seg_reloc_count = 0;
   symbolS *add_symbolP;
@@ -2436,7 +2445,7 @@ fixup_segment (fixP, this_segment_type)
   if (linkrelax)
     {
       for (; fixP; fixP = fixP->fx_next)
-	seg_reloc_count++;
+        seg_reloc_count++;
       TC_ADJUST_RELOC_COUNT (fixP, seg_reloc_count);
       return seg_reloc_count;
     }
@@ -2465,307 +2474,307 @@ fixup_segment (fixP, this_segment_type)
       plt = fixP->fx_plt;
 
       if (add_symbolP != NULL
-	  && symbol_mri_common_p (add_symbolP))
-	{
-	  know (add_symbolP->sy_value.X_op == O_symbol);
-	  add_number += S_GET_VALUE (add_symbolP);
-	  fixP->fx_offset = add_number;
-	  add_symbolP = fixP->fx_addsy =
-	    symbol_get_value_expression (add_symbolP)->X_add_symbol;
-	}
+          && symbol_mri_common_p (add_symbolP))
+        {
+          know (add_symbolP->sy_value.X_op == O_symbol);
+          add_number += S_GET_VALUE (add_symbolP);
+          fixP->fx_offset = add_number;
+          add_symbolP = fixP->fx_addsy =
+            symbol_get_value_expression (add_symbolP)->X_add_symbol;
+        }
 
       if (add_symbolP)
-	add_symbol_segment = S_GET_SEGMENT (add_symbolP);
+        add_symbol_segment = S_GET_SEGMENT (add_symbolP);
 
       if (sub_symbolP)
-	{
-	  resolve_symbol_value (sub_symbolP, 1);
-	  if (add_symbolP == NULL || add_symbol_segment == absolute_section)
-	    {
-	      if (add_symbolP != NULL)
-		{
-		  add_number += S_GET_VALUE (add_symbolP);
-		  add_symbolP = NULL;
-		  fixP->fx_addsy = NULL;
-		}
+        {
+          resolve_symbol_value (sub_symbolP, 1);
+          if (add_symbolP == NULL || add_symbol_segment == absolute_section)
+            {
+              if (add_symbolP != NULL)
+                {
+                  add_number += S_GET_VALUE (add_symbolP);
+                  add_symbolP = NULL;
+                  fixP->fx_addsy = NULL;
+                }
 
-	      /* It's just -sym */
-	      if (S_GET_SEGMENT (sub_symbolP) == absolute_section)
-		{
-		  add_number -= S_GET_VALUE (sub_symbolP);
-		  fixP->fx_subsy = NULL;
-		}
-	      else if (pcrel
-		       && S_GET_SEGMENT (sub_symbolP) == this_segment_type)
-		{
-		  /* Should try converting to a constant.  */
-		  goto bad_sub_reloc;
-		}
-	      else
-	      bad_sub_reloc:
-		as_bad_where (fixP->fx_file, fixP->fx_line,
-			      _("Negative of non-absolute symbol %s"),
-			      S_GET_NAME (sub_symbolP));
-	    }
-	  else if (S_GET_SEGMENT (sub_symbolP) == add_symbol_segment
-		   && SEG_NORMAL (add_symbol_segment))
-	    {
-	      /* Difference of 2 symbols from same segment.
-		 Can't make difference of 2 undefineds: 'value' means
-		 something different for N_UNDF. */
+              /* It's just -sym */
+              if (S_GET_SEGMENT (sub_symbolP) == absolute_section)
+                {
+                  add_number -= S_GET_VALUE (sub_symbolP);
+                  fixP->fx_subsy = NULL;
+                }
+              else if (pcrel
+                       && S_GET_SEGMENT (sub_symbolP) == this_segment_type)
+                {
+                  /* Should try converting to a constant.  */
+                  goto bad_sub_reloc;
+                }
+              else
+              bad_sub_reloc:
+                as_bad_where (fixP->fx_file, fixP->fx_line,
+                              _("Negative of non-absolute symbol %s"),
+                              S_GET_NAME (sub_symbolP));
+            }
+          else if (S_GET_SEGMENT (sub_symbolP) == add_symbol_segment
+                   && SEG_NORMAL (add_symbol_segment))
+            {
+              /* Difference of 2 symbols from same segment.
+                 Can't make difference of 2 undefineds: 'value' means
+                 something different for N_UNDF. */
 #ifdef TC_I960
-	      /* Makes no sense to use the difference of 2 arbitrary symbols
-		 as the target of a call instruction.  */
-	      if (fixP->fx_tcbit)
-		as_bad_where (fixP->fx_file, fixP->fx_line,
-			      _("callj to difference of 2 symbols"));
+              /* Makes no sense to use the difference of 2 arbitrary symbols
+                 as the target of a call instruction.  */
+              if (fixP->fx_tcbit)
+                as_bad_where (fixP->fx_file, fixP->fx_line,
+                              _("callj to difference of 2 symbols"));
 #endif /* TC_I960 */
-	      add_number += S_GET_VALUE (add_symbolP) -
-		S_GET_VALUE (sub_symbolP);
+              add_number += S_GET_VALUE (add_symbolP) -
+                S_GET_VALUE (sub_symbolP);
 
-	      add_symbolP = NULL;
-	      pcrel = 0;	/* No further pcrel processing. */
+              add_symbolP = NULL;
+              pcrel = 0;        /* No further pcrel processing. */
 
-	      /* Let the target machine make the final determination
-		 as to whether or not a relocation will be needed to
-		 handle this fixup.  */
-	      if (!TC_FORCE_RELOCATION_SECTION (fixP, this_segment_type))
-		{
-		  fixP->fx_pcrel = 0;
-		  fixP->fx_addsy = NULL;
-		  fixP->fx_subsy = NULL;
-		}
-	    }
-	  else
-	    {
-	      /* Different segments in subtraction. */
-	      know (!(S_IS_EXTERNAL (sub_symbolP)
-		      && (S_GET_SEGMENT (sub_symbolP) == absolute_section)));
+              /* Let the target machine make the final determination
+                 as to whether or not a relocation will be needed to
+                 handle this fixup.  */
+              if (!TC_FORCE_RELOCATION_SECTION (fixP, this_segment_type))
+                {
+                  fixP->fx_pcrel = 0;
+                  fixP->fx_addsy = NULL;
+                  fixP->fx_subsy = NULL;
+                }
+            }
+          else
+            {
+              /* Different segments in subtraction. */
+              know (!(S_IS_EXTERNAL (sub_symbolP)
+                      && (S_GET_SEGMENT (sub_symbolP) == absolute_section)));
 
-	      if ((S_GET_SEGMENT (sub_symbolP) == absolute_section))
-		add_number -= S_GET_VALUE (sub_symbolP);
+              if ((S_GET_SEGMENT (sub_symbolP) == absolute_section))
+                add_number -= S_GET_VALUE (sub_symbolP);
 
 #ifdef DIFF_EXPR_OK
-	      else if (S_GET_SEGMENT (sub_symbolP) == this_segment_type
+              else if (S_GET_SEGMENT (sub_symbolP) == this_segment_type
 #if 0 /* Do this even if it's already described as pc-relative.  For example,
-	 on the m68k, an operand of "pc@(foo-.-2)" should address "foo" in a
-	 pc-relative mode.  */
-		       && pcrel
+         on the m68k, an operand of "pc@(foo-.-2)" should address "foo" in a
+         pc-relative mode.  */
+                       && pcrel
 #endif
-		       )
-		{
-		  /* Make it pc-relative.  */
-		  add_number += (MD_PCREL_FROM_SECTION (fixP, this_segment_type)
-				 - S_GET_VALUE (sub_symbolP));
-		  pcrel = 1;
-		  fixP->fx_pcrel = 1;
-		  sub_symbolP = 0;
-		  fixP->fx_subsy = 0;
-		}
+                       )
+                {
+                  /* Make it pc-relative.  */
+                  add_number += (MD_PCREL_FROM_SECTION (fixP, this_segment_type)
+                                 - S_GET_VALUE (sub_symbolP));
+                  pcrel = 1;
+                  fixP->fx_pcrel = 1;
+                  sub_symbolP = 0;
+                  fixP->fx_subsy = 0;
+                }
 #endif
 #ifdef UNDEFINED_DIFFERENCE_OK
-	      /* The PA needs this for PIC code generation.  We basically
-		 don't want to do anything if we have the difference of two
-		 symbols at this point.  */
-	      else if (1)
-		{
-		  /* Leave it alone.  */
-		}
+              /* The PA needs this for PIC code generation.  We basically
+                 don't want to do anything if we have the difference of two
+                 symbols at this point.  */
+              else if (1)
+                {
+                  /* Leave it alone.  */
+                }
 #endif
 #ifdef BFD_ASSEMBLER
-	      else if (fixP->fx_r_type == BFD_RELOC_GPREL32
-		       || fixP->fx_r_type == BFD_RELOC_GPREL16)
-		{
-		  /* Leave it alone.  */
-		}
+              else if (fixP->fx_r_type == BFD_RELOC_GPREL32
+                       || fixP->fx_r_type == BFD_RELOC_GPREL16)
+                {
+                  /* Leave it alone.  */
+                }
 #endif
-	      else
-		{
-		  char buf[50];
-		  sprint_value (buf, fragP->fr_address + where);
-		  as_bad_where (fixP->fx_file, fixP->fx_line,
-				_("Subtraction of two symbols in different sections \"%s\" {%s section} - \"%s\" {%s section} at file address %s."),
-				S_GET_NAME (add_symbolP),
-				segment_name (S_GET_SEGMENT (add_symbolP)),
-				S_GET_NAME (sub_symbolP),
-				segment_name (S_GET_SEGMENT (sub_symbolP)),
-				buf);
-		}
-	    }
-	}
+              else
+                {
+                  char buf[50];
+                  sprint_value (buf, fragP->fr_address + where);
+                  as_bad_where (fixP->fx_file, fixP->fx_line,
+                                _("Subtraction of two symbols in different sections \"%s\" {%s section} - \"%s\" {%s section} at file address %s."),
+                                S_GET_NAME (add_symbolP),
+                                segment_name (S_GET_SEGMENT (add_symbolP)),
+                                S_GET_NAME (sub_symbolP),
+                                segment_name (S_GET_SEGMENT (sub_symbolP)),
+                                buf);
+                }
+            }
+        }
 
       if (add_symbolP)
-	{
-	  if (add_symbol_segment == this_segment_type && pcrel && !plt
-	      && TC_RELOC_RTSYM_LOC_FIXUP (fixP))
-	    {
-	      /*
-	       * This fixup was made when the symbol's segment was
-	       * SEG_UNKNOWN, but it is now in the local segment.
-	       * So we know how to do the address without relocation.
-	       */
+        {
+          if (add_symbol_segment == this_segment_type && pcrel && !plt
+              && TC_RELOC_RTSYM_LOC_FIXUP (fixP))
+            {
+              /*
+               * This fixup was made when the symbol's segment was
+               * SEG_UNKNOWN, but it is now in the local segment.
+               * So we know how to do the address without relocation.
+               */
 #ifdef TC_I960
-	      /* reloc_callj() may replace a 'call' with a 'calls' or a
-		 'bal', in which cases it modifies *fixP as appropriate.
-		 In the case of a 'calls', no further work is required,
-		 and *fixP has been set up to make the rest of the code
-		 below a no-op. */
-	      reloc_callj (fixP);
+              /* reloc_callj() may replace a 'call' with a 'calls' or a
+                 'bal', in which cases it modifies *fixP as appropriate.
+                 In the case of a 'calls', no further work is required,
+                 and *fixP has been set up to make the rest of the code
+                 below a no-op. */
+              reloc_callj (fixP);
 #endif /* TC_I960 */
 
-	      add_number += S_GET_VALUE (add_symbolP);
-	      add_number -= MD_PCREL_FROM_SECTION (fixP, this_segment_type);
-	      pcrel = 0;	/* Lie. Don't want further pcrel processing. */
+              add_number += S_GET_VALUE (add_symbolP);
+              add_number -= MD_PCREL_FROM_SECTION (fixP, this_segment_type);
+              pcrel = 0;        /* Lie. Don't want further pcrel processing. */
 
-	      /* Let the target machine make the final determination
-		 as to whether or not a relocation will be needed to
-		 handle this fixup.  */
-	      if (!TC_FORCE_RELOCATION (fixP))
-		{
-		  fixP->fx_pcrel = 0;
-		  fixP->fx_addsy = NULL;
-		}
-	    }
-	  else
-	    {
-	      if (add_symbol_segment == absolute_section
-		  && ! pcrel)
-		{
+              /* Let the target machine make the final determination
+                 as to whether or not a relocation will be needed to
+                 handle this fixup.  */
+              if (!TC_FORCE_RELOCATION (fixP))
+                {
+                  fixP->fx_pcrel = 0;
+                  fixP->fx_addsy = NULL;
+                }
+            }
+          else
+            {
+              if (add_symbol_segment == absolute_section
+                  && ! pcrel)
+                {
 #ifdef TC_I960
-		  /* See comment about reloc_callj() above.  */
-		  reloc_callj (fixP);
+                  /* See comment about reloc_callj() above.  */
+                  reloc_callj (fixP);
 #endif /* TC_I960 */
-		  add_number += S_GET_VALUE (add_symbolP);
+                  add_number += S_GET_VALUE (add_symbolP);
 
-		  /* Let the target machine make the final determination
-		     as to whether or not a relocation will be needed to
-		     handle this fixup.  */
+                  /* Let the target machine make the final determination
+                     as to whether or not a relocation will be needed to
+                     handle this fixup.  */
 
-		  if (!TC_FORCE_RELOCATION (fixP))
-		    {
-		      fixP->fx_addsy = NULL;
-		      add_symbolP = NULL;
-		    }
-		}
-	      else if (add_symbol_segment == undefined_section
+                  if (!TC_FORCE_RELOCATION (fixP))
+                    {
+                      fixP->fx_addsy = NULL;
+                      add_symbolP = NULL;
+                    }
+                }
+              else if (add_symbol_segment == undefined_section
 #ifdef BFD_ASSEMBLER
-		       || bfd_is_com_section (add_symbol_segment)
+                       || bfd_is_com_section (add_symbol_segment)
 #endif
-		       )
-		{
+                       )
+                {
 #ifdef TC_I960
-		  if ((int) fixP->fx_bit_fixP == 13)
-		    {
-		      /* This is a COBR instruction.  They have only a
-		       * 13-bit displacement and are only to be used
-		       * for local branches: flag as error, don't generate
-		       * relocation.
-		       */
-		      as_bad_where (fixP->fx_file, fixP->fx_line,
-				    _("can't use COBR format with external label"));
-		      fixP->fx_addsy = NULL;
-		      fixP->fx_done = 1;
-		      continue;
-		    }		/* COBR */
+                  if ((int) fixP->fx_bit_fixP == 13)
+                    {
+                      /* This is a COBR instruction.  They have only a
+                       * 13-bit displacement and are only to be used
+                       * for local branches: flag as error, don't generate
+                       * relocation.
+                       */
+                      as_bad_where (fixP->fx_file, fixP->fx_line,
+                                    _("can't use COBR format with external label"));
+                      fixP->fx_addsy = NULL;
+                      fixP->fx_done = 1;
+                      continue;
+                    }           /* COBR */
 #endif /* TC_I960 */
 
 #ifdef OBJ_COFF
 #ifdef TE_I386AIX
-		  if (S_IS_COMMON (add_symbolP))
-		    add_number += S_GET_VALUE (add_symbolP);
+                  if (S_IS_COMMON (add_symbolP))
+                    add_number += S_GET_VALUE (add_symbolP);
 #endif /* TE_I386AIX */
 #endif /* OBJ_COFF */
-		  ++seg_reloc_count;
-		}
-	      else
-		{
-		  seg_reloc_count++;
+                  ++seg_reloc_count;
+                }
+              else
+                {
+                  seg_reloc_count++;
 #if !(defined (TC_V850) && defined (OBJ_ELF))
 #if !(defined (TC_M68K) && defined (OBJ_ELF))
 #if !(defined (TC_ARM)  && defined (OBJ_ELF))
 #if !(defined (TC_I960) && defined (OBJ_ELF))
 #if !defined (TC_I386) || !(defined (OBJ_ELF) || defined (OBJ_COFF)) || defined (TE_PE)
-		  add_number += S_GET_VALUE (add_symbolP);
+                  add_number += S_GET_VALUE (add_symbolP);
 #endif
 #endif
 #endif
 #endif
 #endif
-		}
-	    }
-	}
+                }
+            }
+        }
 
       if (pcrel)
-	{
-	  add_number -= MD_PCREL_FROM_SECTION (fixP, this_segment_type);
-	  if (add_symbolP == 0)
-	    {
+        {
+          add_number -= MD_PCREL_FROM_SECTION (fixP, this_segment_type);
+          if (add_symbolP == 0)
+            {
 #ifndef BFD_ASSEMBLER
-	      fixP->fx_addsy = &abs_symbol;
+              fixP->fx_addsy = &abs_symbol;
 #else
-	      fixP->fx_addsy = section_symbol (absolute_section);
+              fixP->fx_addsy = section_symbol (absolute_section);
 #endif
-	      symbol_mark_used_in_reloc (fixP->fx_addsy);
-	      ++seg_reloc_count;
-	    }
-	}
+              symbol_mark_used_in_reloc (fixP->fx_addsy);
+              ++seg_reloc_count;
+            }
+        }
 
       if (!fixP->fx_done)
-	{
+        {
 #ifdef MD_APPLY_FIX3
-	  md_apply_fix3 (fixP, &add_number, this_segment_type);
+          md_apply_fix3 (fixP, &add_number, this_segment_type);
 #else
 #ifdef BFD_ASSEMBLER
-	  md_apply_fix (fixP, &add_number);
+          md_apply_fix (fixP, &add_number);
 #else
-	  md_apply_fix (fixP, add_number);
+          md_apply_fix (fixP, add_number);
 #endif
 #endif
 
 #ifndef TC_HANDLES_FX_DONE
-	  /* If the tc-* files haven't been converted, assume it's handling
-	     it the old way, where a null fx_addsy means that the fix has
-	     been applied completely, and no further work is needed.  */
-	  if (fixP->fx_addsy == 0 && fixP->fx_pcrel == 0)
-	    fixP->fx_done = 1;
+          /* If the tc-* files haven't been converted, assume it's handling
+             it the old way, where a null fx_addsy means that the fix has
+             been applied completely, and no further work is needed.  */
+          if (fixP->fx_addsy == 0 && fixP->fx_pcrel == 0)
+            fixP->fx_done = 1;
 #endif
-	}
+        }
 
       if (!fixP->fx_bit_fixP && !fixP->fx_no_overflow && size > 0)
-	{
-	  if ((size_t) size < sizeof (valueT))
-	    {
-	      valueT mask;
+        {
+          if ((size_t) size < sizeof (valueT))
+            {
+              valueT mask;
 
-	      mask = 0;
-	      mask--;		/* set all bits to one */
-	      mask <<= size * 8 - (fixP->fx_signed ? 1 : 0);
-	      if ((add_number & mask) != 0 && (add_number & mask) != mask)
-		{
-		  char buf[50], buf2[50];
-		  sprint_value (buf, fragP->fr_address + where);
-		  if (add_number > 1000)
-		    sprint_value (buf2, add_number);
-		  else
-		    sprintf (buf2, "%ld", (long) add_number);
-		  as_bad_where (fixP->fx_file, fixP->fx_line,
-				_("Value of %s too large for field of %d bytes at %s"),
-				buf2, size, buf);
-		} /* generic error checking */
-	    }
+              mask = 0;
+              mask--;           /* set all bits to one */
+              mask <<= size * 8 - (fixP->fx_signed ? 1 : 0);
+              if ((add_number & mask) != 0 && (add_number & mask) != mask)
+                {
+                  char buf[50], buf2[50];
+                  sprint_value (buf, fragP->fr_address + where);
+                  if (add_number > 1000)
+                    sprint_value (buf2, add_number);
+                  else
+                    sprintf (buf2, "%ld", (long) add_number);
+                  as_bad_where (fixP->fx_file, fixP->fx_line,
+                                _("Value of %s too large for field of %d bytes at %s"),
+                                buf2, size, buf);
+                } /* generic error checking */
+            }
 #ifdef WARN_SIGNED_OVERFLOW_WORD
-	  /* Warn if a .word value is too large when treated as a signed
-	     number.  We already know it is not too negative.  This is to
-	     catch over-large switches generated by gcc on the 68k.  */
-	  if (!flag_signed_overflow_ok
-	      && size == 2
-	      && add_number > 0x7fff)
-	    as_bad_where (fixP->fx_file, fixP->fx_line,
-			  _("Signed .word overflow; switch may be too large; %ld at 0x%lx"),
-			  (long) add_number,
-			  (unsigned long) (fragP->fr_address + where));
+          /* Warn if a .word value is too large when treated as a signed
+             number.  We already know it is not too negative.  This is to
+             catch over-large switches generated by gcc on the 68k.  */
+          if (!flag_signed_overflow_ok
+              && size == 2
+              && add_number > 0x7fff)
+            as_bad_where (fixP->fx_file, fixP->fx_line,
+                          _("Signed .word overflow; switch may be too large; %ld at 0x%lx"),
+                          (long) add_number,
+                          (unsigned long) (fragP->fr_address + where));
 #endif
-	}			/* not a bit fix */
+        }                       /* not a bit fix */
 
 #ifdef TC_VALIDATE_FIX
     skip:  ATTRIBUTE_UNUSED_LABEL
@@ -2775,7 +2784,7 @@ fixup_segment (fixP, this_segment_type)
       fprintf (stderr, "result:\n");
       print_fixup (fixP);
 #endif
-    }				/* For each fixS in this segment. */
+    }                           /* For each fixS in this segment. */
 
   TC_ADJUST_RELOC_COUNT (fixP, seg_reloc_count);
   return seg_reloc_count;
@@ -2846,11 +2855,11 @@ print_fixup (fixp)
   if (fixp->fx_done)
     fprintf (stderr, " done");
   fprintf (stderr, "\n    size=%d frag=%lx where=%ld offset=%lx addnumber=%lx",
-	   fixp->fx_size, (long) fixp->fx_frag, (long) fixp->fx_where,
-	   (long) fixp->fx_offset, (long) fixp->fx_addnumber);
+           fixp->fx_size, (long) fixp->fx_frag, (long) fixp->fx_where,
+           (long) fixp->fx_offset, (long) fixp->fx_addnumber);
 #ifdef BFD_ASSEMBLER
   fprintf (stderr, "\n    %s (%d)", bfd_get_reloc_code_name (fixp->fx_r_type),
-	   fixp->fx_r_type);
+           fixp->fx_r_type);
 #else
 #ifdef NEED_FX_R_TYPE
   fprintf (stderr, " r_type=%d", fixp->fx_r_type);

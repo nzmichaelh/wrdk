@@ -55,6 +55,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 #define ARCH_z8k
 #endif
 
+#define	ARCH_c33	/* ’Ç‰Á 2001.1.15 ide */
 
 disassembler_ftype
 disassembler (abfd)
@@ -259,6 +260,14 @@ disassembler (abfd)
       disassemble = print_insn_vax;
       break;
 #endif
+
+#ifdef ARCH_c33		/* add */
+    case bfd_arch_c33:
+      disassemble = print_insn_c33;
+      break;
+#endif
+
+
     default:
       return 0;
     }

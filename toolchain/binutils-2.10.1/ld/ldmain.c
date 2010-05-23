@@ -41,9 +41,16 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include "ldfile.h"
 #include "ldctor.h"
 
+int g_iAdvance = 0;     /* add T.Tazaki 2003/05/14 */
+int g_iPE      = 0;     /* add T.Tazaki 2003/11/18 */
+/* >>>>> DELETED D.Fujimoto 2007/10/15 e_machine set in elf.c */
+///* add architecture number 2003/05/14 T.Tazaki */
+//#define EM_SE_C33      107      /* S1C33 Family of Seiko Epson processor */
+/* <<<<< DELETED D.Fujimoto 2007/10/15 e_machine set in elf.c */
+
 /* Somewhere above, sys/stat.h got included . . . . */
 #if !defined(S_ISDIR) && defined(S_IFDIR)
-#define	S_ISDIR(m) (((m) & S_IFMT) == S_IFDIR)
+#define S_ISDIR(m) (((m) & S_IFMT) == S_IFDIR)
 #endif
 
 #include <string.h>
@@ -94,41 +101,41 @@ ld_config_type config;
 static void remove_output PARAMS ((void));
 static boolean check_for_scripts_dir PARAMS ((char *dir));
 static boolean add_archive_element PARAMS ((struct bfd_link_info *, bfd *,
-					    const char *));
+                        const char *));
 static boolean multiple_definition PARAMS ((struct bfd_link_info *,
-					    const char *,
-					    bfd *, asection *, bfd_vma,
-					    bfd *, asection *, bfd_vma));
+                        const char *,
+                        bfd *, asection *, bfd_vma,
+                        bfd *, asection *, bfd_vma));
 static boolean multiple_common PARAMS ((struct bfd_link_info *,
-					const char *, bfd *,
-					enum bfd_link_hash_type, bfd_vma,
-					bfd *, enum bfd_link_hash_type,
-					bfd_vma));
+                    const char *, bfd *,
+                    enum bfd_link_hash_type, bfd_vma,
+                    bfd *, enum bfd_link_hash_type,
+                    bfd_vma));
 static boolean add_to_set PARAMS ((struct bfd_link_info *,
-				   struct bfd_link_hash_entry *,
-				   bfd_reloc_code_real_type,
-				   bfd *, asection *, bfd_vma));
+                   struct bfd_link_hash_entry *,
+                   bfd_reloc_code_real_type,
+                   bfd *, asection *, bfd_vma));
 static boolean constructor_callback PARAMS ((struct bfd_link_info *,
-					     boolean constructor,
-					     const char *name,
-					     bfd *, asection *, bfd_vma));
+                         boolean constructor,
+                         const char *name,
+                         bfd *, asection *, bfd_vma));
 static boolean warning_callback PARAMS ((struct bfd_link_info *,
-					 const char *, const char *, bfd *,
-					 asection *, bfd_vma));
+                     const char *, const char *, bfd *,
+                     asection *, bfd_vma));
 static void warning_find_reloc PARAMS ((bfd *, asection *, PTR));
 static boolean undefined_symbol PARAMS ((struct bfd_link_info *,
-					 const char *, bfd *,
-					 asection *, bfd_vma, boolean));
+                     const char *, bfd *,
+                     asection *, bfd_vma, boolean));
 static boolean reloc_overflow PARAMS ((struct bfd_link_info *, const char *,
-				       const char *, bfd_vma,
-				       bfd *, asection *, bfd_vma));
+                       const char *, bfd_vma,
+                       bfd *, asection *, bfd_vma));
 static boolean reloc_dangerous PARAMS ((struct bfd_link_info *, const char *,
-					bfd *, asection *, bfd_vma));
+                    bfd *, asection *, bfd_vma));
 static boolean unattached_reloc PARAMS ((struct bfd_link_info *,
-					 const char *, bfd *, asection *,
-					 bfd_vma));
+                     const char *, bfd *, asection *,
+                     bfd_vma));
 static boolean notice PARAMS ((struct bfd_link_info *, const char *,
-			       bfd *, asection *, bfd_vma));
+                   bfd *, asection *, bfd_vma));
 
 static struct bfd_link_callbacks link_callbacks =
 {
@@ -153,9 +160,9 @@ remove_output ()
   if (output_filename) 
     {
       if (output_bfd && output_bfd->iostream)
-	fclose((FILE *)(output_bfd->iostream));
+    fclose((FILE *)(output_bfd->iostream));
       if (delete_output_file_on_failure)
-	unlink (output_filename);
+    unlink (output_filename);
     }
 }
 
@@ -166,6 +173,9 @@ main (argc, argv)
 {
   char *emulation;
   long start_time = get_run_time ();
+/* >>>>> DELETED D.Fujimoto 2007/10/15 e_machine set in elf.c */
+//  FILE *fpOut;      /* ELF file write file pointer   add T.Tazaki 2003/05/14 */
+/* <<<<< DELETED D.Fujimoto 2007/10/15 e_machine set in elf.c */
 
 #if defined (HAVE_SETLOCALE) && defined (HAVE_LC_MESSAGES)
   setlocale (LC_MESSAGES, "");
@@ -258,13 +268,13 @@ main (argc, argv)
   if (link_info.relocateable)
     {
       if (command_line.gc_sections)
-	einfo ("%P%F: --gc-sections and -r may not be used together\n");
+    einfo ("%P%F: --gc-sections and -r may not be used together\n");
       if (link_info.mpc860c0)
-	einfo (_("%P%F: -r and --mpc860c0 may not be used together\n"));
+    einfo (_("%P%F: -r and --mpc860c0 may not be used together\n"));
       else if (command_line.relax)
-	einfo (_("%P%F: --relax and -r may not be used together\n"));
+    einfo (_("%P%F: --relax and -r may not be used together\n"));
       if (link_info.shared)
-	einfo (_("%P%F: -r and -shared may not be used together\n"));
+    einfo (_("%P%F: -r and -shared may not be used together\n"));
     }
 
   /* Treat ld -r -s as ld -r -S -x (i.e., strip all local symbols).  I
@@ -274,7 +284,7 @@ main (argc, argv)
     {
       link_info.strip = strip_debugger;
       if (link_info.discard == discard_none)
-	link_info.discard = discard_all;
+    link_info.discard = discard_all;
     }
 
   /* This essentially adds another -L directory so this must be done after
@@ -288,19 +298,19 @@ main (argc, argv)
       char *s = ldemul_get_script (&isfile);
 
       if (isfile)
-	ldfile_open_command_file (s);
+    ldfile_open_command_file (s);
       else
-	{
-	  if (trace_file_tries)
-	    {
-	      info_msg (_("using internal linker script:\n"));
-	      info_msg ("==================================================\n");
-	      info_msg (s);
-	      info_msg ("\n==================================================\n");
-	    }
-	  lex_string = s;
-	  lex_redirect (s);
-	}
+    {
+      if (trace_file_tries)
+        {
+          info_msg (_("using internal linker script:\n"));
+          info_msg ("==================================================\n");
+          info_msg (s);
+          info_msg ("\n==================================================\n");
+        }
+      lex_string = s;
+      lex_redirect (s);
+    }
       parser_input = input_script;
       yyparse ();
       lex_string = NULL;
@@ -311,7 +321,7 @@ main (argc, argv)
   if (lang_has_input_file == false)
     {
       if (version_printed)
-	xexit (0);
+    xexit (0);
       einfo (_("%P%F: no input files\n"));
     }
 
@@ -326,19 +336,19 @@ main (argc, argv)
   if (config.map_filename)
     {
       if (strcmp (config.map_filename, "-") == 0)
-	{
-	  config.map_file = stdout;
-	}
+    {
+      config.map_file = stdout;
+    }
       else
-	{
-	  config.map_file = fopen (config.map_filename, FOPEN_WT);
-	  if (config.map_file == (FILE *) NULL)
-	    {
-	      bfd_set_error (bfd_error_system_call);
-	      einfo (_("%P%F: cannot open map file %s: %E\n"),
-		     config.map_filename);
-	    }
-	}
+    {
+      config.map_file = fopen (config.map_filename, FOPEN_WT);
+      if (config.map_file == (FILE *) NULL)
+        {
+          bfd_set_error (bfd_error_system_call);
+          einfo (_("%P%F: cannot open map file %s: %E\n"),
+             config.map_filename);
+        }
+    }
     }
 
 
@@ -354,9 +364,9 @@ main (argc, argv)
       asection *found = bfd_get_section_by_name (output_bfd, ".text");
 
       if (found != (asection *) NULL)
-	{
-	  found->flags |= SEC_READONLY;
-	}
+    {
+      found->flags |= SEC_READONLY;
+    }
     }
 
   if (link_info.relocateable)
@@ -366,12 +376,17 @@ main (argc, argv)
 
   ldwrite ();
 
+/* del T.Tazaki 2003/06/24 >>> : Map file output after bfd close. 
+                               : symbol with underbar modify */
+//#if 0	/* add T.Tazaki 2003/11/19 bug fix */
   if (config.map_file != NULL)
     lang_map ();
   if (command_line.cref)
     output_cref (config.map_file != NULL ? config.map_file : stdout);
   if (nocrossref_list != NULL)
     check_nocrossrefs ();
+//#endif
+/* del T.Tazaki 2003/06/24 <<< */
 
   /* Even if we're producing relocateable output, some non-fatal errors should
      be reported in the exit status.  (What non-fatal errors, if any, do we
@@ -380,10 +395,10 @@ main (argc, argv)
   if (config.make_executable == false && force_make_executable == false)
     {
       if (trace_files == true)
-	{
-	  einfo (_("%P: link errors found, deleting executable `%s'\n"),
-		 output_filename);
-	}
+    {
+      einfo (_("%P: link errors found, deleting executable `%s'\n"),
+         output_filename);
+    }
 
       /* The file will be removed by remove_output.  */
 
@@ -392,50 +407,98 @@ main (argc, argv)
   else
     {
       if (! bfd_close (output_bfd))
-	einfo (_("%F%B: final close failed: %E\n"), output_bfd);
+    einfo (_("%F%B: final close failed: %E\n"), output_bfd);
+
+/* add T.Tazaki 2003/06/24 >>>  : Map file output after bfd close.  
+                                : symbol with underbar modify */
+#if 0	/* del T.Tazaki 2003/11/19 bug fix */
+  if (config.map_file != NULL)
+    lang_map ();
+  if (command_line.cref)
+    output_cref (config.map_file != NULL ? config.map_file : stdout);
+  if (nocrossref_list != NULL)
+    check_nocrossrefs ();
+#endif    
+/* add T.Tazaki 2003/06/24 <<< */
+
+/* >>>>> DELETED D.Fujimoto 2007/10/15 e_machine set in elf.c */
+///* add T.Tazaki 2003/05/14 >>> */
+//    fpOut = fopen( output_filename,"r+b" );
+//    if( fpOut != NULL )
+//    {
+//        /* e_machine number set */
+//        fseek( fpOut, 18, SEEK_SET );
+//        fputc( EM_SE_C33, fpOut );
+/* <<<<< DELETED D.Fujimoto 2007/10/15 e_machine set in elf.c */
+
+/* >>>>> DELETED D.Fujimoto 2007/10/01 macro flag output moved to bfd/elf32-c33.c */
+//        /* Advanced macro mode ? */
+//        if( g_iAdvance == 1 )
+//        {
+//            /* ELF header : e_flags bit31-28=CPU flag set */
+//            /*  flag = 0x0  : Standard macro */
+//	        /*  flag = 'A'  : Advanced macro */
+//	        /*  flag = 'P'  : PE macro */
+//           fseek( fpOut, 39, SEEK_SET );
+//           fputc( 'A', fpOut );
+//        }
+//        else if ( g_iPE == 1 )			/* add T.Tazaki 2003/11/18 */
+//        {
+//           fseek( fpOut, 39, SEEK_SET );
+//           fputc( 'P', fpOut );
+//        }
+/* <<<<< DELETED D.Fujimoto 2007/10/01 macro flag output moved to bfd/elf32-c33.c */
+
+/* >>>>> DELETED D.Fujimoto 2007/10/15 e_machine set in elf.c */
+//        fclose( fpOut );
+//    }
+//
+///* add T.Tazaki 2003/05/14 <<< */
+/* <<<<< DELETED D.Fujimoto 2007/10/15 e_machine set in elf.c */
+
 
       /* If the --force-exe-suffix is enabled, and we're making an
-	 executable file and it doesn't end in .exe, copy it to one which does. */
+     executable file and it doesn't end in .exe, copy it to one which does. */
 
       if (! link_info.relocateable && command_line.force_exe_suffix)
-	{
-	  int len = strlen (output_filename);
-	  if (len < 4 
-	      || (strcasecmp (output_filename + len - 4, ".exe") != 0
-		  && strcasecmp (output_filename + len - 4, ".dll") != 0))
-	    {
-	      FILE *src;
-	      FILE *dst;
-	      const int bsize = 4096;
-	      char *buf = xmalloc (bsize);
-	      int l;
-	      char *dst_name = xmalloc (len + 5);
-	      strcpy (dst_name, output_filename);
-	      strcat (dst_name, ".exe");
-	      src = fopen (output_filename, FOPEN_RB);
-	      dst = fopen (dst_name, FOPEN_WB);
+    {
+      int len = strlen (output_filename);
+      if (len < 4 
+          || (strcasecmp (output_filename + len - 4, ".exe") != 0
+          && strcasecmp (output_filename + len - 4, ".dll") != 0))
+        {
+          FILE *src;
+          FILE *dst;
+          const int bsize = 4096;
+          char *buf = xmalloc (bsize);
+          int l;
+          char *dst_name = xmalloc (len + 5);
+          strcpy (dst_name, output_filename);
+          strcat (dst_name, ".exe");
+          src = fopen (output_filename, FOPEN_RB);
+          dst = fopen (dst_name, FOPEN_WB);
 
-	      if (!src)
-		einfo (_("%X%P: unable to open for source of copy `%s'\n"), output_filename);
-	      if (!dst)
-		einfo (_("%X%P: unable to open for destination of copy `%s'\n"), dst_name);
-	      while ((l = fread (buf, 1, bsize, src)) > 0)
-		{
-		  int done = fwrite (buf, 1, l, dst);
-		  if (done != l)
-		    {
-		      einfo (_("%P: Error writing file `%s'\n"), dst_name);
-		    }
-		}
-	      fclose (src);
-	      if (fclose (dst) == EOF)
-		{
-		  einfo (_("%P: Error closing file `%s'\n"), dst_name);
-		}
-	      free (dst_name);
-	      free (buf);
-	    }
-	}
+          if (!src)
+        einfo (_("%X%P: unable to open for source of copy `%s'\n"), output_filename);
+          if (!dst)
+        einfo (_("%X%P: unable to open for destination of copy `%s'\n"), dst_name);
+          while ((l = fread (buf, 1, bsize, src)) > 0)
+        {
+          int done = fwrite (buf, 1, l, dst);
+          if (done != l)
+            {
+              einfo (_("%P: Error writing file `%s'\n"), dst_name);
+            }
+        }
+          fclose (src);
+          if (fclose (dst) == EOF)
+        {
+          einfo (_("%P: Error closing file `%s'\n"), dst_name);
+        }
+          free (dst_name);
+          free (buf);
+        }
+    }
     }
 
   END_PROGRESS (program_name);
@@ -448,10 +511,10 @@ main (argc, argv)
       long run_time = get_run_time () - start_time;
 
       fprintf (stderr, _("%s: total time in link: %ld.%06ld\n"),
-	       program_name, run_time / 1000000, run_time % 1000000);
+           program_name, run_time / 1000000, run_time % 1000000);
 #ifdef HAVE_SBRK
       fprintf (stderr, _("%s: data size %ld\n"), program_name,
-	       (long) (lim - (char *) &environ));
+           (long) (lim - (char *) &environ));
 #endif
     }
 
@@ -480,45 +543,45 @@ get_emulation (argc, argv)
   for (i = 1; i < argc; i++)
     {
       if (!strncmp (argv[i], "-m", 2))
-	{
-	  if (argv[i][2] == '\0')
-	    {
-	      /* -m EMUL */
-	      if (i < argc - 1)
-		{
-		  emulation = argv[i + 1];
-		  i++;
-		}
-	      else
-		{
-		  einfo(_("%P%F: missing argument to -m\n"));
-		}
-	    }
-	  else if (strcmp (argv[i], "-mips1") == 0
-		   || strcmp (argv[i], "-mips2") == 0
-		   || strcmp (argv[i], "-mips3") == 0
-		   || strcmp (argv[i], "-mips4") == 0)
-	    {
-	      /* FIXME: The arguments -mips1, -mips2 and -mips3 are
-		 passed to the linker by some MIPS compilers.  They
-		 generally tell the linker to use a slightly different
-		 library path.  Perhaps someday these should be
-		 implemented as emulations; until then, we just ignore
-		 the arguments and hope that nobody ever creates
-		 emulations named ips1, ips2 or ips3.  */
-	    }
-	  else if (strcmp (argv[i], "-m486") == 0)
-	    {
-	      /* FIXME: The argument -m486 is passed to the linker on
-		 some Linux systems.  Hope that nobody creates an
-		 emulation named 486.  */
-	    }
-	  else
-	    {
-	      /* -mEMUL */
-	      emulation = &argv[i][2];
-	    }
-	}
+    {
+      if (argv[i][2] == '\0')
+        {
+          /* -m EMUL */
+          if (i < argc - 1)
+        {
+          emulation = argv[i + 1];
+          i++;
+        }
+          else
+        {
+          einfo(_("%P%F: missing argument to -m\n"));
+        }
+        }
+      else if (strcmp (argv[i], "-mips1") == 0
+           || strcmp (argv[i], "-mips2") == 0
+           || strcmp (argv[i], "-mips3") == 0
+           || strcmp (argv[i], "-mips4") == 0)
+        {
+          /* FIXME: The arguments -mips1, -mips2 and -mips3 are
+         passed to the linker by some MIPS compilers.  They
+         generally tell the linker to use a slightly different
+         library path.  Perhaps someday these should be
+         implemented as emulations; until then, we just ignore
+         the arguments and hope that nobody ever creates
+         emulations named ips1, ips2 or ips3.  */
+        }
+      else if (strcmp (argv[i], "-m486") == 0)
+        {
+          /* FIXME: The argument -m486 is passed to the linker on
+         some Linux systems.  Hope that nobody creates an
+         emulation named 486.  */
+        }
+      else
+        {
+          /* -mEMUL */
+          emulation = &argv[i][2];
+        }
+    }
     }
 
   return emulation;
@@ -564,7 +627,7 @@ set_scripts_dir ()
   size_t dirlen;
 
   if (check_for_scripts_dir (SCRIPTDIR))
-    return;			/* We've been installed normally.  */
+    return;         /* We've been installed normally.  */
 
   /* Look for "ldscripts" in the dir where our binary is.  */
   end = strrchr (program_name, '/');
@@ -592,14 +655,14 @@ set_scripts_dir ()
   dir[dirlen] = '\0';
 
   if (check_for_scripts_dir (dir))
-    return;			/* Don't free dir.  */
+    return;         /* Don't free dir.  */
 
   /* Look for "ldscripts" in <the dir where our binary is>/../lib.  */
   strcpy (dir + dirlen, "/../lib");
   if (check_for_scripts_dir (dir))
     return;
 
-  free (dir);			/* Well, we tried.  */
+  free (dir);           /* Well, we tried.  */
 }
 
 void
@@ -609,11 +672,11 @@ add_ysym (name)
   if (link_info.notice_hash == (struct bfd_hash_table *) NULL)
     {
       link_info.notice_hash = ((struct bfd_hash_table *)
-			       xmalloc (sizeof (struct bfd_hash_table)));
+                   xmalloc (sizeof (struct bfd_hash_table)));
       if (! bfd_hash_table_init_n (link_info.notice_hash,
-				   bfd_hash_newfunc,
-				   61))
-	einfo (_("%P%F: bfd_hash_table_init failed: %E\n"));
+                   bfd_hash_newfunc,
+                   61))
+    einfo (_("%P%F: bfd_hash_table_init failed: %E\n"));
     }      
 
   if (bfd_hash_lookup (link_info.notice_hash, name, true, true)
@@ -630,11 +693,11 @@ add_wrap (name)
   if (link_info.wrap_hash == NULL)
     {
       link_info.wrap_hash = ((struct bfd_hash_table *)
-			     xmalloc (sizeof (struct bfd_hash_table)));
+                 xmalloc (sizeof (struct bfd_hash_table)));
       if (! bfd_hash_table_init_n (link_info.wrap_hash,
-				   bfd_hash_newfunc,
-				   61))
-	einfo (_("%P%F: bfd_hash_table_init failed: %E\n"));
+                   bfd_hash_newfunc,
+                   61))
+    einfo (_("%P%F: bfd_hash_table_init failed: %E\n"));
     }
   if (bfd_hash_lookup (link_info.wrap_hash, name, true, true) == NULL)
     einfo (_("%P%F: bfd_hash_lookup failed: %E\n"));
@@ -663,7 +726,7 @@ add_keepsyms_file (filename)
     }
 
   link_info.keep_hash = ((struct bfd_hash_table *)
-			 xmalloc (sizeof (struct bfd_hash_table)));
+             xmalloc (sizeof (struct bfd_hash_table)));
   if (! bfd_hash_table_init (link_info.keep_hash, bfd_hash_newfunc))
     einfo (_("%P%F: bfd_hash_table_init failed: %E\n"));
 
@@ -674,30 +737,30 @@ add_keepsyms_file (filename)
   while (c != EOF)
     {
       while (isspace (c))
-	c = getc (file);
+    c = getc (file);
 
       if (c != EOF)
-	{
-	  size_t len = 0;
+    {
+      size_t len = 0;
 
-	  while (! isspace (c) && c != EOF)
-	    {
-	      buf[len] = c;
-	      ++len;
-	      if (len >= bufsize)
-		{
-		  bufsize *= 2;
-		  buf = xrealloc (buf, bufsize);
-		}
-	      c = getc (file);
-	    }
+      while (! isspace (c) && c != EOF)
+        {
+          buf[len] = c;
+          ++len;
+          if (len >= bufsize)
+        {
+          bufsize *= 2;
+          buf = xrealloc (buf, bufsize);
+        }
+          c = getc (file);
+        }
 
-	  buf[len] = '\0';
+      buf[len] = '\0';
 
-	  if (bfd_hash_lookup (link_info.keep_hash, buf, true, true)
-	      == (struct bfd_hash_entry *) NULL)
-	    einfo (_("%P%F: bfd_hash_lookup for insertion failed: %E\n"));
-	}
+      if (bfd_hash_lookup (link_info.keep_hash, buf, true, true)
+          == (struct bfd_hash_entry *) NULL)
+        einfo (_("%P%F: bfd_hash_lookup for insertion failed: %E\n"));
+    }
     }
 
   if (link_info.strip != strip_none)
@@ -721,7 +784,7 @@ add_archive_element (info, abfd, name)
   lang_input_statement_type *input;
 
   input = ((lang_input_statement_type *)
-	   xmalloc (sizeof (lang_input_statement_type)));
+       xmalloc (sizeof (lang_input_statement_type)));
   input->filename = abfd->filename;
   input->local_sym_name = abfd->filename;
   input->the_bfd = abfd;
@@ -749,72 +812,72 @@ add_archive_element (info, abfd, name)
       h = bfd_link_hash_lookup (link_info.hash, name, false, false, true);
 
       if (h == NULL)
-	from = NULL;
+    from = NULL;
       else
-	{
-	  switch (h->type)
-	    {
-	    default:
-	      from = NULL;
-	      break;
+    {
+      switch (h->type)
+        {
+        default:
+          from = NULL;
+          break;
 
-	    case bfd_link_hash_defined:
-	    case bfd_link_hash_defweak:
-	      from = h->u.def.section->owner;
-	      break;
+        case bfd_link_hash_defined:
+        case bfd_link_hash_defweak:
+          from = h->u.def.section->owner;
+          break;
 
-	    case bfd_link_hash_undefined:
-	    case bfd_link_hash_undefweak:
-	      from = h->u.undef.abfd;
-	      break;
+        case bfd_link_hash_undefined:
+        case bfd_link_hash_undefweak:
+          from = h->u.undef.abfd;
+          break;
 
-	    case bfd_link_hash_common:
-	      from = h->u.c.p->section->owner;
-	      break;
-	    }
-	}
+        case bfd_link_hash_common:
+          from = h->u.c.p->section->owner;
+          break;
+        }
+    }
 
       if (! header_printed)
-	{
-	  char buf[100];
+    {
+      char buf[100];
 
-	  sprintf (buf, "%-29s %s\n\n", _("Archive member included"),
-		   _("because of file (symbol)"));
-	  minfo ("%s", buf);
-	  header_printed = true;
-	}
+      sprintf (buf, "%-29s %s\n\n", _("Archive member included"),
+           _("because of file (symbol)"));
+      minfo ("%s", buf);
+      header_printed = true;
+    }
 
       if (bfd_my_archive (abfd) == NULL)
-	{
-	  minfo ("%s", bfd_get_filename (abfd));
-	  len = strlen (bfd_get_filename (abfd));
-	}
+    {
+      minfo ("%s", bfd_get_filename (abfd));
+      len = strlen (bfd_get_filename (abfd));
+    }
       else
-	{
-	  minfo ("%s(%s)", bfd_get_filename (bfd_my_archive (abfd)),
-		 bfd_get_filename (abfd));
-	  len = (strlen (bfd_get_filename (bfd_my_archive (abfd)))
-		 + strlen (bfd_get_filename (abfd))
-		 + 2);
-	}
+    {
+      minfo ("%s(%s)", bfd_get_filename (bfd_my_archive (abfd)),
+         bfd_get_filename (abfd));
+      len = (strlen (bfd_get_filename (bfd_my_archive (abfd)))
+         + strlen (bfd_get_filename (abfd))
+         + 2);
+    }
 
       if (len >= 29)
-	{
-	  print_nl ();
-	  len = 0;
-	}
+    {
+      print_nl ();
+      len = 0;
+    }
       while (len < 30)
-	{
-	  print_space ();
-	  ++len;
-	}
+    {
+      print_space ();
+      ++len;
+    }
 
       if (from != NULL)
-	minfo ("%B ", from);
+    minfo ("%B ", from);
       if (h != NULL)
-	minfo ("(%T)\n", h->root.string);
+    minfo ("(%T)\n", h->root.string);
       else
-	minfo ("(%s)\n", name);
+    minfo ("(%s)\n", name);
     }
 
   if (trace_files || trace_file_tries)
@@ -847,15 +910,21 @@ multiple_definition (info, name, obfd, osec, oval, nbfd, nsec, nval)
        && ! bfd_is_abs_section (osec)
        && bfd_is_abs_section (osec->output_section))
       || (nsec->output_section != NULL
-	  && ! bfd_is_abs_section (nsec)
-	  && bfd_is_abs_section (nsec->output_section)))
+      && ! bfd_is_abs_section (nsec)
+      && bfd_is_abs_section (nsec->output_section)))
     return true;
 
+/* delete 2002.07.01 T.Tazaki mutiple difinition error */
+#if 0
+
   einfo (_("%X%C: multiple definition of `%T'\n"),
-	 nbfd, nsec, nval, name);
+     nbfd, nsec, nval, name);
   if (obfd != (bfd *) NULL)
     einfo (_("%D: first defined here\n"), obfd, osec, oval);
+
+#endif
   return true;
+
 }
 
 /* This is called when there is a definition of a common symbol, or
@@ -884,43 +953,43 @@ multiple_common (info, name, obfd, otype, osize, nbfd, ntype, nsize)
     {
       ASSERT (otype == bfd_link_hash_common);
       einfo (_("%B: warning: definition of `%T' overriding common\n"),
-	     nbfd, name);
+         nbfd, name);
       if (obfd != NULL)
-	einfo (_("%B: warning: common is here\n"), obfd);
+    einfo (_("%B: warning: common is here\n"), obfd);
     }
   else if (otype == bfd_link_hash_defined
-	   || otype == bfd_link_hash_defweak
-	   || otype == bfd_link_hash_indirect)
+       || otype == bfd_link_hash_defweak
+       || otype == bfd_link_hash_indirect)
     {
       ASSERT (ntype == bfd_link_hash_common);
       einfo (_("%B: warning: common of `%T' overridden by definition\n"),
-	     nbfd, name);
+         nbfd, name);
       if (obfd != NULL)
-	einfo (_("%B: warning: defined here\n"), obfd);
+    einfo (_("%B: warning: defined here\n"), obfd);
     }
   else
     {
       ASSERT (otype == bfd_link_hash_common && ntype == bfd_link_hash_common);
       if (osize > nsize)
-	{
-	  einfo (_("%B: warning: common of `%T' overridden by larger common\n"),
-		 nbfd, name);
-	  if (obfd != NULL)
-	    einfo (_("%B: warning: larger common is here\n"), obfd);
-	}
+    {
+      einfo (_("%B: warning: common of `%T' overridden by larger common\n"),
+         nbfd, name);
+      if (obfd != NULL)
+        einfo (_("%B: warning: larger common is here\n"), obfd);
+    }
       else if (nsize > osize)
-	{
-	  einfo (_("%B: warning: common of `%T' overriding smaller common\n"),
-		 nbfd, name);
-	  if (obfd != NULL)
-	    einfo (_("%B: warning: smaller common is here\n"), obfd);
-	}
+    {
+      einfo (_("%B: warning: common of `%T' overriding smaller common\n"),
+         nbfd, name);
+      if (obfd != NULL)
+        einfo (_("%B: warning: smaller common is here\n"), obfd);
+    }
       else
-	{
-	  einfo (_("%B: warning: multiple common of `%T'\n"), nbfd, name);
-	  if (obfd != NULL)
-	    einfo (_("%B: warning: previous common is here\n"), obfd);
-	}
+    {
+      einfo (_("%B: warning: multiple common of `%T'\n"), nbfd, name);
+      if (obfd != NULL)
+        einfo (_("%B: warning: previous common is here\n"), obfd);
+    }
     }
 
   return true;
@@ -942,7 +1011,7 @@ add_to_set (info, h, reloc, abfd, section, value)
 {
   if (config.warn_constructors)
     einfo (_("%P: warning: global constructor %s used\n"),
-	   h->root.string);
+       h->root.string);
 
   if (! config.build_constructors)
     return true;
@@ -954,8 +1023,8 @@ add_to_set (info, h, reloc, abfd, section, value)
       h->type = bfd_link_hash_undefined;
       h->u.undef.abfd = abfd;
       /* We don't call bfd_link_add_undef to add this to the list of
-	 undefined symbols because we are going to define it
-	 ourselves.  */
+     undefined symbols because we are going to define it
+     ourselves.  */
     }
 
   return true;
@@ -989,7 +1058,7 @@ constructor_callback (info, constructor, name, abfd, section, value)
      useful error message.  */
   if (bfd_reloc_type_lookup (output_bfd, BFD_RELOC_CTOR) == NULL
       && (link_info.relocateable
-	  || bfd_reloc_type_lookup (abfd, BFD_RELOC_CTOR) == NULL))
+      || bfd_reloc_type_lookup (abfd, BFD_RELOC_CTOR) == NULL))
     einfo (_("%P%F: BFD backend error: BFD_RELOC_CTOR unsupported\n"));
 
   s = set_name;
@@ -1008,8 +1077,8 @@ constructor_callback (info, constructor, name, abfd, section, value)
       h->type = bfd_link_hash_undefined;
       h->u.undef.abfd = abfd;
       /* We don't call bfd_link_add_undef to add this to the list of
-	 undefined symbols because we are going to define it
-	 ourselves.  */
+     undefined symbols because we are going to define it
+     ourselves.  */
     }
 
   ldctor_add_set_entry (h, BFD_RELOC_CTOR, name, section, value);
@@ -1058,29 +1127,29 @@ warning_callback (info, warning, symbol, abfd, section, address)
       struct warning_callback_info info;
 
       /* Look through the relocs to see if we can find a plausible
-	 address.  */
+     address.  */
 
       entry = (lang_input_statement_type *) abfd->usrdata;
       if (entry != NULL && entry->asymbols != NULL)
-	asymbols = entry->asymbols;
+    asymbols = entry->asymbols;
       else
-	{
-	  long symsize;
-	  long symbol_count;
+    {
+      long symsize;
+      long symbol_count;
 
-	  symsize = bfd_get_symtab_upper_bound (abfd);
-	  if (symsize < 0)
-	    einfo (_("%B%F: could not read symbols: %E\n"), abfd);
-	  asymbols = (asymbol **) xmalloc (symsize);
-	  symbol_count = bfd_canonicalize_symtab (abfd, asymbols);
-	  if (symbol_count < 0)
-	    einfo (_("%B%F: could not read symbols: %E\n"), abfd);
-	  if (entry != NULL)
-	    {
-	      entry->asymbols = asymbols;
-	      entry->symbol_count = symbol_count;
-	    }
-	}
+      symsize = bfd_get_symtab_upper_bound (abfd);
+      if (symsize < 0)
+        einfo (_("%B%F: could not read symbols: %E\n"), abfd);
+      asymbols = (asymbol **) xmalloc (symsize);
+      symbol_count = bfd_canonicalize_symtab (abfd, asymbols);
+      if (symbol_count < 0)
+        einfo (_("%B%F: could not read symbols: %E\n"), abfd);
+      if (entry != NULL)
+        {
+          entry->asymbols = asymbols;
+          entry->symbol_count = symbol_count;
+        }
+    }
 
       info.found = false;
       info.warning = warning;
@@ -1089,10 +1158,10 @@ warning_callback (info, warning, symbol, abfd, section, address)
       bfd_map_over_sections (abfd, warning_find_reloc, (PTR) &info);
 
       if (! info.found)
-	einfo ("%B: %s\n", abfd, warning);
+    einfo ("%B: %s\n", abfd, warning);
 
       if (entry == NULL)
-	free (asymbols);
+    free (asymbols);
     }
 
   return true;
@@ -1136,14 +1205,14 @@ warning_find_reloc (abfd, sec, iarg)
       arelent *q = *p;
 
       if (q->sym_ptr_ptr != NULL
-	  && *q->sym_ptr_ptr != NULL
-	  && strcmp (bfd_asymbol_name (*q->sym_ptr_ptr), info->symbol) == 0)
-	{
-	  /* We found a reloc for the symbol we are looking for.  */
-	  einfo ("%C: %s\n", abfd, sec, q->address, info->warning);
-	  info->found = true;
-	  break;
-	}
+      && *q->sym_ptr_ptr != NULL
+      && strcmp (bfd_asymbol_name (*q->sym_ptr_ptr), info->symbol) == 0)
+    {
+      /* We found a reloc for the symbol we are looking for.  */
+      einfo ("%C: %s\n", abfd, sec, q->address, info->warning);
+      info->found = true;
+      break;
+    }
     }
 
   free (relpp);
@@ -1173,18 +1242,18 @@ undefined_symbol (info, name, abfd, section, address, fatal)
       /* Only warn once about a particular undefined symbol.  */
 
       if (hash == NULL)
-	{
-	  hash = ((struct bfd_hash_table *)
-		  xmalloc (sizeof (struct bfd_hash_table)));
-	  if (! bfd_hash_table_init (hash, bfd_hash_newfunc))
-	    einfo (_("%F%P: bfd_hash_table_init failed: %E\n"));
-	}
+    {
+      hash = ((struct bfd_hash_table *)
+          xmalloc (sizeof (struct bfd_hash_table)));
+      if (! bfd_hash_table_init (hash, bfd_hash_newfunc))
+        einfo (_("%F%P: bfd_hash_table_init failed: %E\n"));
+    }
 
       if (bfd_hash_lookup (hash, name, false, false) != NULL)
-	return true;
+    return true;
 
       if (bfd_hash_lookup (hash, name, true, true) == NULL)
-	einfo (_("%F%P: bfd_hash_lookup failed: %E\n"));
+    einfo (_("%F%P: bfd_hash_lookup failed: %E\n"));
     }
 
   /* We never print more than a reasonable number of errors in a row
@@ -1196,35 +1265,35 @@ undefined_symbol (info, name, abfd, section, address, fatal)
     {
       error_count = 0;
       if (error_name != (char *) NULL)
-	free (error_name);
+    free (error_name);
       error_name = buystring (name);
     }
 
   if (section != NULL)
     {
       if (error_count < MAX_ERRORS_IN_A_ROW)
-	{
-	  einfo (_("%C: undefined reference to `%T'\n"),
-		 abfd, section, address, name);
-	  if (fatal)
-	    einfo ("%X");
-	}
+    {
+      einfo (_("%C: undefined reference to `%T'\n"),
+         abfd, section, address, name);
+      if (fatal)
+        einfo ("%X");
+    }
       else if (error_count == MAX_ERRORS_IN_A_ROW)
-	einfo (_("%D: more undefined references to `%T' follow\n"),
-	       abfd, section, address, name);
+    einfo (_("%D: more undefined references to `%T' follow\n"),
+           abfd, section, address, name);
     }
   else
     {
       if (error_count < MAX_ERRORS_IN_A_ROW)
-	{
-	  einfo (_("%B: undefined reference to `%T'\n"),
-		 abfd, name);
-	  if (fatal)
-	    einfo ("%X");
-	}
+    {
+      einfo (_("%B: undefined reference to `%T'\n"),
+         abfd, name);
+      if (fatal)
+        einfo ("%X");
+    }
       else if (error_count == MAX_ERRORS_IN_A_ROW)
-	einfo (_("%B: more undefined references to `%T' follow\n"),
-	       abfd, name);
+    einfo (_("%B: more undefined references to `%T' follow\n"),
+           abfd, name);
     }
 
   return true;
@@ -1307,12 +1376,12 @@ notice (info, name, abfd, section, value)
 {
   if (! info->notice_all
       || (info->notice_hash != NULL
-	  && bfd_hash_lookup (info->notice_hash, name, false, false) != NULL))
+      && bfd_hash_lookup (info->notice_hash, name, false, false) != NULL))
     {
       if (bfd_is_und_section (section))
-	einfo ("%B: reference to %s\n", abfd, name);
+    einfo ("%B: reference to %s\n", abfd, name);
       else
-	einfo ("%B: definition of %s\n", abfd, name);
+    einfo ("%B: definition of %s\n", abfd, name);
     }
 
   if (command_line.cref || nocrossref_list != NULL)

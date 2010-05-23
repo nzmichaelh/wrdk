@@ -171,6 +171,7 @@ CPU_TYPES = \
 	vax \
 	w65 \
 	v850 \
+	c33 \
 	z8k
 
 
@@ -277,7 +278,8 @@ GAS_CFILES = \
 	stabs.c \
 	subsegs.c \
 	symbols.c \
-	write.c
+	write.c \
+	ext_remove.c
 
 
 CFILES = $(GAS_CFILES) gasp.c itbl-ops.c
@@ -308,7 +310,8 @@ HFILES = \
 	subsegs.h \
 	symbols.h \
 	tc.h \
-	write.h
+	write.h \
+	ext_remove.h
 
 
 # CPU files in config.
@@ -347,6 +350,7 @@ TARGET_CPU_CFILES = \
 	config/tc-vax.c \
 	config/tc-w65.c \
 	config/tc-v850.c \
+	config/tc-c33.c \
 	config/tc-z8k.c
 
 
@@ -384,6 +388,7 @@ TARGET_CPU_HFILES = \
 	config/tc-vax.h \
 	config/tc-w65.h \
 	config/tc-v850.h \
+	config/tc-c33.h \
 	config/tc-z8k.h
 
 
@@ -466,7 +471,6 @@ CONFIG_OBJS = \
 	$(ATOF_TARG_O) \
 	$(extra_objects)
 
-
 GENERIC_OBJS = \
 	app.o \
 	as.o \
@@ -495,7 +499,8 @@ GENERIC_OBJS = \
 	ecoff.o \
 	stabs.o \
 	sb.o \
-	macro.o
+	macro.o \
+	ext_remove.o
 
 
 OBJS = $(CONFIG_OBJS) $(GENERIC_OBJS)
@@ -1034,6 +1039,11 @@ DEPTC_v850_elf = $(INCDIR)/bin-bugs.h $(srcdir)/config/obj-elf.h \
   $(INCDIR)/elf/external.h $(INCDIR)/bfdlink.h $(srcdir)/config/tc-v850.h \
   emul.h subsegs.h $(INCDIR)/obstack.h $(INCDIR)/opcode/v850.h
 
+DEPTC_c33_elf = $(INCDIR)/bin-bugs.h $(srcdir)/config/obj-elf.h \
+  $(BFDDIR)/elf-bfd.h $(INCDIR)/elf/common.h $(INCDIR)/elf/internal.h \
+  $(INCDIR)/elf/external.h $(INCDIR)/bfdlink.h $(srcdir)/config/tc-c33.h \
+  emul.h subsegs.h $(INCDIR)/obstack.h $(INCDIR)/opcode/c33.h
+
 DEPTC_z8k_coff = $(srcdir)/../opcodes/z8k-opc.h $(INCDIR)/bin-bugs.h \
   $(srcdir)/config/obj-coff.h $(srcdir)/config/tc-z8k.h \
   $(INCDIR)/coff/internal.h $(INCDIR)/coff/z8k.h $(BFDDIR)/libcoff.h \
@@ -1454,6 +1464,11 @@ DEPOBJ_v850_elf = $(INCDIR)/bin-bugs.h $(srcdir)/config/obj-elf.h \
   $(INCDIR)/elf/external.h $(INCDIR)/bfdlink.h $(srcdir)/config/tc-v850.h \
   emul.h subsegs.h $(INCDIR)/obstack.h $(INCDIR)/aout/aout64.h
 
+DEPOBJ_c33_elf = $(INCDIR)/bin-bugs.h $(srcdir)/config/obj-elf.h \
+  $(BFDDIR)/elf-bfd.h $(INCDIR)/elf/common.h $(INCDIR)/elf/internal.h \
+  $(INCDIR)/elf/external.h $(INCDIR)/bfdlink.h $(srcdir)/config/tc-c33.h \
+  emul.h subsegs.h $(INCDIR)/obstack.h $(INCDIR)/aout/aout64.h
+
 DEPOBJ_z8k_coff = $(INCDIR)/bin-bugs.h $(srcdir)/config/obj-coff.h \
   $(srcdir)/config/tc-z8k.h $(INCDIR)/coff/internal.h \
   $(INCDIR)/coff/z8k.h $(BFDDIR)/libcoff.h $(INCDIR)/bfdlink.h \
@@ -1764,6 +1779,10 @@ DEP_v850_elf = $(srcdir)/config/obj-elf.h $(BFDDIR)/elf-bfd.h \
   $(INCDIR)/elf/common.h $(INCDIR)/elf/internal.h $(INCDIR)/elf/external.h \
   $(INCDIR)/bfdlink.h $(srcdir)/config/tc-v850.h
 
+DEP_c33_elf = $(srcdir)/config/obj-elf.h $(BFDDIR)/elf-bfd.h \
+  $(INCDIR)/elf/common.h $(INCDIR)/elf/internal.h $(INCDIR)/elf/external.h \
+  $(INCDIR)/bfdlink.h $(srcdir)/config/tc-c33.h
+
 DEP_z8k_coff = $(srcdir)/config/obj-coff.h $(srcdir)/config/tc-z8k.h \
   $(INCDIR)/coff/internal.h $(INCDIR)/coff/z8k.h $(BFDDIR)/libcoff.h \
   $(INCDIR)/bfdlink.h
@@ -1795,11 +1814,12 @@ itbl_test_OBJECTS =  itbl-parse.o itbl-lex.o
 itbl_test_DEPENDENCIES =  itbl-tops.o itbl-test.o \
 ../libiberty/libiberty.a
 itbl_test_LDFLAGS = 
+
 as_new_OBJECTS =  app.o as.o atof-generic.o bignum-copy.o cond.o \
 depend.o dwarf2dbg.o ecoff.o ehopt.o expr.o flonum-copy.o \
 flonum-konst.o flonum-mult.o frags.o hash.o input-file.o input-scrub.o \
 listing.o literal.o macro.o messages.o output-file.o read.o sb.o \
-stabs.o subsegs.o symbols.o write.o
+stabs.o subsegs.o symbols.o write.o ext_remove.o
 as_new_LDFLAGS = 
 gasp_new_OBJECTS =  gasp.o macro.o sb.o hash.o
 gasp_new_LDFLAGS = 
@@ -2668,6 +2688,7 @@ e-mipsecoff.o: $(srcdir)/config/e-mipsecoff.c $(INCDIR)/bin-bugs.h \
   emul.h emul-target.h
 e-mipself.o: $(srcdir)/config/e-mipself.c $(INCDIR)/bin-bugs.h \
   emul.h emul-target.h
+ext_remove.o: ext_remove.c ext_remove.h
 $(OBJS): $(DEP_@target_cpu_type@_@obj_format@)
 $(TARG_CPU_O): $(DEPTC_@target_cpu_type@_@obj_format@)
 $(OBJ_FORMAT_O): $(DEPOBJ_@target_cpu_type@_@obj_format@)

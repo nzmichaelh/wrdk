@@ -34,6 +34,7 @@ CPU_DOCS = \
 	c-sparc.texi \
 	c-vax.texi \
 	c-v850.texi \
+	c-c33.texi \
 	c-z8k.texi
 
 gasver.texi: Makefile

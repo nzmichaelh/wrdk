@@ -861,6 +861,9 @@ case "${target}" in
   v850-*-*)
     noconfigdirs="$noconfigdirs target-libgloss"
     ;;
+  c33-*-*)
+    noconfigdirs="$noconfigdirs target-libgloss"
+    ;;
   v850e-*-*)
     noconfigdirs="$noconfigdirs target-libgloss"
     ;;

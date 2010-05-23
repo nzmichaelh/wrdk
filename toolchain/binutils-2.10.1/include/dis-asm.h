@@ -196,6 +196,10 @@ extern int print_insn_tic80		PARAMS ((bfd_vma, disassemble_info*));
 extern int print_insn_pj		PARAMS ((bfd_vma, disassemble_info*));
 extern int print_insn_avr		PARAMS ((bfd_vma, disassemble_info*));
 
+/* ’Ç‰Á 2001.1.15 ide */
+extern int print_insn_c33		PARAMS ((bfd_vma, disassemble_info*));
+
+
 extern void print_arm_disassembler_options PARAMS ((FILE *));
 extern void parse_arm_disassembler_option  PARAMS ((char *));
 extern int  get_arm_regname_num_options    PARAMS ((void));

@@ -417,6 +417,13 @@ seen_at_least_1_file ()		/* TRUE if we opened any file. */
 {
   return (physical_input_file != NULL);
 }
+/* add T.Tazaki 2002.02.05 >>> */
+line_numberT
+get_physical_input_line()
+{
+	return physical_input_line;
+}
+/* add T.Tazaki 2002.02.05 <<< */
 
 void
 bump_line_counters ()
@@ -468,23 +475,33 @@ new_logical_line (fname, line_number)
  * namep should be char * const *, but there are compilers which screw
  * up declarations like that, and it's easier to avoid it.
  */
+ 
+
+/* >>> add T.Tazaki 2002.03.04 */
+extern char *c33_original_input_file;
+/* <<< add T.Tazaki 2002.03.04 */
+
 void 
 as_where (namep, linep)
      char **namep;
      unsigned int *linep;
 {
+
+	/*  */
+
+
   if (logical_input_file != NULL
       && (linep == NULL || logical_input_line >= 0))
     {
-      *namep = logical_input_file;
+	 *namep = logical_input_file;
       if (linep != NULL)
 	*linep = logical_input_line;
     }
   else if (physical_input_file != NULL)
     {
-      *namep = physical_input_file;
+      	*namep = physical_input_file;
       if (linep != NULL)
-	*linep = physical_input_line;
+	     *linep = physical_input_line;
     }
   else
     {
@@ -492,6 +509,14 @@ as_where (namep, linep)
       if (linep != NULL)
 	*linep = 0;
     }
+    
+    /* >>> add T.Tazaki 2002.03.04 */
+    /* input file name pointer set */
+    if( *c33_original_input_file != NULL ){
+	 *namep = c33_original_input_file;	/* cpp :# 1 "sample.s" */
+    }
+    /* <<< add T.Tazaki 2002.03.04 */
+    	
 }				/* as_where() */
 
 

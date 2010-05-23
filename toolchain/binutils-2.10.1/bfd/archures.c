@@ -274,6 +274,7 @@ extern const bfd_arch_info_type bfd_z8k_arch;
 extern const bfd_arch_info_type bfd_ns32k_arch;
 extern const bfd_arch_info_type bfd_w65_arch;
 extern const bfd_arch_info_type bfd_v850_arch;
+extern const bfd_arch_info_type bfd_c33_arch;
 extern const bfd_arch_info_type bfd_fr30_arch;
 extern const bfd_arch_info_type bfd_mcore_arch;
 extern const bfd_arch_info_type bfd_avr_arch;
@@ -314,6 +315,7 @@ static const bfd_arch_info_type * const bfd_archures_list[] =
   &bfd_ns32k_arch,
   &bfd_w65_arch,
   &bfd_v850_arch,
+  &bfd_c33_arch,
   &bfd_fr30_arch,
   &bfd_mcore_arch,
   &bfd_avr_arch,
