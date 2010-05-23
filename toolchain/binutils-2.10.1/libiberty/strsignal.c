@@ -244,7 +244,9 @@ static const char **sys_siglist;
 #else
 
 #ifdef NSIG
+#if !defined(__FreeBSD__)
 static int sys_nsig = NSIG;
+#endif
 #else
 #ifdef _NSIG
 static int sys_nsig = _NSIG;
