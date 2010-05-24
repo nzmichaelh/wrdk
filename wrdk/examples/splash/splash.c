@@ -19,7 +19,7 @@ typedef struct
 
 #define LCD_ImageType static const Image
 
-#include "build/splash.img"
+#include "build/splash.xpm.h"
 
 /** Main must be first in the file */
 int main(void)

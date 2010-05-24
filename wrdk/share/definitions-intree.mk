@@ -6,7 +6,7 @@ SAMO_LIB := $(WIKIREADER_ROOT)/samo-lib
 GRIFO = ${SAMO_LIB}/grifo
 GRIFO_SCRIPTS = $(GRIFO)/scripts
 
-IMAGE2HEADER = $(HOST_TOOLS)/imagetool/image2header
-XPM2ICON = $(GRIFO_SCRIPTS)/xpm2icon
+IMAGE2MANY = python $(WRDK_SHARE)/../bin/image2many
+
 
 

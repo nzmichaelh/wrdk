@@ -1,9 +1,11 @@
 # Makefile that packages up a copy of wrdk
 #
 
+# AR=i586-mingw32msvc-ar CC=i586-mingw32msvc-gcc ../../toolchain/gcc-3.3.2/configure --target=c33-epson-elf --host=i586-mingw32msvc --build=i686-pc-linux-gnuaout --prefix=$HOME/mingw  --enable-languages=c --disable-multilib 2>&1|less
+
 # make USE_COLLECT2= HOST_CC=gcc GCC_FOR_TARGET=c33-epson-elf-gcc
 # ../gcc-3.3.2/configure --target=c33-epson-elf --host=i586-mingw32msvc --build=i686-pc-linux-gnuaout --prefix=$HOME/mingw  --enable-languages=c
-# ../binutils-2.10.1/configure --target=c33-epson-elf --host=i586-mingw32msvc --build=i686-pc-linux-gnuaout --prefix=$HOME/mingw  --program-prefix=c33-epson-elf --program-suffix=.exe
+# ../binutils-2.10.1/configure --target=c33-epson-elf --host=i586-mingw32msvc --build=i686-pc-linux-gnuaout --prefix=$HOME/mingw  --program-prefix=c33-epson-elf- --program-suffix=.exe
 
 include ../samo-lib/Mk/definitions.mk
 
@@ -45,61 +47,32 @@ GCC_FILE = $(GCC_PACKAGE)
 toolchain: $(STAMPS)/binutils $(STAMPS)/gcc
 
 # Shortcuts
-binutils-patch: $(STAMPS)/binutils-patch
-gcc-patch: $(STAMPS)/gcc-patch
+binutils: $(STAMPS)/binutils
+gcc: $(STAMPS)/gcc
 
-# Fetch binutils
-$(STAMPS)/binutils-fetch:
+# Configure binutils
+$(BUILD)/binutils/Makefile:
 	mkdir -p $(@D)
-	cp ../host-tools/toolchain-download/binutils-* .
-	touch $@
-
-# Extract and add the patches
-$(STAMPS)/binutils-patch: $(STAMPS)/binutils-fetch
-	mkdir -p $(@D)
-	rm -fr $(BUILD)/binutils-$(BINUTILS_VERSION)
-	tar -xzf "${BINUTILS_FILE}" -C $(BUILD)
-	cd $(BUILD)/binutils-${BINUTILS_VERSION} && \
-	for p in $(PATCHES)/*-binutils-*.patch ; \
-	do \
-	   patch -p1 < "$${p}" ; \
-	done
-	touch $@
+	cd $(@D) && ../../../../toolchain/binutils-2.10.1/configure --target=c33-epson-elf --host=i586-mingw32msvc --build=i686-pc-linux-gnuaout --prefix=$(BUILD)/wrdk  --program-prefix=c33-epson-elf- --program-suffix=.exe
 
 # Build and stage binutils
-$(STAMPS)/binutils: $(STAMPS)/binutils-patch
-	mkdir -p $(BUILD)/build-binutils
-	cd $(BUILD)/build-binutils && \
-	$(HOST_FLAGS) CPPFLAGS="-D_FORTIFY_SOURCE=0" ../binutils-$(BINUTILS_VERSION)/configure --prefix $(STAGING) --target=c33-epson-elf && \
-	CPPFLAGS="-D_FORTIFY_SOURCE=0" ${MAKE}
-	${MAKE} -C $(BUILD)/build-binutils install
-	touch $@
-
-# Fetch gcc
-$(STAMPS)/gcc-fetch:
+$(STAMPS)/binutils: $(BUILD)/binutils/Makefile
+	$(MAKE) -C $(<D) $(PARALLEL)
+	$(MAKE) -C $(<D) $(PARALLEL) install
 	mkdir -p $(@D)
-	cp ../host-tools/toolchain-download/gcc-* .
 	touch $@
 
-# Extract and patch gcc
-$(STAMPS)/gcc-patch: $(STAMPS)/gcc-fetch
-	tar -xzf "${GCC_FILE}" -C $(BUILD)
-	cd $(BUILD)/gcc-$(GCC_VERSION) && \
-	for p in $(PATCHES)/*-gcc-*.patch ; \
-	do \
-	   patch -p1 < "$${p}" ; \
-	done
-	touch $@
+# Configure gcc
+$(BUILD)/gcc/Makefile:
+	mkdir -p $(@D)
+	cd $(@D) && ../../../../toolchain/gcc-3.3.2/configure --target=c33-epson-elf --host=i586-mingw32msvc --build=i686-pc-linux-gnuaout --prefix=$(BUILD)/wrdk  --enable-languages=c --disable-multilib
 
 # Build and stage gcc
-$(STAMPS)/gcc: $(STAMPS)/binutils $(STAMPS)/gcc-patch
-	mkdir -p $(BUILD)/build-gcc
-	export PATH="$(STAGING)/bin:${PATH}" && \
-	cd $(BUILD)/build-gcc && \
-	$(HOST_FLAGS) CPPFLAGS="-D_FORTIFY_SOURCE=0" ../gcc-$(GCC_VERSION)/configure --prefix $(STAGING) --target=c33-epson-elf --enable-languages=c && \
-	CPPFLAGS="-D_FORTIFY_SOURCE=0" ${MAKE} && \
-	${MAKE} install
-	${TOUCH} $@
+$(STAMPS)/gcc: $(BUILD)/gcc/Makefile
+	$(MAKE) -C $(<D) -k $(PARALLEL)
+	$(MAKE) -C $(<D) -k $(PARALLEL) install
+	mkdir -p $(@D)
+	touch $@
 
 # Pulls together the includes, libraries, examples, and other
 # components together into the staging area

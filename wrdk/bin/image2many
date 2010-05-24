@@ -1,0 +1,142 @@
+#!/usr/bin/env python
+
+import sys
+import optparse
+import StringIO
+import copy
+
+import PIL.Image
+
+# Pull in a few of the standard loaders so that py2exe can find them
+import PIL.BmpImagePlugin
+import PIL.PngImagePlugin
+import PIL.XpmImagePlugin
+
+header_header = """/* Generated from %(arg)s by %(this)s */
+
+"""
+
+header_body = """enum
+{
+    %(variable)s_width = %(width)d,
+    %(variable)s_height = %(height)d,
+};
+
+%(type)s %(variable)s =
+{
+    .width = %(width)d,
+    .height = %(height)d,
+"""
+
+def main():
+    parser = optparse.OptionParser()
+
+    parser.add_option('-o', dest='output')
+    parser.add_option('-f', dest='format', default='ico')
+    parser.add_option('--with-mask', action='store_true', dest='with_mask', default=False)
+    parser.add_option('--auto-mask', action='store_true',
+                      dest='auto_mask', default=False)
+
+    parser.add_option('--variable-name', dest='variable', default='image')
+    parser.add_option('--type-name', dest='type', default='LCD_ImageType')
+
+    options, args = parser.parse_args()
+
+    if not args:
+        parser.error('missing filename')
+
+    if len(args) > 1:
+        parser.error('too many arguments')
+
+    # Read into a string buffer first. PIL 1.1.7 has a problem with
+    # mmap() and XPM files; reading into StringIO disables mmap()
+    io = StringIO.StringIO(open(args[0]).read())
+
+    # Load the image
+    img = PIL.Image.open(io)
+    width, height = img.size
+
+    # Convert to greyscale to make the processing easier
+    luma = list(img.convert('L').getdata())
+
+    # Split the luma into rows
+    rows = [luma[i:i+width] for i in range(0, len(luma), width)]
+    # Build the binary mask for each pixel in the row
+    masks = [2**(7 - i % 8) for i in range(width)]
+
+    def threshold(x):
+        return 0 if x == 255 else 1
+
+    def mask(x):
+        return 1 if (x != 0 and x != 255) else 0
+
+    def extract(mapper):
+        out = []
+
+        for row in rows:
+            bits = [mapper(x) for x in row]
+            masked = [x*y for x, y in zip(masks, bits)]
+            bytes = [sum(masked[x:x+8]) for x in range(0, len(masked), 8)]
+
+            out.append(bytes)
+
+        return out
+
+    byte_rows = extract(threshold)
+    mask_rows = extract(mask)
+
+    if options.output:
+        out = open(options.output, 'wb')
+    else:
+        out = sys.stdout
+
+    d = copy.copy(options.__dict__)
+    d.update(locals())
+    d['arg'] = args[0]
+    d['this'] = sys.argv[0]
+
+    def write_ico():
+        for row in byte_rows:
+            out.write(''.join(chr(x) for x in row))
+
+    def write_header():
+        out.write(header_header % d)
+
+        flat = []
+
+        for row in mask_rows:
+            flat.extend(row)
+
+        mask = options.with_mask
+
+        if options.auto_mask and sum(flat) != 0:
+            mask = True
+
+        if mask:
+            print >> out, 'static const uint8_t %(variable)s_mask[] =\n{' % d
+
+            for y, row in enumerate(mask_rows):
+                print >> out, '        /* Row %d */' % y
+                print >> out, '        %s,' % ', '.join('0x%02x' % x for x in row)
+
+            print >> out, '};'
+
+        out.write(header_body % d)
+
+        if mask:
+            print >> out, '    .mask = %(variable)s_mask,' % d
+
+        print >> out, '    .bytes =\n    {'
+
+        for y, row in enumerate(byte_rows):
+            print >> out, '        /* Row %d */' % y
+            print >> out, '        %s,' % ', '.join('0x%02x' % x for x in row)
+
+        print >> out, '    }\n};'
+
+    outputter = 'write_' + options.format
+
+    locals()[outputter]()
+
+if __name__ == '__main__':
+    main()

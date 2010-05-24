@@ -86,17 +86,17 @@ typedef enum
 
 #define LCD_ImageType static const Image
 
-#include "build/flame.img"
-#include "build/building.img"
-#include "build/baby.img"
-#include "build/player.img"
-#include "build/ambulance.img"
-#include "build/title.img"
-#include "build/gameover.img"
-#include "build/baby0.img"
-#include "build/baby90.img"
-#include "build/baby180.img"
-#include "build/baby270.img"
+#include "build/flame.xpm.h"
+#include "build/building.xpm.h"
+#include "build/baby.xpm.h"
+#include "build/player.xpm.h"
+#include "build/ambulance.xpm.h"
+#include "build/title.xpm.h"
+#include "build/gameover.xpm.h"
+#include "build/baby0.xpm.h"
+#include "build/baby90.xpm.h"
+#include "build/baby180.xpm.h"
+#include "build/baby270.xpm.h"
 
 /** The different images used in the baby animation */
 static const Image* baby_frames[] =

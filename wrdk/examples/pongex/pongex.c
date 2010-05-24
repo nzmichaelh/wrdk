@@ -50,12 +50,12 @@ typedef enum { Title, Playing } State;
 
 #define LCD_ImageType static const Image
 
-#include "build/leftbumper.img"
-#include "build/rightbumper.img"
-#include "build/ball.img"
-#include "build/player1.img"
-#include "build/player2.img"
-#include "build/title.img"
+#include "build/leftbumper.xpm.h"
+#include "build/rightbumper.xpm.h"
+#include "build/ball.xpm.h"
+#include "build/player1.xpm.h"
+#include "build/player2.xpm.h"
+#include "build/title.xpm.h"
 
 /** All of the global values */
 struct
@@ -81,7 +81,7 @@ static const Sprite leftbumper =
 
 static const Sprite rightbumper =
 {
-    &rightbumper_image, LCD_WIDTH - rightbumper_image_Width, 0
+    &rightbumper_image, LCD_WIDTH - rightbumper_image_width, 0
 };
 
 /** All of the sprites in the scene in Z order */

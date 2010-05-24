@@ -75,18 +75,18 @@ static uint8_t fb[LCD_BUFFER_WIDTH_BYTES*LCD_HEIGHT];
 
 #define LCD_ImageType static const Image
 
-#include "build/background.img"
-#include "build/special.img"
-#include "build/top1.img"
-#include "build/top2.img"
-#include "build/mid1.img"
-#include "build/mid2.img"
-#include "build/bottom1.img"
-#include "build/bottom2.img"
-#include "build/player.img"
-#include "build/shot.img"
-#include "build/explode.img"
-#include "build/gameover.img"
+#include "build/background.xpm.h"
+#include "build/special.xpm.h"
+#include "build/top1.xpm.h"
+#include "build/top2.xpm.h"
+#include "build/mid1.xpm.h"
+#include "build/mid2.xpm.h"
+#include "build/bottom1.xpm.h"
+#include "build/bottom2.xpm.h"
+#include "build/player.xpm.h"
+#include "build/shot.xpm.h"
+#include "build/explode.xpm.h"
+#include "build/gameover.xpm.h"
 
 /** The invader images where the columns are the animation frame and
     the rows match the invader rows
