@@ -17,9 +17,9 @@ struct Image
 
 /* Pull in the bitmaps */
 #define LCD_ImageType static const struct Image
-#include "build/icon.img"
-#include "build/dot.img"
-#include "build/filled.img"
+#include "build/icon.xpm.h"
+#include "build/dot.xpm.h"
+#include "build/filled.xpm.h"
 
 /** X positions of the progress dots */
 static const uint dot_x[] =

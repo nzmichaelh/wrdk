@@ -9,7 +9,8 @@ BUILD = build
 BUILD2 = $(BUILD)/$(TARGET)
 INSTALL_DIR = dist
 
-THIS := $(notdir $(shell pwd))
+HERE := $(notdir $(shell pwd))
+THIS := $(word $(words $(HERE)), $(HERE))
 
 TARGETS = $(BUILD2)/$(THIS).app $(BUILD)/$(THIS).ico
 LIB = $(BUILD2)/lib$(THIS).a

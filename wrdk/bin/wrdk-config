@@ -9,6 +9,9 @@
 import sys
 import os
 
+if sys.platform == 'win32':
+    import win32api
+
 join = os.path.join
 
 def path(*args):
@@ -21,7 +24,19 @@ def path(*args):
         split.extend(arg.split('/'))
 
     combined = reduce(join, split)
-    return os.path.abspath(combined)
+
+    abs = os.path.abspath(combined)
+
+    if sys.platform == 'win32':
+        # Convert to a short name so that we don't have to quote Program Files
+        if os.path.exists(abs):
+            abs = win32api.GetShortPathName(abs)
+
+        # Change to the alternate separator. Convers win32 '\' paths to
+        # '/' which work a bit better with Makefiles
+        abs = abs.replace(os.sep, os.altsep)
+
+    return abs
 
 def intree_share(root, w):
     print path(w, 'wrdk/share'),
@@ -30,7 +45,12 @@ def standalone_share(root, w):
     print path(root, 'share')
 
 def main():
-    root = join(os.path.dirname(sys.argv[0]), '..')
+    if 'wrdk-config' in sys.executable:
+        root = sys.executable
+    else:
+        root = sys.argv[0]
+
+    root = join(os.path.dirname(root), '..')
 
     if os.path.exists(path(root, '../samo-lib')):
         layout = 'intree'

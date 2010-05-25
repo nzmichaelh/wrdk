@@ -1,6 +1,6 @@
 /** A simple serial based boot loader.
 
-    @author Michael Hope
+    @author Michael Hope <michaelh@juju.net.nz>
 */
 #include "loader.h"
 

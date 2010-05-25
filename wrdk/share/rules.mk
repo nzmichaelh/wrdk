@@ -3,10 +3,15 @@
 
 LIBS += $(LIB)
 
+IMAGES ?= $(wildcard resources/*.xpm)
+IMAGE_HEADERS = $(IMAGES:resources/%=build/%.h)
+
 all: $(TARGETS)
 
 host:
 	$(MAKE) TARGET=host
+
+images: $(IMAGE_HEADERS)
 
 install: all
 	mkdir -p $(INSTALL_DIR)
