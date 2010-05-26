@@ -35,7 +35,7 @@ int main(void)
                0,
                splash_image.bytes);
 
-    delay_us(1000000);
+    delay_us(500000);
 
     return 0;
 }

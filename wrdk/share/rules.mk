@@ -3,6 +3,8 @@
 
 LIBS += $(LIB)
 
+IMAGE_MASK ?= --with-mask
+
 IMAGES ?= $(wildcard resources/*.xpm)
 IMAGE_HEADERS = $(IMAGES:resources/%=build/%.h)
 
@@ -34,7 +36,7 @@ $(BUILD2)/%.d: %.c
 	$(OBJCOPY) -j .text -j .data -j .rodata -O binary $< $@
 
 $(BUILD)/%.xpm.h: resources/%.xpm
-	$(IMAGE2MANY) -f header --auto-mask -o $@ --variable-name=$(notdir $(@:.xpm.h=_image)) $<
+	$(IMAGE2MANY) -f header $(IMAGE_MASK) -o $@ --variable-name=$(notdir $(@:.xpm.h=_image)) $<
 
 # convert XPM to binary ICO format
 $(BUILD)/%.ico: %.xpm

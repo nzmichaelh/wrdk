@@ -39,6 +39,7 @@ typedef struct
 {
     uint width;
     uint height;
+    const uint8_t* mask;
 
     uint8_t bytes[];
 } Image;

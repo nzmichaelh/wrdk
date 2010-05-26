@@ -4,6 +4,7 @@ import sys
 import optparse
 import StringIO
 import copy
+import re
 
 import PIL.Image
 
@@ -28,6 +29,28 @@ header_body = """enum
     .height = %(height)d,
 """
 
+def fix_xpm(name):
+    # PIL has quite a few problems with XPM files.  mmap() makes the
+    # image all jagged.  Comments turn into bad rows.  Create a tidied
+    # up version before writing it.
+
+    clean = ['/* XPM */']
+
+    for line in open(name).readlines():
+        # Strip out any comments
+        line = re.sub(r'/\*.*\*/', '', line)
+        line = line.strip()
+
+        # Only append if there's anything left
+        if line:
+            clean.append(line)
+
+    io = StringIO.StringIO('\n'.join(clean))
+
+    img = PIL.Image.open(io)
+
+    return img
+
 def main():
     parser = optparse.OptionParser()
 
@@ -48,12 +71,12 @@ def main():
     if len(args) > 1:
         parser.error('too many arguments')
 
-    # Read into a string buffer first. PIL 1.1.7 has a problem with
-    # mmap() and XPM files; reading into StringIO disables mmap()
-    io = StringIO.StringIO(open(args[0]).read())
-
     # Load the image
-    img = PIL.Image.open(io)
+    img = PIL.Image.open(args[0])
+
+    if img.format == 'XPM':
+        img = fix_xpm(args[0])
+
     width, height = img.size
 
     # Convert to greyscale to make the processing easier
@@ -65,7 +88,7 @@ def main():
     masks = [2**(7 - i % 8) for i in range(width)]
 
     def threshold(x):
-        return 0 if x == 255 else 1
+        return 1 if x == 0 else 0
 
     def mask(x):
         return 1 if (x != 0 and x != 255) else 0
@@ -85,6 +108,16 @@ def main():
     byte_rows = extract(threshold)
     mask_rows = extract(mask)
 
+    fill = 0 if width % 8 == 0 else 2**(8 - width%8) - 1
+
+    with_mask = options.with_mask
+
+    for row in mask_rows:
+        if options.auto_mask and sum(row) != 0:
+            with_mask = True
+            
+        row[-1] |= fill
+
     if options.output:
         out = open(options.output, 'wb')
     else:
@@ -102,17 +135,7 @@ def main():
     def write_header():
         out.write(header_header % d)
 
-        flat = []
-
-        for row in mask_rows:
-            flat.extend(row)
-
-        mask = options.with_mask
-
-        if options.auto_mask and sum(flat) != 0:
-            mask = True
-
-        if mask:
+        if with_mask:
             print >> out, 'static const uint8_t %(variable)s_mask[] =\n{' % d
 
             for y, row in enumerate(mask_rows):
@@ -123,7 +146,7 @@ def main():
 
         out.write(header_body % d)
 
-        if mask:
+        if with_mask:
             print >> out, '    .mask = %(variable)s_mask,' % d
 
         print >> out, '    .bytes =\n    {'
