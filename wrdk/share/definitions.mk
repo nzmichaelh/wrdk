@@ -3,18 +3,24 @@
 
 LAYOUT := $(shell wrdk-config --layout)
 
+# Target to build for: samov1 (WikiReader), host
 TARGET ?= samov1
 
+# Build directory
 BUILD = build
+# Target specific build directory
 BUILD2 = $(BUILD)/$(TARGET)
-INSTALL_DIR = dist
 
 HERE := $(notdir $(shell pwd))
+# Default name of this project
 THIS := $(word $(words $(HERE)), $(HERE))
 
+# Targets to build (application and icon)
 TARGETS = $(BUILD2)/$(THIS).app $(BUILD)/$(THIS).ico
+# Library to build into
 LIB = $(BUILD2)/lib$(THIS).a
 
+# Pull in the target and layout specific files
 -include $(WRDK_SHARE)/definitions-$(LAYOUT).mk
 -include $(WRDK_SHARE)/definitions-$(TARGET).mk
 -include $(WRDK_SHARE)/definitions-$(TARGET)-$(LAYOUT).mk
@@ -27,3 +33,5 @@ OBJCOPY = $(CROSS_COMPILE)objcopy
 CFLAGS += -Wall -ggdb --std=gnu99
 CFLAGS += $(INCLUDES)
 CFLAGS += $(OPT)
+
+IMAGETOOL ?= wrdk-imagetool

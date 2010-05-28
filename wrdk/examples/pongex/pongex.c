@@ -353,7 +353,7 @@ static int max(int a, int b)
     return a > b ? a : b;
 }
 
-static int abs(int v)
+int abs(int v)
 {
     return v > 0 ? v : -v;
 }

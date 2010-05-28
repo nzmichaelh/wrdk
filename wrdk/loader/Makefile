@@ -8,9 +8,8 @@ TARGETS = $(BUILD2)/stub.app $(BUILD)/stub.ico
 
 # list of modules
 SRC = $(wildcard *.c)
-OBJ = $(addprefix $(BUILD2)/, $(SRC:.c=.o))
 
-LIBS += $(LIB)
+IMAGE_MASK = 
 
 all: $(TARGETS)
 
@@ -21,6 +20,6 @@ $(BUILD2)/loader.elf: $(BUILD2) $(BUILD2)/main.o $(LIB) loader.lds
 	$(LD) -o $@ $(LDFLAGS) $(BUILD2)/main.o $(LIBS) -T loader.lds
 
 $(BUILD)/%.inc: $(BUILD2)/%.bin
-	python bin2array $< $@
+	wrdk-bintool -f header -o $@ $<
 
 include $(WRDK_SHARE)/rules.mk

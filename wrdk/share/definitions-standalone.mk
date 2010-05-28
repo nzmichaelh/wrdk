@@ -1,6 +1,1 @@
 WRDK_ROOT = $(WRDK_SHARE)/..
-
-HOST_TOOLS := 
-SAMO_LIB := 
-
-IMAGE2MANY= image2many

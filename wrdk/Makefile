@@ -4,7 +4,7 @@
 include ../samo-lib/Mk/definitions.mk
 
 # Release version
-VERSION = 0.1
+VERSION = $(shell wrdk-config --version)
 
 SUBDIRS = loader examples/wrinv examples/baby examples/splash examples/pongex
 

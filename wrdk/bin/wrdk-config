@@ -8,6 +8,9 @@
 
 import sys
 import os
+import optparse
+
+import wrdk
 
 if sys.platform == 'win32':
     import win32api
@@ -28,7 +31,7 @@ def path(*args):
     abs = os.path.abspath(combined)
 
     if sys.platform == 'win32':
-        # Convert to a short name so that we don't have to quote Program Files
+        # Avoid having to quote everything by converting to a short name
         if os.path.exists(abs):
             abs = win32api.GetShortPathName(abs)
 
@@ -45,6 +48,16 @@ def standalone_share(root, w):
     print path(root, 'share')
 
 def main():
+    parser = optparse.OptionParser(version=wrdk.__version__,
+                                   description='Provides information about how wrdk is installed')
+    parser.add_option('--layout', action='store_true')
+    parser.add_option('--share', action='store_true')
+
+    opts, args = parser.parse_args()
+
+    if args or len(sys.argv) == 1:
+        parser.error('No arguments supplied')
+
     if 'wrdk-config' in sys.executable:
         root = sys.executable
     else:

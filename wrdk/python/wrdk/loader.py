@@ -64,7 +64,7 @@ class Loader:
         self.send('M%x %x %s' % (address, len(data), payload))
         self.check_ok()
 
-    def writebin(self, address, data):
+    def write_bin(self, address, data):
         """Write the given data to the given address in binary transfer mode"""
         special = '\r\n\003}'
         payload = ''.join('}%s' % chr(ord(x) ^ 0x20) if x in special else x for x in data)
@@ -105,7 +105,7 @@ class Loader:
         chunk = 256
 
         for i in range(0, len(bin), chunk):
-            self.writebin(address + i, bin[i:i+chunk])
+            self.write_bin(address + i, bin[i:i+chunk])
             self.progress(address + i, 100.0 * i / len(bin))
 
         got = self.checksum(0x10040000, len(bin))
@@ -150,4 +150,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

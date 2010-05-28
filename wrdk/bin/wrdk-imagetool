@@ -1,10 +1,13 @@
 #!/usr/bin/env python
+"""Converts images to the different formats used in wrdk"""
 
 import sys
 import optparse
 import StringIO
 import copy
 import re
+
+import wrdk
 
 import PIL.Image
 
@@ -52,10 +55,10 @@ def fix_xpm(name):
     return img
 
 def main():
-    parser = optparse.OptionParser()
+    parser = optparse.OptionParser(version=wrdk.__version__)
 
     parser.add_option('-o', dest='output')
-    parser.add_option('-f', dest='format', default='ico')
+    parser.add_option('-f', dest='format', type='choice', choices=['ico', 'header'], default='ico')
     parser.add_option('--with-mask', action='store_true', dest='with_mask', default=False)
     parser.add_option('--auto-mask', action='store_true',
                       dest='auto_mask', default=False)
@@ -66,10 +69,10 @@ def main():
     options, args = parser.parse_args()
 
     if not args:
-        parser.error('missing filename')
+        parser.error('no filename supplied')
 
     if len(args) > 1:
-        parser.error('too many arguments')
+        parser.error('too many filenames')
 
     # Load the image
     img = PIL.Image.open(args[0])

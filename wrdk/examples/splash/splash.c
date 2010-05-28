@@ -24,6 +24,10 @@ typedef struct
 /** Main must be first in the file */
 int main(void)
 {
+#ifdef WRDK_HOST
+    grifo_init();
+#endif
+
     lcd_clear(LCD_WHITE);
 
     lcd_bitmap(lcd_get_framebuffer(),
@@ -36,6 +40,10 @@ int main(void)
                splash_image.bytes);
 
     delay_us(500000);
+
+#ifdef WRDK_HOST
+    event_t event; for (;;) event_get(&event);
+#endif
 
     return 0;
 }

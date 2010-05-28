@@ -1,0 +1,40 @@
+#!/usr/bin/env python
+"""A simple script that turns a binary file into a C array"""
+
+from __future__ import with_statement
+
+import sys
+import optparse
+
+import wrdk
+
+__author__ = 'Michael Hope'
+
+def main():
+    parser = optparse.OptionParser(version=wrdk.__version__,
+                                   description='Converts binary files to various formats')
+
+    parser.add_option('-f', dest='format', type='choice', choices=['header'], default='header')
+    parser.add_option('-o', dest='output')
+
+    opts, args = parser.parse_args()
+
+    if not args:
+        parser.error('no filename supplied')
+
+    if opts.output:
+        out = open(opts.output, 'w')
+    else:
+        out = sys.stdout
+
+    width = 8
+
+    for arg in args:
+        with open(arg, 'rb') as src:
+            bytes = src.read()
+
+            for i in range(0, len(bytes), width):
+                print >> out, '   ', ''.join('0x%02x, ' % ord(x) for x in bytes[i:i+width])
+
+if __name__ == '__main__':
+    main()

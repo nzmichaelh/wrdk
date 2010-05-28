@@ -5,7 +5,7 @@ LIBS += $(LIB)
 
 IMAGE_MASK ?= --with-mask
 
-IMAGES ?= $(wildcard resources/*.xpm)
+IMAGES ?= $(wildcard resources/*.xpm) $(wildcard resources/*.png)
 IMAGE_HEADERS = $(IMAGES:resources/%=build/%.h)
 
 all: $(TARGETS)
@@ -35,12 +35,17 @@ $(BUILD2)/%.d: %.c
 %.bin: %.elf
 	$(OBJCOPY) -j .text -j .data -j .rodata -O binary $< $@
 
+# Convert a XPM image into a header file
 $(BUILD)/%.xpm.h: resources/%.xpm
-	$(IMAGE2MANY) -f header $(IMAGE_MASK) -o $@ --variable-name=$(notdir $(@:.xpm.h=_image)) $<
+	$(IMAGETOOL) -f header $(IMAGE_MASK) -o $@ --variable-name=$(notdir $(@:.xpm.h=_image)) $<
+
+# Convert a PNG image into a header file
+$(BUILD)/%.png.h: resources/%.png
+	$(IMAGETOOL) -f header $(IMAGE_MASK) -o $@ --variable-name=$(notdir $(@:.png.h=_image)) $<
 
 # convert XPM to binary ICO format
 $(BUILD)/%.ico: %.xpm
-	$(IMAGE2MANY) -f ico -o $@ $<
+	$(IMAGETOOL) -f ico -o $@ $<
 
 $(BUILD2):
 	$(MKDIR) $@

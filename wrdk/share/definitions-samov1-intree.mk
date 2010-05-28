@@ -14,4 +14,3 @@ LIBS = \
 LDFLAGS = 
 
 GRIFO_APPLICATION_LDS = $(WIKIREADER_ROOT)/samo-lib/grifo/lds/application.lds
-
