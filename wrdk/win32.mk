@@ -16,4 +16,4 @@ $(BUILD)/msys: msys.tar.bz2
 
 installer: $(BUILD)/msys
 	makensis wrdk.nsi
-	mv wrdk-installer.exe wrdk-$(VERSION)-installer.exe
+	mv wrdk-installer.exe wrdk-installer-$(VERSION).exe

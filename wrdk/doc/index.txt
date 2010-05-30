@@ -22,6 +22,9 @@ Download
 * Windows installer: http://wrdk.seabright.co.nz/files/wrdk-installer-0.1.exe
 * Source: http://wrdk.seabright.co.nz/files/wrdk-0.1.tar.bz2
 
+The Linux binary was built on Ubuntu 8.04 and should work on versions 8.04
+through to 10.04.
+
 Development occurs on github at http://github.com/nzmichaelh/wrdk
 
 Install
@@ -35,11 +38,12 @@ To install:
 * Change to your home directory
 * Extract the archive using ``tar xzf wrdk-linux-$VERSION.tar.gz``
 * Add ``$HOME/wrdk/bin`` to your path
+* Add ``$HOME/wrdk/python`` to your PYTHONPATH
 
 *For Windows users:*
 
 * Download and run the installer above.  wrdk is automatically added
-to your path
+  to your path
 
 Making a SD card
 ----------------
@@ -58,25 +62,33 @@ installed applications.
 
 Examples
 --------
-A few simple examples are included under $WRDK/examples
+A few simple examples are included under ``$WRDK/examples``.  To build,
+change to an example directory such as ``$WRDK/examples/pongex`` and
+run ``make``.
 
-.. image:: baby.png
+.. figure:: baby.png
 
-A simple 'save the baby from the burning building' game.  Catch the
-babies and bounce them over into the ambulance!
+   A simple 'save the baby from the burning building' game.
 
-.. image:: splash.png
+   Catch the babies and bounce them over into the ambulance!
 
-A splash screen.  Shows when the device boots.
+.. figure:: splash.png
 
-.. image:: pongex.png
+   A splash screen.
 
-Pong with not many twists.  Get the ball past the other player.  First
-to five points wins.
+   Shows when the device boots.
 
-.. image:: wrinv.png
+.. figure:: pongex.png
 
-A strangely familiar game.  Destroy the invaders before they land.
+   Pong with not many twists.
+
+   Get the ball past the other player.  First to five points wins.
+
+.. figure:: wrinv.png
+
+   A strangely familiar game.
+
+   Destroy the invaders before they land.
 
 Serial loader
 -------------
@@ -96,11 +108,11 @@ For the debug connector pinout see:
 To use the loader:
 
 * Build your application (foo.app)
-* Build a binary only version (make foo.bin)
+* Build a binary only version (``make foo.bin``)
 * Start the WikiReader
 * Press the loader icon (looks like a circle with an arrow)
-* Use loader.py from the 'loader' directory to load and run the binary
-   version of the application
+* Use ``wrdk-load`` to load and run the binary version of the
+  application
 
 Making your own applications
 ----------------------------

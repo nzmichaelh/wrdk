@@ -102,7 +102,10 @@ package-main:
 	$(GRIFO_LIB) \
 	$(C33)/lib
 	-cp bin/* $(STAGING)/bin
-	rsync -Ca examples $(STAGING)
+	rsync --exclude=_build -Ca doc $(STAGING)
+	cp -a doc/_build/* $(STAGING)/doc
+	rsync -Ca python $(STAGING)
+	rsync --exclude=build -Ca examples $(STAGING)
 	cp -a share $(STAGING)
 	cp $(GRIFO)/lds/* $(STAGING)/share
 	cp -a loader $(STAGING)
