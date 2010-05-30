@@ -1624,6 +1624,7 @@ else
 #if STDC_HEADERS
 #include <stdlib.h>
 #include <stddef.h>
+#include <stdint.h>
 #endif
 EOF
 if (eval "$ac_cpp conftest.$ac_ext") 2>&5 |
