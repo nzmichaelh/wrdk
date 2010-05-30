@@ -25,3 +25,7 @@ GCC_FOR_TARGET = d:/Epson/gnu33/xgcc -Bd:/Epson/gnu33/
 
 # 2002.2.13 watanabe
 # C33: It is necessary that "LIB2FUNCS_EH = _eh" is changed to "LIB2FUNCS_EH =".
+
+# Disable collect2.  It doesn't build under win32 and isn't needed for
+# plain C programs
+USE_COLLECT2 =
