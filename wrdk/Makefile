@@ -90,7 +90,7 @@ $(STAMPS)/gcc: $(STAMPS)/gcc-install
 # components together into the staging area
 package: binutils gcc package-main package-sdimage package-host
 
-package-main:
+package-main: doc/_build
 	mkdir -p $(C33)/include $(C33)/lib
 	cp -a $(SAMO_LIB_INCLUDE)/* \
 	$(FATFS_INCLUDE)/*.h \
@@ -118,6 +118,10 @@ package-sdimage:
 	cd $(STAGING)/share/sdimage && sha256sum * > sha256.txt
 	cp README $(STAGING)
 	for i in $(SUBDIRS); do $(MAKE) -C $(STAGING)/$$i clean; done
+
+# Build the documentation
+doc/_build:
+	$(MAKE) -C doc build
 
 # Archive up the final build
 archive:

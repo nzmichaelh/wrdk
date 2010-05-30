@@ -1,8 +1,6 @@
 wrdk - a simple WikiReader Development Kit
 ==========================================
 
-.. toctree::
-
 Michael Hope <michael.hope@seabright.co.nz>  (c) 2010
 
 http://wrdk.seabright.co.nz/
@@ -137,6 +135,13 @@ Running ``make`` will give you the application in
 them to the ``init.ini`` on the card.
 
 Don't forget to ``umount && sync`` before removing the card!
+
+See also
+--------
+.. toctree::
+   :maxdepth: 1
+
+   building
 
 .. _Openmoko: http://www.openmoko.com/
 .. _WikiReader: http://www.thewikireader.com/
