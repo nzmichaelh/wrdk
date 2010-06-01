@@ -41,6 +41,7 @@ a cross-compiling Linux host, but you will need Windows to build the
 binary versions of the Python scripts.
 
 You'll need:
+
 * The win32 cross compiler ``mingw32``
 * The NSIS installer builder ``nsis``
 * The text file converter ``flip``

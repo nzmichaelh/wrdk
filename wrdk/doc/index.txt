@@ -1,5 +1,5 @@
-wrdk - a simple WikiReader Development Kit
-==========================================
+wrdk - a WikiReader Development Kit
+===================================
 
 Michael Hope <michael.hope@seabright.co.nz>  (c) 2010
 
@@ -16,14 +16,16 @@ compile/load/test cycle.
 
 Download
 --------
-* Linux binary: http://wrdk.seabright.co.nz/files/wrdk-linux-0.1.tar.bz2
+* Linux binary: http://wrdk.seabright.co.nz/files/wrdk-linux-0.1.tar.gz
 * Windows installer: http://wrdk.seabright.co.nz/files/wrdk-installer-0.1.exe
-* Source: http://wrdk.seabright.co.nz/files/wrdk-0.1.tar.bz2
+* Source: http://wrdk.seabright.co.nz/files/wrdk-0.1.tar.gz
 
 The Linux binary was built on Ubuntu 8.04 and should work on versions 8.04
 through to 10.04.
 
-Development occurs on github at http://github.com/nzmichaelh/wrdk
+Development occurs on github at http://github.com/nzmichaelh/wrdk.
+Issues can be filed at http://github.com/nzmichaelh/wrdk/issues.
+There's a mailing list at http://groups.google.com/group/wrdk-users.
 
 Install
 -------
@@ -88,30 +90,6 @@ run ``make``.
 
    Destroy the invaders before they land.
 
-Serial loader
--------------
-The serial loader is a small, grifo based program that can load and
-execute other grifo programs over the WikiReader's built in serial
-port.
-
-Build a 3.3 V serial cable and connect it to the debug connector in
-the battery bay of the WikiReader.
-
-For teardown pictures see:
- http://wiki.seabright.co.nz/wiki/WikiReader.html
-
-For the debug connector pinout see:
- http://wiki.github.com/wikireader/wikireader/hardware-specifications
-
-To use the loader:
-
-* Build your application (foo.app)
-* Build a binary only version (``make foo.bin``)
-* Start the WikiReader
-* Press the loader icon (looks like a circle with an arrow)
-* Use ``wrdk-load`` to load and run the binary version of the
-  application
-
 Making your own applications
 ----------------------------
 wrdk includes a set of Makefile rules designed to make writing your
@@ -135,6 +113,32 @@ Running ``make`` will give you the application in
 them to the ``init.ini`` on the card.
 
 Don't forget to ``umount && sync`` before removing the card!
+
+Have a look in ``grifo.h`` for the available functions.
+
+Serial loader
+-------------
+The serial loader is a small, grifo based program that can load and
+execute other grifo programs over the WikiReader's built in serial
+port.
+
+Build a 3.3 V serial cable and connect it to the debug connector in
+the battery bay of the WikiReader.
+
+For teardown pictures see:
+ http://wiki.seabright.co.nz/wiki/WikiReader.html
+
+For the debug connector pinout see:
+ http://wiki.github.com/wikireader/wikireader/hardware-specifications
+
+To use the loader:
+
+* Build your application (foo.app)
+* Build a binary only version (``make foo.bin``)
+* Start the WikiReader
+* Press the loader icon (looks like a circle with an arrow)
+* Use ``wrdk-load`` to load and run the binary version of the
+  application
 
 See also
 --------

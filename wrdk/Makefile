@@ -126,3 +126,6 @@ doc/_build:
 # Archive up the final build
 archive:
 	tar czf wrdk-linux-$(VERSION).tar.gz -C build/linux wrdk
+
+upload:
+	rsync --progress -e ssh -a wrdk-*.exe wrdk-*.gz nz_michaelh@wrdk.seabright.co.nz:~/wrdk.seabright.co.nz/files
