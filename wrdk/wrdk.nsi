@@ -10,7 +10,7 @@
 ;General
 
   ;Name and file
-  Name "WikiReader Development Kit"
+  Name "wrdk"
   OutFile "wrdk-installer.exe"
 
   ;Default installation folder
